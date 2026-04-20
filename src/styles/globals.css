@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,300;6..96,400&family=Inter:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #f2efe9;
+  --bg2: #e9e5de;
+  --night: #0c0c0a;
+  --night2: #141412;
+  --fog: #5c5950;
+  --mist: #9a9589;
+  --linen: #f7f5f0;
+  --bronze: #9e8a6a;
+  --wa: #075e54;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--night);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.hero {
+  min-height: 88vh;
+  background: linear-gradient(rgba(12,12,10,.55), rgba(12,12,10,.75)),
+    radial-gradient(circle at top left, rgba(158,138,106,.18), transparent 35%),
+    var(--night);
+  color: var(--linen);
+  padding: 24px 24px 80px;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 28px;
+  letter-spacing: 0.2em;
+}
+
+.nav-link {
+  border: 1px solid rgba(247,245,240,.25);
+  padding: 10px 16px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero-inner {
+  max-width: 900px;
+  margin: auto 0 0;
+  padding-top: 80px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(247,245,240,.7);
+  margin-bottom: 18px;
+}
+
+.eyebrow.dark {
+  color: var(--mist);
+}
+
+.hero h1,
+.booking h2,
+.fleet h2 {
+  font-family: 'Bodoni Moda', serif;
+  font-weight: 300;
+  line-height: 1.02;
+  margin: 0 0 18px;
+}
+
+.hero h1 {
+  font-size: clamp(44px, 10vw, 96px);
+  max-width: 760px;
+}
+
+.sub,
+.hero-note,
+.booking-copy p,
+.fleet p,
+.footer {
+  color: rgba(247,245,240,.72);
+}
+
+.sub {
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.primary-btn,
+.wa-btn {
+  display: inline-block;
+  background: var(--wa);
+  color: white;
+  padding: 16px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero-note {
+  margin-top: 14px;
+  font-size: 13px;
+}
+
+.trust-strip {
+  background: var(--night);
+  color: rgba(247,245,240,.76);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 16px 24px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.booking {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 40px;
+  padding: 64px 24px;
+  background: var(--night2);
+  color: var(--linen);
+}
+
+.booking-copy h2 {
+  font-size: clamp(30px, 4vw, 54px);
+}
+
+.booking-copy p {
+  color: rgba(247,245,240,.6);
+  max-width: 420px;
+}
+
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 0;
+  color: rgba(247,245,240,.76);
+  line-height: 2;
+}
+
+.card {
+  background: rgba(247,245,240,.04);
+  border: 1px solid rgba(247,245,240,.08);
+  padding: 24px;
+  border-radius: 10px;
+}
+
+.field {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(247,245,240,.64);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(247,245,240,.18);
+  background: transparent;
+  color: white;
+  padding: 14px 0;
+  font-size: 15px;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-bottom-color: var(--bronze);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #1a1a17;
+  border: 1px solid rgba(247,245,240,.08);
+  z-index: 10;
+}
+
+.suggestions button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: white;
+  padding: 12px;
+}
+
+.fare-box {
+  margin: 22px 0 16px;
+  background: rgba(12,12,10,.45);
+  border-left: 2px solid var(--bronze);
+  padding: 18px;
+}
+
+.fare-label {
+  margin: 0 0 8px;
+  color: rgba(247,245,240,.58);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.fare-price {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 42px;
+  font-weight: 300;
+}
+
+.fare-note,
+.wa-note {
+  color: rgba(247,245,240,.55);
+  font-size: 13px;
+}
+
+.wa-btn {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.wa-note {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.fleet {
+  padding: 64px 24px;
+  background: var(--bg2);
+}
+
+.fleet h2 {
+  font-size: clamp(28px, 4vw, 52px);
+}
+
+.fleet p {
+  color: var(--fog);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 24px 80px;
+  color: var(--fog);
+  background: var(--bg);
+}
+
+.floating-wa {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  background: var(--wa);
+  color: white;
+  padding: 14px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+
+@media (max-width: 860px) {
+  .booking {
+    grid-template-columns: 1fr;
+  }
+
+  .row,
+  .footer {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .hero {
+    min-height: auto;
+  }
+}
