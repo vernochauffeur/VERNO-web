@@ -8,6 +8,18 @@ VERNO PRICING ENGINE v4
 Priority: airport-fixed -> route-table (airport only) -> anchor-based suburb
 Always returns a number. Non-airport fares use anchor-relative logic.
 ─────────────────────────────────────────────────────────────── */
+const PRICING = {
+  MIN_FARE: 75,
+  BASE_FEE: 15,
+  PER_MIN: 0.60,
+  RATE_0_25: 3.20,
+  RATE_25_50: 2.80,
+  RATE_50UP: 2.30,
+  LATE_SURCHARGE: 0.15,
+  LATE_START: 0,
+  LATE_END: 5,
+  BUFFER: 5,
+  ROUND_TO: 5,
 };
 // Airport-to-suburb fixed fares (suburb end only -- airport keyword triggers these).
 // Also used as anchor values for suburb-to-suburb pricing.
