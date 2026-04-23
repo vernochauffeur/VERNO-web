@@ -74,42 +74,38 @@ const AIRPORT_FIXED = {
 // Airport-only route table -- used only when one side is an airport/terminal.
 // Suburb-to-suburb routes are handled by anchor-based logic below.
 const ROUTE_TABLE = [
-  // Tullamarine
-  { keys: [["airport","cbd"],["airport","melbourne city"]], km: 25, min: 25 },
-  { keys: [["airport","southbank"],["airport","docklands"]], km: 27, min: 28 },
-  { keys: [["airport","st kilda"],["airport","south yarra"]], km: 30, min: 32 },
-  { keys: [["airport","richmond"],["airport","hawthorn"]], km: 28, min: 30 },
-  { keys: [["airport","brighton"],["airport","bayside"]], km: 32, min: 34 },
-  { keys: [["airport","toorak"],["airport","malvern"]], km: 31, min: 33 },
-
-  // Long distance
-  { keys: [["airport","geelong"]], km: 90, min: 75 },
-  { keys: [["airport","sorrento"],["airport","portsea"]], km: 120, min: 100 },
-  { keys: [["airport","yarra valley"]], km: 70, min: 70 },
-
-  // Avalon
-  { keys: [["avalon","cbd"],["avalon","city"]], km: 56, min: 47 },
+  { keys: [["airport","cbd"],["airport","melbourne city"],["airport","southern cross"],["airport","flinders"],["tullamarine","cbd"]], km: 23, min: 25 },
+  { keys: [["airport","southbank"],["airport","crown"],["airport","docklands"],["tullamarine","southbank"]], km: 25, min: 27 },
+  { keys: [["airport","st kilda"],["airport","south yarra"],["airport","prahran"],["airport","chapel street"],["tullamarine","st kilda"]], km: 30, min: 33 },
+  { keys: [["airport","richmond"],["airport","hawthorn"],["airport","camberwell"],["tullamarine","richmond"]], km: 28, min: 30 },
+  { keys: [["airport","brighton"],["airport","bayside"],["airport","sandringham"],["tullamarine","brighton"]], km: 37, min: 40 },
+  { keys: [["airport","toorak"],["airport","malvern"],["tullamarine","toorak"]], km: 31, min: 34 },
+  { keys: [["airport","geelong"],["airport","torquay"],["tullamarine","geelong"]], km: 90, min: 65 },
+  { keys: [["airport","mornington"],["airport","portsea"],["airport","sorrento"],["airport","peninsula"],["tullamarine","mornington"]], km: 95, min: 70 },
+  { keys: [["airport","yarra valley"],["airport","healesville"],["airport","lilydale"],["tullamarine","yarra valley"]], km: 80, min: 60 },
+  { keys: [["airport","avalon"],["tullamarine","avalon"]], km: 50, min: 42 },
+  { keys: [["avalon","cbd"],["avalon","city"],["avalon","southern cross"]], km: 56, min: 47 },
+  { keys: [["avalon","southbank"],["avalon","docklands"]], km: 58, min: 49 },
   { keys: [["avalon","geelong"]], km: 20, min: 20 },
+  { keys: [["park hyatt","airport"],["langham","airport"],["sofitel","airport"],["crown","airport"]], km: 24, min: 26 },
 ];
-// Nearby suburb clusters -- very short trips within the same pocket.
-// Fare = max(MIN_FARE, avg_anchor * 0.40) + BUFFER
+
 const NEARBY_GROUPS = [
-["mornington", "mount eliza", "mount martha"],
-["brighton", "hampton", "sandringham"],
-["south yarra", "prahran", "windsor"],
-["richmond", "hawthorn"],
-["st kilda", "elwood", "balaclava"],
-["cbd", "southbank", "docklands", "carlton"],
-["toorak", "malvern"],
+  ["mornington", "mount eliza", "mount martha"],
+  ["brighton", "hampton", "sandringham"],
+  ["south yarra", "prahran", "windsor"],
+  ["richmond", "hawthorn"],
+  ["st kilda", "elwood", "balaclava"],
+  ["cbd", "southbank", "docklands", "carlton"],
+  ["toorak", "malvern"],
 ];
-// Same-zone groups -- longer but still within a connected corridor.
-// Fare = max(MIN_FARE, min_anchor * 0.50) + BUFFER
+
 const ZONE_GROUPS = [
-["mornington", "mount eliza", "mount martha", "frankston"],
-["dromana", "rosebud", "rye", "sorrento", "portsea"],
-["brighton", "hampton", "sandringham", "cheltenham", "mentone", "st kilda", "elwood", "bala
-["south yarra", "prahran", "richmond", "windsor", "toorak", "hawthorn", "malvern", "camberw
-["cbd", "southbank", "docklands", "carlton", "fitzroy", "collingwood"],
+  ["mornington", "mount eliza", "mount martha", "frankston"],
+  ["dromana", "rosebud", "rye", "sorrento", "portsea"],
+  ["brighton", "hampton", "sandringham", "cheltenham", "mentone", "st kilda", "elwood", "balaclava"],
+  ["south yarra", "prahran", "richmond", "windsor", "toorak", "hawthorn", "malvern", "camberwell"],
+  ["cbd", "southbank", "docklands", "carlton", "fitzroy", "collingwood"],
 ];
 // ── Helpers ─────────────────────────────────────────────────
 function isAirport(text) {
