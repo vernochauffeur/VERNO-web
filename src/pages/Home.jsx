@@ -74,23 +74,22 @@ const AIRPORT_FIXED = {
 // Airport-only route table -- used only when one side is an airport/terminal.
 // Suburb-to-suburb routes are handled by anchor-based logic below.
 const ROUTE_TABLE = [
-// Tullamarine routes
-{ keys: [["airport","cbd"],["airport","melbourne city"],["airport","southern cross"],["airp
-{ keys: [["airport","southbank"],["airport","crown"],["airport","docklands"],["tullamarine"
-{ keys: [["airport","st kilda"],["airport","south yarra"],["airport","prahran"],["airport",
-{ keys: [["airport","richmond"],["airport","hawthorn"],["airport","camberwell"],["tullamari
-{ keys: [["airport","brighton"],["airport","bayside"],["airport","sandringham"],["tullamari
-{ keys: [["airport","toorak"],["airport","malvern"],["tullamarine","toorak"]], km: 31, min:
-{ keys: [["airport","geelong"],["airport","torquay"],["tullamarine","geelong"]], km: 90, mi
-{ keys: [["airport","mornington"],["airport","portsea"],["airport","sorrento"],["airport","
-{ keys: [["airport","yarra valley"],["airport","healesville"],["airport","lilydale"],["tull
-{ keys: [["airport","avalon"],["tullamarine","avalon"]], km: 50, min: 42 },
-// Avalon routes
-{ keys: [["avalon","cbd"],["avalon","city"],["avalon","southern cross"]], km: 56, min: 47 }
-{ keys: [["avalon","southbank"],["avalon","docklands"]], km: 58, min: 49 },
-{ keys: [["avalon","geelong"]], km: 20, min: 20 },
-// Hotels to airport
-{ keys: [["park hyatt","airport"],["langham","airport"],["sofitel","airport"],["crown","air
+  // Tullamarine
+  { keys: [["airport","cbd"],["airport","melbourne city"]], km: 25, min: 25 },
+  { keys: [["airport","southbank"],["airport","docklands"]], km: 27, min: 28 },
+  { keys: [["airport","st kilda"],["airport","south yarra"]], km: 30, min: 32 },
+  { keys: [["airport","richmond"],["airport","hawthorn"]], km: 28, min: 30 },
+  { keys: [["airport","brighton"],["airport","bayside"]], km: 32, min: 34 },
+  { keys: [["airport","toorak"],["airport","malvern"]], km: 31, min: 33 },
+
+  // Long distance
+  { keys: [["airport","geelong"]], km: 90, min: 75 },
+  { keys: [["airport","sorrento"],["airport","portsea"]], km: 120, min: 100 },
+  { keys: [["airport","yarra valley"]], km: 70, min: 70 },
+
+  // Avalon
+  { keys: [["avalon","cbd"],["avalon","city"]], km: 56, min: 47 },
+  { keys: [["avalon","geelong"]], km: 20, min: 20 },
 ];
 // Nearby suburb clusters -- very short trips within the same pocket.
 // Fare = max(MIN_FARE, avg_anchor * 0.40) + BUFFER
