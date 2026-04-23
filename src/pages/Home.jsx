@@ -469,7 +469,7 @@ CONSTANTS & WA
 const WA_NUMBER = "610421238894";
 const VERNO_EMAIL = "book@vernochauffeur.com.au";
 function buildWhatsAppLink({ from, to, date, time, pax, bags, fare }) {
-const fareStr = fare ? `;{fare}` : null;
+const fareStr = fare ? `$${fare}` : null;
 const msg = [
 "Hello, I'd like to book a transfer:",
 "",
