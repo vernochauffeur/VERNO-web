@@ -70,44 +70,7 @@ const AIRPORT_FIXED = {
   "yarra valley": 195, "yarra glen": 195,
   "warburton": 215,
 };
-"cbd": 105, "melbourne cbd": 105,
-"city": 105, "docklands": 105,
-"southbank": 110, "south melbourne": 110,
-"carlton": 108, "fitzroy": 110,
-"collingwood": 110, "richmond": 115,
-// Inner south / east
-"south yarra": 120, "prahran": 120,
-"chapel street": 120, "hawthorn": 120,
-"toorak": 125, "malvern": 125,
-"camberwell": 130, "st kilda": 130,
-"elwood": 132,
-// Bayside
-"brighton": 145, "bayside": 145,
-"hampton": 148, "sandringham": 150,
-"mentone": 155, "cheltenham": 155,
-// South-east outer
-"moorabbin": 155, "oakleigh": 158,
-"chadstone": 158, "glen waverley": 165,
-"knox": 168, "dandenong": 175,
-// Peninsula
-"frankston": 245, "mornington": 275,
-"mount eliza": 260, "mount martha": 285,
-"dromana": 300, "rosebud": 315,
-"rye": 330, "sorrento": 350,
-"portsea": 375, "peninsula": 310,
-// North / West
-"essendon": 115, "brunswick": 108,
-"coburg": 110, "northcote": 110,
-"footscray": 108, "williamstown": 115,
-"werribee": 165, "hoppers crossing": 165,
-// Geelong / Surf Coast
-"geelong": 175, "torquay": 185,
-"barwon heads": 190, "surf coast": 195,
-// Yarra Valley / Hills
-"lilydale": 175, "healesville": 195,
-"yarra valley": 195, "yarra glen": 195,
-"warburton": 215,
-};
+
 // Airport-only route table -- used only when one side is an airport/terminal.
 // Suburb-to-suburb routes are handled by anchor-based logic below.
 const ROUTE_TABLE = [
