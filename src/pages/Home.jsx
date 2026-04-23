@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 
 /* image constants */
-const MOMENTS_MAIN = “/images/moments-main.jpg”;
-const MOMENTS_ACCENT = “/images/moments-accent.jpg”;
-const FLEET_IMG = “/images/fleet.jpg”;
+const MOMENTS_MAIN = "/images/moments-main.jpg";
+const MOMENTS_ACCENT = "/images/moments-accent.jpg";
+const FLEET_IMG = "/images/fleet.jpg";
 
 /* ─────────────────────────────────────────────────────────────
 VERNO PRICING ENGINE v4
