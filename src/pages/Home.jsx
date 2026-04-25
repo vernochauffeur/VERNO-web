@@ -377,6 +377,129 @@ const CSS = `
   color:rgba(255,255,255,.55);
 }
 
+/* TEXT SIZE FIX */
+.hero-line1{
+  display:block;
+  font-style:normal;
+}
+.hero-line2{
+  display:block;
+  font-style:italic;
+}
+
+/* BUTTON GOLD */
+.btn-gold{
+  background:#b88a4a;
+  color:#fff;
+  padding:1rem 2rem;
+  display:inline-flex;
+  gap:.6rem;
+  align-items:center;
+  font-weight:600;
+  letter-spacing:.06em;
+}
+
+/* RIGHT PANEL (küçük + arkada hissi) */
+.hero-panel{
+  max-width:420px;
+  margin-left:auto;
+  background:rgba(10,10,10,.45);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(184,138,74,.35);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+
+.panel-row{
+  display:grid;
+  grid-template-columns:60px 1fr;
+  padding:1.6rem;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.panel-row:last-child{
+  border-bottom:none;
+}
+
+.icon{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid rgba(184,138,74,.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#d89c52;
+  background:rgba(216,156,82,.08);
+  font-size:1.1rem;
+}
+
+/* MINI TRUST */
+.hero-mini{
+  display:flex;
+  gap:2rem;
+  margin-top:2rem;
+  font-size:.7rem;
+  color:rgba(255,255,255,.5);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+
+/* 🔥 ALT STRIP */
+.hero-bottom{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  background:rgba(8,8,8,.9);
+  border-top:1px solid rgba(255,255,255,.08);
+}
+
+.hb-item{
+  display:flex;
+  gap:1rem;
+  padding:2rem;
+  border-right:1px solid rgba(255,255,255,.06);
+}
+
+.hb-item:last-child{
+  border-right:none;
+}
+
+.hb-icon{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid rgba(184,138,74,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#d89c52;
+  font-size:1.1rem;
+}
+
+.hb-item h4{
+  font-size:.9rem;
+  color:#fff;
+  margin-bottom:.3rem;
+}
+
+.hb-item p{
+  font-size:.75rem;
+  color:rgba(255,255,255,.45);
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  .hero-bottom{
+    position:relative;
+    grid-template-columns:1fr;
+  }
+}
+
 .trust-strip{
   background:#111;
   padding:2.2rem 5vw;
