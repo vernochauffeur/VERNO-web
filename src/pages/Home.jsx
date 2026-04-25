@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
@@ -76,13 +77,12 @@ function Hero() {
   return (
     <section className="hero">
       <div className="hero-content">
-        
         <div className="hero-left">
           <p className="hero-label">Private Chauffeur — Melbourne</p>
 
           <h1 className="hero-h1">
-            <span className="hero-line1">Arrive in</span>
-            <span className="hero-line2">complete confidence.</span>
+            Arrive in<br />
+            <em>complete confidence.</em>
           </h1>
 
           <div className="hero-line" />
@@ -94,15 +94,13 @@ function Hero() {
           </p>
 
           <div className="hero-actions">
-            <a href={wa} className="btn-gold">
+            <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold">
               <WAIcon s={18} /> Reserve via WhatsApp
             </a>
-            <a href="#book" className="btn-outline">
-              Get Instant Fare
-            </a>
+            <a href="#book" className="btn-outline hero-outline">Get Instant Fare</a>
           </div>
 
-          <div className="hero-mini">
+          <div className="hero-trust">
             <div>Fixed pricing</div>
             <div>No surge</div>
             <div>Direct contact</div>
@@ -110,61 +108,32 @@ function Hero() {
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <div className="hero-panel">
-          <div className="panel-row">
-            <div className="icon">✈</div>
+        <div className="hero-service-panel">
+          <div className="hero-service-row">
+            <div className="hero-service-icon">✈</div>
             <div>
               <h3>Airport Transfers</h3>
-              <p>Tullamarine & Avalon</p>
+              <p>Tullamarine &amp; Avalon</p>
               <p>Fixed fare, flight tracked</p>
             </div>
           </div>
 
-          <div className="panel-row">
-            <div className="icon">💼</div>
+          <div className="hero-service-row">
+            <div className="hero-service-icon">▣</div>
             <div>
               <h3>Corporate Travel</h3>
               <p>Executive ground transport</p>
-              <p>Discreet & reliable</p>
+              <p>Discreet &amp; reliable</p>
             </div>
           </div>
 
-          <div className="panel-row">
-            <div className="icon">🚘</div>
+          <div className="hero-service-row">
+            <div className="hero-service-icon">▰</div>
             <div>
               <h3>Private Hire</h3>
               <p>Mornington, Yarra Valley</p>
-              <p>& beyond — BMW i5</p>
+              <p>&amp; beyond — BMW i5</p>
             </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* 🔥 ALT 3’LÜ STRIP */}
-      <div className="hero-bottom">
-        <div className="hb-item">
-          <div className="hb-icon">🕒</div>
-          <div>
-            <h4>On time, every time</h4>
-            <p>Punctual, professional and always reliable.</p>
-          </div>
-        </div>
-
-        <div className="hb-item">
-          <div className="hb-icon">👤</div>
-          <div>
-            <h4>Discreet & professional</h4>
-            <p>Your privacy is respected. Always.</p>
-          </div>
-        </div>
-
-        <div className="hb-item">
-          <div className="hb-icon">⭐</div>
-          <div>
-            <h4>Premium experience</h4>
-            <p>Luxury electric comfort from start to finish.</p>
           </div>
         </div>
       </div>
@@ -356,148 +325,27 @@ const CSS = `
   border-bottom:none;
 }
 .hero-service-icon{
-  width:46px;
-  height:46px;
+  width:54px;
+  height:54px;
   border-radius:999px;
-  border:1px solid rgba(184,132,73,.45);
+  border:1px solid rgba(184,164,138,.35);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:1.2rem;
-  color:#d39a5c;
-  background:rgba(211,154,92,0.08);
+  color:#b89870;
+  font-size:1.25rem;
 }
 .hero-service-row h3{
-  font-size:1.05rem;
-  font-weight:500;
-}
-
-.hero-service-row p{
-  font-size:.78rem;
-  color:rgba(255,255,255,.55);
-}
-
-/* TEXT SIZE FIX */
-.hero-line1{
-  display:block;
-  font-style:normal;
-}
-.hero-line2{
-  display:block;
-  font-style:italic;
-}
-
-/* BUTTON GOLD */
-.btn-gold{
-  background:#b88a4a;
-  color:#fff;
-  padding:1rem 2rem;
-  display:inline-flex;
-  gap:.6rem;
-  align-items:center;
+  font-family:var(--serif);
+  font-size:1.25rem;
   font-weight:600;
-  letter-spacing:.06em;
-}
-
-/* RIGHT PANEL (küçük + arkada hissi) */
-.hero-panel{
-  max-width:420px;
-  margin-left:auto;
-  background:rgba(10,10,10,.45);
-  backdrop-filter:blur(14px);
-  border:1px solid rgba(184,138,74,.35);
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 30px 80px rgba(0,0,0,.5);
-}
-
-.panel-row{
-  display:grid;
-  grid-template-columns:60px 1fr;
-  padding:1.6rem;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.panel-row:last-child{
-  border-bottom:none;
-}
-
-.icon{
-  width:44px;
-  height:44px;
-  border-radius:50%;
-  border:1px solid rgba(184,138,74,.5);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#d89c52;
-  background:rgba(216,156,82,.08);
-  font-size:1.1rem;
-}
-
-/* MINI TRUST */
-.hero-mini{
-  display:flex;
-  gap:2rem;
-  margin-top:2rem;
-  font-size:.7rem;
-  color:rgba(255,255,255,.5);
-  text-transform:uppercase;
-  letter-spacing:.12em;
-}
-
-/* 🔥 ALT STRIP */
-.hero-bottom{
-  position:absolute;
-  bottom:0;
-  left:0;
-  right:0;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  background:rgba(8,8,8,.9);
-  border-top:1px solid rgba(255,255,255,.08);
-}
-
-.hb-item{
-  display:flex;
-  gap:1rem;
-  padding:2rem;
-  border-right:1px solid rgba(255,255,255,.06);
-}
-
-.hb-item:last-child{
-  border-right:none;
-}
-
-.hb-icon{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  border:1px solid rgba(184,138,74,.45);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#d89c52;
-  font-size:1.1rem;
-}
-
-.hb-item h4{
-  font-size:.9rem;
   color:#fff;
-  margin-bottom:.3rem;
+  margin-bottom:.55rem;
 }
-
-.hb-item p{
-  font-size:.75rem;
-  color:rgba(255,255,255,.45);
-}
-
-/* MOBILE */
-@media(max-width:768px){
-  .hero-bottom{
-    position:relative;
-    grid-template-columns:1fr;
-  }
+.hero-service-row p{
+  font-size:.88rem;
+  line-height:1.45;
+  color:rgba(255,255,255,.56);
 }
 
 .trust-strip{
