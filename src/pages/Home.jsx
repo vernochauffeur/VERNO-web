@@ -195,10 +195,12 @@ padding:100px 5vw 80px;
 overflow:hidden;
 }
 .hero-bg{
-  background:
-    linear-gradient(90deg, rgba(10,10,10,.85) 0%, rgba(10,10,10,.55) 45%, rgba(10,10,10,.2) 100%),
-    linear-gradient(180deg, rgba(180,120,60,.25) 0%, rgba(0,0,0,.8) 100%),
-    url("/images/hero-bg.jpg") center/cover no-repeat;
+position:absolute;inset:0;
+background:
+linear-gradient(95deg,rgba(7,5,3,.90) 0%,rgba(7,5,3,.72) 38%,rgba(7,5,3,.22) 68%,rgba(7,5,3,.08) 100%),
+linear-gradient(180deg,rgba(0,0,0,.12) 0%,rgba(0,0,0,.60) 100%),
+url(’/images/hero-bg.jpg’) center/cover no-repeat;
+filter:contrast(1.08) brightness(.93) saturate(1.12);
 }
 .hero-inner{
 position:relative;z-index:2;
