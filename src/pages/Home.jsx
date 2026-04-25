@@ -181,10 +181,11 @@ const CSS = `
   position:absolute;
   inset:0;
   background:
-    linear-gradient(90deg, rgba(10,10,10,.92) 0%, rgba(10,10,10,.75) 45%, rgba(10,10,10,.3) 100%),
-    linear-gradient(180deg, rgba(0,0,0,.4) 0%, rgba(0,0,0,.85) 100%),
+    linear-gradient(90deg, rgba(10,10,10,.85) 0%, rgba(10,10,10,.55) 45%, rgba(10,10,10,.2) 100%),
+    linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.75) 100%),
     url("/images/hero-bg.jpg") center/cover no-repeat;
-  filter: contrast(1.1) brightness(0.85) saturate(0.9);
+
+  filter: contrast(1.15) brightness(1) saturate(1.05);
 }
 
 /* LAYOUT */
@@ -209,16 +210,12 @@ const CSS = `
 }
 
 .hero-h1{
-  font-family:var(--serif);
-  font-size:clamp(3.5rem,6vw,6.8rem);
-  line-height:.98;
-  color:#fff;
-  margin-bottom:2rem;
+  color:rgba(255,255,255,.92);
+  letter-spacing:-0.04em;
 }
 
 .hero-h1 em{
-  font-style:italic;
-  color:rgba(255,255,255,.8);
+  color:rgba(255,255,255,.75);
 }
 
 .hero-rule{
@@ -242,7 +239,7 @@ const CSS = `
 }
 
 .hero-gold{
-  background:var(--gold);
+  background:linear-gradient(135deg,#9E8A6A,#B8A48A);
   color:#fff;
 }
 
@@ -260,10 +257,7 @@ const CSS = `
 }
 
 .hero-trust-item{
-  font-size:.7rem;
-  color:rgba(255,255,255,.4);
-  letter-spacing:.1em;
-  text-transform:uppercase;
+  color:rgba(255,255,255,.28);
 }
 
 /* RIGHT PANEL */
@@ -275,9 +269,16 @@ const CSS = `
 .hero-service-panel{
   max-width:420px;
   width:100%;
-  background:rgba(15,15,15,.6);
-  border:1px solid rgba(158,138,106,.3);
-  backdrop-filter:blur(14px);
+  background:linear-gradient(
+    180deg,
+    rgba(20,20,20,.55),
+    rgba(10,10,10,.8)
+  );
+  border:1px solid rgba(158,138,106,.35);
+  backdrop-filter:blur(18px);
+  box-shadow:
+    0 0 40px rgba(158,138,106,.08),
+    inset 0 0 20px rgba(255,255,255,.02);
 }
 
 /* CARDS */
