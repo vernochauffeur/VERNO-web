@@ -336,16 +336,13 @@ const CSS = `
   background:rgba(211,154,92,0.08);
 }
 .hero-service-row h3{
-  font-family:var(--serif);
-  font-size:1.25rem;
-  font-weight:600;
-  color:#fff;
-  margin-bottom:.55rem;
+  font-size:1.05rem;
+  font-weight:500;
 }
+
 .hero-service-row p{
-  font-size:.88rem;
-  line-height:1.45;
-  color:rgba(255,255,255,.56);
+  font-size:.78rem;
+  color:rgba(255,255,255,.55);
 }
 
 .trust-strip{
