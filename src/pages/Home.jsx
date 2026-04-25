@@ -80,8 +80,8 @@ function Hero() {
           <p className="hero-label">Private Chauffeur — Melbourne</p>
 
           <h1 className="hero-h1">
-  <span className="hero-line1">Arrive in</span>
-  <span className="hero-line2">complete confidence.</span>
+  <span>Arrive in</span>
+  <em>complete confidence.</em>
 </h1>
 
           <div className="hero-line" />
@@ -238,34 +238,40 @@ const CSS = `
 }
 .hero-h1{
   font-family:var(--serif);
-  font-size:clamp(3.8rem,5.6vw,6.1rem);
+  font-size:clamp(3.9rem,5.4vw,6.2rem);
   font-weight:400;
-  line-height:1.02;
-  letter-spacing:-.04em;
+  line-height:1.08;
+  letter-spacing:-.035em;
   color:#fff;
   margin-bottom:1.9rem;
   max-width:820px;
 }
 
-.hero-line1{
+.hero-h1 span{
   display:block;
   font-style:normal;
+  font-weight:400;
+  color:#fff;
 }
 
-.hero-line2{
+.hero-h1 em{
   display:block;
   font-style:italic;
-  color:rgba(255,255,255,.92);
+  font-weight:400;
+  color:rgba(255,255,255,.94);
+  margin-top:.05em;
+  white-space:nowrap;
 }
-.hero-h1 em{
-  font-style:italic;
-  color:rgba(255,255,255,.92);
-}
-.hero-line{
-  width:52px;
-  height:2px;
-  background:#b89870;
-  margin-bottom:1.7rem;
+
+@media(max-width:768px){
+  .hero-h1{
+    font-size:3rem;
+    line-height:1.08;
+  }
+
+  .hero-h1 em{
+    white-space:normal;
+  }
 }
 .hero-sub{
   max-width:520px;
