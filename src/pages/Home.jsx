@@ -324,15 +324,16 @@ const CSS = `
   border-bottom:none;
 }
 .hero-service-icon{
-  width:54px;
-  height:54px;
+  width:46px;
+  height:46px;
   border-radius:999px;
-  border:1px solid rgba(184,164,138,.35);
+  border:1px solid rgba(184,132,73,.45);
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#b89870;
-  font-size:1.25rem;
+  font-size:1.2rem;
+  color:#d39a5c;
+  background:rgba(211,154,92,0.08);
 }
 .hero-service-row h3{
   font-family:var(--serif);
