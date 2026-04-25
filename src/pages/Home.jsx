@@ -88,12 +88,13 @@ function Hero() {
 
           <p className="hero-sub">
             Private airport, corporate and point-to-point transfers across Melbourne.
+            <br />
             Fixed fares. Direct booking. Premium comfort.
           </p>
 
           <div className="hero-actions">
             <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold">
-              <WAIcon s={17} /> Reserve via WhatsApp
+              <WAIcon s={18} /> Reserve via WhatsApp
             </a>
             <a href="#book" className="btn-outline hero-outline">Get Instant Fare</a>
           </div>
@@ -117,7 +118,7 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon">💼</div>
+            <div className="hero-service-icon">▣</div>
             <div>
               <h3>Corporate Travel</h3>
               <p>Executive ground transport</p>
@@ -126,7 +127,7 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon">🚘</div>
+            <div className="hero-service-icon">▰</div>
             <div>
               <h3>Private Hire</h3>
               <p>Mornington, Yarra Valley</p>
