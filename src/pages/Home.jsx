@@ -81,9 +81,9 @@ function Hero() {
           <p className="hero-label">Private Chauffeur — Melbourne</p>
 
           <h1 className="hero-h1">
-            Arrive in<br />
-            <em>complete confidence.</em>
-          </h1>
+  <span className="hero-line1">Arrive in</span>
+  <span className="hero-line2">complete confidence.</span>
+</h1>
 
           <div className="hero-line" />
 
