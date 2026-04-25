@@ -76,13 +76,14 @@ function Hero() {
   return (
     <section className="hero">
       <div className="hero-content">
+        
         <div className="hero-left">
           <p className="hero-label">Private Chauffeur — Melbourne</p>
 
           <h1 className="hero-h1">
-  <span className="hero-line1">Arrive in</span>
-  <span className="hero-line2">complete confidence.</span>
-</h1>
+            <span className="hero-line1">Arrive in</span>
+            <span className="hero-line2">complete confidence.</span>
+          </h1>
 
           <div className="hero-line" />
 
@@ -93,13 +94,15 @@ function Hero() {
           </p>
 
           <div className="hero-actions">
-            <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold">
+            <a href={wa} className="btn-gold">
               <WAIcon s={18} /> Reserve via WhatsApp
             </a>
-            <a href="#book" className="btn-outline hero-outline">Get Instant Fare</a>
+            <a href="#book" className="btn-outline">
+              Get Instant Fare
+            </a>
           </div>
 
-          <div className="hero-trust">
+          <div className="hero-mini">
             <div>Fixed pricing</div>
             <div>No surge</div>
             <div>Direct contact</div>
@@ -107,32 +110,61 @@ function Hero() {
           </div>
         </div>
 
-        <div className="hero-service-panel">
-          <div className="hero-service-row">
-            <div className="hero-service-icon">✈</div>
+        {/* RIGHT PANEL */}
+        <div className="hero-panel">
+          <div className="panel-row">
+            <div className="icon">✈</div>
             <div>
               <h3>Airport Transfers</h3>
-              <p>Tullamarine &amp; Avalon</p>
+              <p>Tullamarine & Avalon</p>
               <p>Fixed fare, flight tracked</p>
             </div>
           </div>
 
-          <div className="hero-service-row">
-            <div className="hero-service-icon">▣</div>
+          <div className="panel-row">
+            <div className="icon">💼</div>
             <div>
               <h3>Corporate Travel</h3>
               <p>Executive ground transport</p>
-              <p>Discreet &amp; reliable</p>
+              <p>Discreet & reliable</p>
             </div>
           </div>
 
-          <div className="hero-service-row">
-            <div className="hero-service-icon">▰</div>
+          <div className="panel-row">
+            <div className="icon">🚘</div>
             <div>
               <h3>Private Hire</h3>
               <p>Mornington, Yarra Valley</p>
-              <p>&amp; beyond — BMW i5</p>
+              <p>& beyond — BMW i5</p>
             </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* 🔥 ALT 3’LÜ STRIP */}
+      <div className="hero-bottom">
+        <div className="hb-item">
+          <div className="hb-icon">🕒</div>
+          <div>
+            <h4>On time, every time</h4>
+            <p>Punctual, professional and always reliable.</p>
+          </div>
+        </div>
+
+        <div className="hb-item">
+          <div className="hb-icon">👤</div>
+          <div>
+            <h4>Discreet & professional</h4>
+            <p>Your privacy is respected. Always.</p>
+          </div>
+        </div>
+
+        <div className="hb-item">
+          <div className="hb-icon">⭐</div>
+          <div>
+            <h4>Premium experience</h4>
+            <p>Luxury electric comfort from start to finish.</p>
           </div>
         </div>
       </div>
