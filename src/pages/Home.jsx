@@ -5,104 +5,107 @@ const FLEET_IMG    = “/images/fleet.jpg”;
 const WA_NUMBER    = “610421238894”;
 const VERNO_EMAIL  = “book@vernochauffeur.com.au”;
 
-/* ─── PRICING & DATA (unchanged) ─────────────────────────────────────────── */
 const PRICING = { MIN_FARE:75,BASE_FEE:15,PER_MIN:0.6,RATE_0_25:3.2,RATE_25_50:2.8,RATE_50UP:2.3,LATE_SURCHARGE:0.15,LATE_START:0,LATE_END:5,BUFFER:5,ROUND_TO:5 };
 const AIRPORT_FIXED = {“cbd”:105,“melbourne cbd”:105,“city”:105,“docklands”:105,“southbank”:110,“south melbourne”:110,“carlton”:108,“fitzroy”:110,“collingwood”:110,“richmond”:115,“south yarra”:120,“prahran”:120,“chapel street”:120,“hawthorn”:120,“toorak”:125,“malvern”:125,“camberwell”:130,“st kilda”:130,“elwood”:132,“brighton”:145,“bayside”:145,“hampton”:148,“sandringham”:150,“mentone”:155,“cheltenham”:155,“moorabbin”:155,“oakleigh”:158,“chadstone”:158,“glen waverley”:165,“knox”:168,“dandenong”:175,“frankston”:245,“mornington”:275,“mount eliza”:260,“mount martha”:285,“dromana”:300,“rosebud”:315,“rye”:330,“sorrento”:350,“portsea”:375,“peninsula”:310,“essendon”:115,“brunswick”:108,“coburg”:110,“northcote”:110,“footscray”:108,“williamstown”:115,“werribee”:165,“hoppers crossing”:165,“geelong”:175,“torquay”:185,“barwon heads”:190,“surf coast”:195,“lilydale”:175,“healesville”:195,“yarra valley”:195,“yarra glen”:195,“warburton”:215};
 const ROUTE_TABLE = [{keys:[[“airport”,“cbd”],[“airport”,“melbourne city”],[“tullamarine”,“cbd”]],km:23,min:32},{keys:[[“airport”,“southbank”],[“airport”,“crown”],[“airport”,“docklands”]],km:25,min:34},{keys:[[“airport”,“st kilda”],[“airport”,“south yarra”],[“airport”,“prahran”]],km:29,min:40},{keys:[[“airport”,“brighton”],[“airport”,“bayside”],[“airport”,“sandringham”]],km:35,min:46},{keys:[[“airport”,“geelong”],[“airport”,“torquay”]],km:90,min:65},{keys:[[“airport”,“mornington”],[“airport”,“peninsula”],[“tullamarine”,“mornington”]],km:90,min:72},{keys:[[“airport”,“avalon”],[“tullamarine”,“avalon”]],km:50,min:42},{keys:[[“avalon”,“cbd”],[“avalon”,“city”]],km:56,min:47}];
 const NEARBY_GROUPS = [[“mornington”,“mount eliza”,“mount martha”],[“brighton”,“hampton”,“sandringham”],[“south yarra”,“prahran”,“windsor”],[“richmond”,“hawthorn”],[“st kilda”,“elwood”,“balaclava”],[“cbd”,“southbank”,“docklands”,“carlton”],[“toorak”,“malvern”]];
 const ZONE_GROUPS = [[“mornington”,“mount eliza”,“mount martha”,“frankston”],[“dromana”,“rosebud”,“rye”,“sorrento”,“portsea”],[“brighton”,“hampton”,“sandringham”,“cheltenham”,“mentone”,“st kilda”,“elwood”,“balaclava”],[“south yarra”,“prahran”,“richmond”,“windsor”,“toorak”,“hawthorn”,“malvern”,“camberwell”],[“cbd”,“southbank”,“docklands”,“carlton”,“fitzroy”,“collingwood”]];
 
-function normalizeAddress(text){return text.toLowerCase().replace(/\bvic\b|\bnsw\b|\bqld\b|\bsa\b|\bwa\b|\btas\b|\bact\b|\bnt\b/g,” “).replace(/\b3\d{3}\b/g,” “).replace(/[^a-z0-9 ]/g,” “).replace(/\s+/g,” “).trim();}
-function isAirport(text){const t=normalizeAddress(text);return t.includes(“airport”)||t.includes(“tullamarine”)||t.includes(“terminal”)||t.includes(“avalon”)||t.includes(“avv”)||t.includes(” mel “);}
+function normalizeAddress(t){return t.toLowerCase().replace(/\bvic\b|\bnsw\b|\bqld\b|\bsa\b|\bwa\b|\btas\b|\bact\b|\bnt\b/g,” “).replace(/\b3\d{3}\b/g,” “).replace(/[^a-z0-9 ]/g,” “).replace(/\s+/g,” “).trim();}
+function isAirport(t){const n=normalizeAddress(t);return n.includes(“airport”)||n.includes(“tullamarine”)||n.includes(“terminal”)||n.includes(“avalon”)||n.includes(“avv”)||n.includes(” mel “);}
 function isLateNight(){const h=new Date().getHours();return h>=PRICING.LATE_START&&h<PRICING.LATE_END;}
 function distanceCost(km){if(km<=25)return km*PRICING.RATE_0_25;if(km<=50)return 25*PRICING.RATE_0_25+(km-25)*PRICING.RATE_25_50;return 25*PRICING.RATE_0_25+25*PRICING.RATE_25_50+(km-50)*PRICING.RATE_50UP;}
 function roundFare(n){return Math.round(n/PRICING.ROUND_TO)*PRICING.ROUND_TO;}
 function applyLateAndRound(fare){return roundFare(isLateNight()?Math.round(fare*(1+PRICING.LATE_SURCHARGE)):fare);}
-function suburbToken(n){const words=n.split(” “);const two=words.length>=2?words[0]+” “+words[1]:””;return Object.keys(AIRPORT_FIXED).includes(two)?two:(words[0]||n);}
-function getAnchor(text){const n=normalizeAddress(text);const sorted=Object.entries(AIRPORT_FIXED).sort((a,b)=>b[0].length-a[0].length);for(const[key,val]of sorted){if(new RegExp(”(?:^| )”+key.replace(/ /g,” “)+”(?= |$)”).test(n))return val;}return null;}
-function inGroup(n,group){return group.some((k)=>new RegExp(”(?:^| )”+k.replace(/ /g,” “)+”(?= |$)”).test(n));}
-function isSameSuburb(a,b){if(a===b)return true;const ta=suburbToken(a);const tb=suburbToken(b);return ta.length>2&&ta===tb;}
-function airportFixedFare(from,to){if(!isAirport(from+” “+to))return null;const combined=normalizeAddress(from+” “+to);const sorted=Object.entries(AIRPORT_FIXED).sort((a,b)=>b[0].length-a[0].length);for(const[zone,price]of sorted){if(new RegExp(”(?:^| )”+zone.replace(/ /g,” “)+”(?= |$)”).test(combined))return price;}return null;}
-function lookupRoute(from,to){const combined=(from+” “+to).toLowerCase();for(const route of ROUTE_TABLE){for(const pair of route.keys){if(combined.includes(pair[0])&&combined.includes(pair[1]))return{km:route.km,min:route.min};}}return null;}
-function anchorSuburbFare(from,to){const af=getAnchor(from);const at=getAnchor(to);const anchors=[af,at].filter((a)=>a!==null);if(anchors.length===0)return applyLateAndRound(PRICING.MIN_FARE+PRICING.BUFFER+15);const nf=normalizeAddress(from);const nt=normalizeAddress(to);const cap=Math.max(…anchors);if(isSameSuburb(nf,nt))return PRICING.MIN_FARE;let base;if(NEARBY_GROUPS.some((g)=>inGroup(nf,g)&&inGroup(nt,g))){base=anchors.reduce((s,a)=>s+a,0)/anchors.length*0.40;}else if(ZONE_GROUPS.some((g)=>inGroup(nf,g)&&inGroup(nt,g))){base=Math.min(…anchors)*0.50;}else{base=Math.max(…anchors)*0.65;}return applyLateAndRound(Math.min(cap,Math.max(PRICING.MIN_FARE,base))+PRICING.BUFFER);}
-function calculateFare(from,to){const airportRoute=isAirport(from+” “+to);const fixed=airportFixedFare(from,to);if(fixed!==null)return applyLateAndRound(fixed+PRICING.BUFFER);if(airportRoute){const route=lookupRoute(from,to);if(route)return applyLateAndRound(Math.max(PRICING.BASE_FEE+distanceCost(route.km)+route.min*PRICING.PER_MIN,PRICING.MIN_FARE)+PRICING.BUFFER);return applyLateAndRound(120+PRICING.BUFFER);}return anchorSuburbFare(from,to);}
+function suburbToken(n){const w=n.split(” “);const two=w.length>=2?w[0]+” “+w[1]:””;return Object.keys(AIRPORT_FIXED).includes(two)?two:(w[0]||n);}
+function getAnchor(text){const n=normalizeAddress(text);const s=Object.entries(AIRPORT_FIXED).sort((a,b)=>b[0].length-a[0].length);for(const[k,v]of s){if(new RegExp(”(?:^| )”+k.replace(/ /g,” “)+”(?= |$)”).test(n))return v;}return null;}
+function inGroup(n,g){return g.some(k=>new RegExp(”(?:^| )”+k.replace(/ /g,” “)+”(?= |$)”).test(n));}
+function isSameSuburb(a,b){if(a===b)return true;const ta=suburbToken(a),tb=suburbToken(b);return ta.length>2&&ta===tb;}
+function airportFixedFare(from,to){if(!isAirport(from+” “+to))return null;const c=normalizeAddress(from+” “+to);const s=Object.entries(AIRPORT_FIXED).sort((a,b)=>b[0].length-a[0].length);for(const[z,p]of s){if(new RegExp(”(?:^| )”+z.replace(/ /g,” “)+”(?= |$)”).test(c))return p;}return null;}
+function lookupRoute(from,to){const c=(from+” “+to).toLowerCase();for(const r of ROUTE_TABLE){for(const p of r.keys){if(c.includes(p[0])&&c.includes(p[1]))return{km:r.km,min:r.min};}}return null;}
+function anchorSuburbFare(from,to){const af=getAnchor(from),at=getAnchor(to);const anchors=[af,at].filter(a=>a!==null);if(!anchors.length)return applyLateAndRound(PRICING.MIN_FARE+PRICING.BUFFER+15);const nf=normalizeAddress(from),nt=normalizeAddress(to),cap=Math.max(…anchors);if(isSameSuburb(nf,nt))return PRICING.MIN_FARE;let base;if(NEARBY_GROUPS.some(g=>inGroup(nf,g)&&inGroup(nt,g))){base=anchors.reduce((s,a)=>s+a,0)/anchors.length*0.40;}else if(ZONE_GROUPS.some(g=>inGroup(nf,g)&&inGroup(nt,g))){base=Math.min(…anchors)*0.50;}else{base=Math.max(…anchors)*0.65;}return applyLateAndRound(Math.min(cap,Math.max(PRICING.MIN_FARE,base))+PRICING.BUFFER);}
+function calculateFare(from,to){const ar=isAirport(from+” “+to);const fx=airportFixedFare(from,to);if(fx!==null)return applyLateAndRound(fx+PRICING.BUFFER);if(ar){const r=lookupRoute(from,to);if(r)return applyLateAndRound(Math.max(PRICING.BASE_FEE+distanceCost(r.km)+r.min*PRICING.PER_MIN,PRICING.MIN_FARE)+PRICING.BUFFER);return applyLateAndRound(120+PRICING.BUFFER);}return anchorSuburbFare(from,to);}
 function estimateFare(from,to){if(from.trim().length<4||to.trim().length<4)return null;const fixed=airportFixedFare(from,to)!==null||lookupRoute(from,to)!==null;return{fare:calculateFare(from,to),isLate:isLateNight(),hasAirport:isAirport(from+” “+to),isFixed:fixed,isFallback:!fixed};}
 
-const DEMO_SUGGESTIONS = [“Melbourne Airport (Tullamarine)”,“Avalon Airport”,“Melbourne CBD”,“Southbank”,“Docklands”,“Crown Melbourne”,“St Kilda”,“South Yarra”,“Prahran”,“Toorak”,“Richmond”,“Hawthorn”,“Brighton”,“Sandringham”,“Mornington”,“Mount Eliza”,“Frankston”,“Geelong CBD”,“Yarra Valley”,“Sorrento”,“Portsea”];
+const DEMO_SUGGESTIONS=[“Melbourne Airport (Tullamarine)”,“Avalon Airport”,“Melbourne CBD”,“Southbank”,“Docklands”,“Crown Melbourne”,“St Kilda”,“South Yarra”,“Prahran”,“Toorak”,“Richmond”,“Hawthorn”,“Brighton”,“Sandringham”,“Mornington”,“Mount Eliza”,“Frankston”,“Geelong CBD”,“Yarra Valley”,“Sorrento”,“Portsea”];
+function AddressField({label,placeholder,value,onChange,id}){const wrapRef=useRef(null);const[open,setOpen]=useState(false);const s=value.length>1?DEMO_SUGGESTIONS.filter(x=>x.toLowerCase().includes(value.toLowerCase())).slice(0,6):[];useEffect(()=>{const fn=e=>{if(wrapRef.current&&!wrapRef.current.contains(e.target))setOpen(false);};document.addEventListener(“mousedown”,fn);return()=>document.removeEventListener(“mousedown”,fn);},[]);return<div className="fg ac-wrap" ref={wrapRef}><label className="fl" htmlFor={id}>{label}</label><input id={id} className=“fi” placeholder={placeholder} value={value} onChange={e=>onChange(e.target.value)} onFocus={()=>setOpen(true)} autoComplete=“off”/>{open&&s.length>0&&<div className="ac-list">{s.map(x=><button key={x} className=“ac-item” onMouseDown={e=>{e.preventDefault();onChange(x);setOpen(false);}}><span className="ac-item-main">{x}</span></button>)}</div>}</div>;}
+function buildWhatsAppLink({from,to,date,time,pax,bags,fare}){const msg=[“Hello, I’d like to book a transfer:”,””,`Pickup: ${from||"--"}`,`Drop-off: ${to||"--"}`,…(date?[`Date: ${date}`]:[]),…(time?[`Time: ${time}`]:[]),…(pax?[`Passengers: ${pax}`]:[]),…(bags?[`Luggage: ${bags}`]:[]),…(fare?[`Estimated fare: $${fare}`]:[]),””,“Please confirm availability.”].join(”\n”);return`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;}
 
-function AddressField({label,placeholder,value,onChange,id,inputRef}){const wrapRef=useRef(null);const[open,setOpen]=useState(false);const suggestions=value.length>1?DEMO_SUGGESTIONS.filter((s)=>s.toLowerCase().includes(value.toLowerCase())).slice(0,6):[];useEffect(()=>{const fn=(e)=>{if(wrapRef.current&&!wrapRef.current.contains(e.target))setOpen(false);};document.addEventListener(“mousedown”,fn);return()=>document.removeEventListener(“mousedown”,fn);},[]);return <div className="fg ac-wrap" ref={wrapRef}><label className="fl" htmlFor={id}>{label}</label><input ref={inputRef} id={id} className=“fi” placeholder={placeholder} value={value} onChange={(e)=>onChange(e.target.value)} onFocus={()=>setOpen(true)} autoComplete=“off”/>{open&&suggestions.length>0&&<div className="ac-list">{suggestions.map((s)=><button key={s} className=“ac-item” onMouseDown={(e)=>{e.preventDefault();onChange(s);setOpen(false);}}><span className="ac-item-main">{s}</span></button>)}</div>}</div>;}
+/* ── SVG ICONS ─────────────────────────────────────────────────────────────── */
+function WAIcon({s=20}){return<svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>;}
+function MsgIcon({s=14}){return<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;}
+/* Trust strip ikonları — outline daire içinde */
+function IcoTag(){return<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1"/></svg>;}
+function IcoShield(){return<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;}
+function IcoChat(){return<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;}
+function IcoDiamond(){return<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 22 9 18 21 6 21 2 9 12 2"/></svg>;}
+/* Servis panel ikonları */
+function IcoPlane(){return<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>;}
+function IcoBag(){return<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>;}
+function IcoCar(){return<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 17H3v-6l2.5-6h11L19 11v6h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>;}
+/* Trust strip büyük ikonlar */
+function IcoClock(){return<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;}
+function IcoPerson(){return<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;}
+function IcoStar(){return<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;}
 
-function buildWhatsAppLink({from,to,date,time,pax,bags,fare}){const msg=[“Hello, I’d like to book a transfer:”,””,`Pickup: ${from||"--"}`,`Drop-off: ${to||"--"}`,…(date?[`Date: ${date}`]:[]),…(time?[`Time: ${time}`]:[]),…(pax?[`Passengers: ${pax}`]:[]),…(bags?[`Luggage: ${bags}`]:[]),…(fare?[`Estimated fare: $${fare}`]:[]),””,“Please confirm availability.”].join(”\n”);return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;}
+function VernoMark({dark=false,h=44}){return<svg width={h*4.6} height={h} viewBox=“0 0 230 44” fill=“none” style={{display:“block”}}><rect x="0" y="19" width="3" height="3" rx="1.5" fill="#9E8A6A"/><text x=“10” y=“32” fontFamily=”‘Playfair Display’,Georgia,serif” fontSize=“22” fontWeight=“600” letterSpacing=“5” fill={dark?”#111”:”#fff”}>VÉRNO</text><text x=“10” y=“42” fontFamily=“Inter,Arial” fontSize=“7” fontWeight=“400” letterSpacing=“4” fill={dark?“rgba(17,17,17,.4)”:“rgba(255,255,255,.38)”}>MELBOURNE</text></svg>;}
 
-/* ─── ICONS ──────────────────────────────────────────────────────────────── */
-function WAIcon({s=20}){return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>;}
-function MsgIcon({s=14}){return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;}
+/* ── NAV ───────────────────────────────────────────────────────────────────── */
+function Nav(){const[solid,setSolid]=useState(false);useEffect(()=>{const fn=()=>setSolid(window.scrollY>60);window.addEventListener(“scroll”,fn);return()=>window.removeEventListener(“scroll”,fn);},[]);return<nav className={`nav${solid?" solid":""}`}><a href="#" className="nav-logo-wrap"><VernoMark dark={solid} h={34}/></a><ul className="nav-links"><li><a href="#services">Services</a></li><li><a href="#fleet">Fleet</a></li><li><a href="#areas">Coverage</a></li><li><a href="#about">About</a></li></ul><div className="nav-right"><a href="#book" className="nav-btn">Reserve a Transfer</a></div></nav>;}
 
-function IconTag(){return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>;}
-function IconShield(){return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;}
-function IconMsgS(){return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;}
-function IconDiamond(){return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 22 9 18 21 6 21 2 9 12 2"/></svg>;}
-function IconPlane(){return <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>;}
-function IconBriefcase(){return <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>;}
-function IconCar(){return <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M5 17H3v-6l2.5-6h11L19 11v6h-2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>;}
-function IconClock(){return <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;}
-function IconPerson(){return <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;}
-function IconStar(){return <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;}
-
-function VernoMark({dark=false,h=44}){return <svg width={h*4.6} height={h} viewBox=“0 0 230 44” fill=“none” style={{display:“block”}}><rect x="0" y="19" width="3" height="3" rx="1.5" fill="#9E8A6A"/><text x=“10” y=“32” fontFamily=”‘Playfair Display’,Georgia,serif” fontSize=“22” fontWeight=“600” letterSpacing=“5” fill={dark?”#111”:”#fff”}>VÉRNO</text><text x=“10” y=“42” fontFamily=“Inter,Arial” fontSize=“7” fontWeight=“400” letterSpacing=“4” fill={dark?“rgba(17,17,17,.4)”:“rgba(255,255,255,.38)”}>MELBOURNE</text></svg>;}
-
-/* ─── NAV ─────────────────────────────────────────────────────────────────── */
-function Nav(){const[solid,setSolid]=useState(false);useEffect(()=>{const fn=()=>setSolid(window.scrollY>60);window.addEventListener(“scroll”,fn);return()=>window.removeEventListener(“scroll”,fn);},[]);return <nav className={`nav${solid?" solid":""}`}><a href="#" className="nav-logo-wrap"><VernoMark dark={solid} h={34}/></a><ul className="nav-links"><li><a href="#services">Services</a></li><li><a href="#fleet">Fleet</a></li><li><a href="#areas">Coverage</a></li><li><a href="#about">About</a></li></ul><div className="nav-right"><a href="#book" className="nav-btn">Reserve a Transfer</a></div></nav>;}
-
-/* ─── HERO ────────────────────────────────────────────────────────────────── */
+/* ── HERO ───────────────────────────────────────────────────────────────────── */
 function Hero(){
-const wa = buildWhatsAppLink({from:””,to:””,fare:null});
-return (
+const wa=buildWhatsAppLink({from:””,to:””,fare:null});
+return(
 <section className="hero">
 <div className="hero-bg"/>
 <div className="hero-inner">
 
 ```
-    {/* SOL */}
+    {/* LEFT */}
     <div className="hero-left">
       <p className="hero-eyebrow">Private Chauffeur — Melbourne</p>
+
       <h1 className="hero-h1">
         Arrive in<br/>
         <em>complete confidence.</em>
       </h1>
+
       <div className="hero-rule"/>
+
       <p className="hero-sub">
-        Private airport, corporate and point-to-point<br/>
-        transfers across Melbourne.<br/>
+        Private airport, corporate and point-to-point transfers across Melbourne.<br/>
         Fixed fares. Direct booking. Premium comfort.
       </p>
+
       <div className="hero-actions">
-        <a href={wa} target="_blank" rel="noopener noreferrer" className="hero-btn-wa">
+        <a href={wa} target="_blank" rel="noopener noreferrer" className="hero-btn-gold">
           <WAIcon s={17}/> Reserve via WhatsApp
         </a>
         <a href="#book" className="hero-btn-outline">Get Instant Fare</a>
       </div>
+
       <div className="hero-trust">
-        {[{i:<IconTag/>,l:"Fixed Pricing"},{i:<IconShield/>,l:"No Surge"},{i:<IconMsgS/>,l:"Direct Contact"},{i:<IconDiamond/>,l:"Premium BMW i5"}].map(t=>(
+        {[{i:<IcoTag/>,l:"Fixed Pricing"},{i:<IcoShield/>,l:"No Surge"},{i:<IcoChat/>,l:"Direct Contact"},{i:<IcoDiamond/>,l:"Premium BMW i5"}].map(t=>(
           <div key={t.l} className="hero-trust-item">
-            <span className="hero-trust-icon">{t.i}</span>
+            <span className="hero-trust-ico">{t.i}</span>
             <span>{t.l}</span>
           </div>
         ))}
       </div>
     </div>
 
-    {/* SAĞ — glassmorphism panel */}
+    {/* RIGHT — servis paneli */}
     <div className="hero-right">
       <div className="hero-panel">
         {[
-          {icon:<IconPlane/>,   title:"Airport Transfers",  l1:"Tullamarine & Avalon",        l2:"Fixed fare, flight tracked"},
-          {icon:<IconBriefcase/>,title:"Corporate Travel",  l1:"Executive ground transport",   l2:"Discreet & reliable"},
-          {icon:<IconCar/>,     title:"Private Hire",       l1:"Mornington, Yarra Valley",     l2:"& beyond — BMW i5"},
+          {ico:<IcoPlane/>, title:"Airport Transfers",  l1:"Tullamarine & Avalon",       l2:"Fixed fare, flight tracked"},
+          {ico:<IcoBag/>,   title:"Corporate Travel",   l1:"Executive ground transport",  l2:"Discreet & reliable"},
+          {ico:<IcoCar/>,   title:"Private Hire",       l1:"Mornington, Yarra Valley",    l2:"& beyond — BMW i5"},
         ].map(s=>(
           <div key={s.title} className="hero-card">
-            <div className="hero-card-icon">{s.icon}</div>
-            <div className="hero-card-text">
+            <div className="hero-card-ico">{s.ico}</div>
+            <div className="hero-card-txt">
               <strong>{s.title}</strong>
               <p>{s.l1}<br/>{s.l2}</p>
             </div>
@@ -118,18 +121,18 @@ return (
 );
 }
 
-/* ─── TRUST STRIP ─────────────────────────────────────────────────────────── */
+/* ── TRUST STRIP ────────────────────────────────────────────────────────────── */
 function TrustStrip(){
-return (
+return(
 <div className="trust-strip">
 <div className="trust-strip-inner">
 {[
-{icon:<IconClock/>,  h:“On Time, Every Time”,      d:“Punctual, professional and always reliable.”},
-{icon:<IconPerson/>, h:“Discreet & Professional”,  d:“Your privacy is respected. Always.”},
-{icon:<IconStar/>,   h:“Premium Experience”,       d:“Luxury electric comfort from start to finish.”},
+{ico:<IcoClock/>,  h:“On Time, Every Time”,     d:“Punctual, professional and always reliable.”},
+{ico:<IcoPerson/>, h:“Discreet & Professional”, d:“Your privacy is respected. Always.”},
+{ico:<IcoStar/>,   h:“Premium Experience”,      d:“Luxury electric comfort from start to finish.”},
 ].map(t=>(
 <div key={t.h} className="trust-item">
-<span className="trust-icon">{t.icon}</span>
+<span className="trust-ico">{t.ico}</span>
 <div>
 <p className="trust-item-h">{t.h}</p>
 <p className="trust-item-d">{t.d}</p>
@@ -141,146 +144,198 @@ return (
 );
 }
 
-/* ─── FARE + BOOKING ──────────────────────────────────────────────────────── */
-function FareEstimate({from,to}){const result=estimateFare(from,to);if(!result)return null;return <div className="fare-estimate"><div className="fare-label">{result.isFixed?“Fixed Price”:“Estimated Fare”}{result.isLate?” - Late-night rate”:””}</div><div className="fare-price">${result.fare}</div><div className="fare-guarantee">{result.isFallback?“Estimate - final price confirmed on booking”:“Fixed price confirmed instantly via WhatsApp”}</div><div className="fare-trust"><span>No hidden costs</span><span>No surge pricing</span><span>No platform fees</span></div></div>;}
-function InlineBooking(){const[from,setFrom]=useState(””);const[to,setTo]=useState(””);const[date,setDate]=useState(””);const[time,setTime]=useState(””);const[pax,setPax]=useState(“1”);const[bags,setBags]=useState(“1”);const fareResult=estimateFare(from,to);const fare=fareResult?fareResult.fare:null;const handleWA=()=>window.open(buildWhatsAppLink({from,to,date,time,pax,bags,fare}),”_blank”,“noopener”);return <div className="booking-panel" id="book"><div className="booking-panel-inner"><div><h2 className="booking-panel-headline">Your fare,<br/><em>instantly.</em></h2><p className="booking-panel-sub">Enter your journey details to see your fare. Then reserve directly via WhatsApp.</p></div><div className="booking-panel-form"><button className=“quick-chip” onClick={()=>setTo(“Melbourne Airport (Tullamarine)”)}><span className="quick-chip-dot"/>Airport transfer? Set Melbourne Airport as destination</button><AddressField id="from" label="Pickup" placeholder="Enter pickup address, suburb or hotel" value={from} onChange={setFrom}/><AddressField id="to" label="Destination" placeholder="Enter destination address or airport" value={to} onChange={setTo}/><div className="f2"><div className="fg"><label className="fl">Date</label><input className=“fi” type=“date” value={date} onChange={(e)=>setDate(e.target.value)}/></div><div className="fg"><label className="fl">Time</label><input className=“fi” type=“time” value={time} onChange={(e)=>setTime(e.target.value)}/></div></div><div className="f2"><div className="fg"><label className="fl">Passengers</label><select className=“fi” value={pax} onChange={(e)=>setPax(e.target.value)}>{[1,2,3,4].map((n)=><option key={n}>{n}</option>)}</select></div><div className="fg"><label className="fl">Luggage</label><select className=“fi” value={bags} onChange={(e)=>setBags(e.target.value)}>{[0,1,2,3,4].map((n)=><option key={n}>{n}</option>)}</select></div></div><FareEstimate from={from} to={to}/><button className="btn-whatsapp" onClick={handleWA}><WAIcon s={18}/> Confirm Booking via WhatsApp</button><p className="btn-wa-note">We usually confirm within 2-5 minutes.</p><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className=“btn-email-secondary”>Prefer email? {VERNO_EMAIL}</a></div></div></div>;}
+/* ── FARE + BOOKING (logic unchanged) ──────────────────────────────────────── */
+function FareEstimate({from,to}){const r=estimateFare(from,to);if(!r)return null;return<div className="fare-estimate"><div className="fare-label">{r.isFixed?“Fixed Price”:“Estimated Fare”}{r.isLate?” - Late-night rate”:””}</div><div className="fare-price">${r.fare}</div><div className="fare-guarantee">{r.isFallback?“Estimate - final price confirmed on booking”:“Fixed price confirmed instantly via WhatsApp”}</div><div className="fare-trust"><span>No hidden costs</span><span>No surge pricing</span><span>No platform fees</span></div></div>;}
+function InlineBooking(){const[from,setFrom]=useState(””);const[to,setTo]=useState(””);const[date,setDate]=useState(””);const[time,setTime]=useState(””);const[pax,setPax]=useState(“1”);const[bags,setBags]=useState(“1”);const fr=estimateFare(from,to);const fare=fr?fr.fare:null;const hw=()=>window.open(buildWhatsAppLink({from,to,date,time,pax,bags,fare}),”_blank”,“noopener”);return<div className="booking-panel" id="book"><div className="booking-panel-inner"><div><h2 className="booking-panel-headline">Your fare,<br/><em>instantly.</em></h2><p className="booking-panel-sub">Enter your journey details to see your fare. Then reserve directly via WhatsApp.</p></div><div className="booking-panel-form"><button className=“quick-chip” onClick={()=>setTo(“Melbourne Airport (Tullamarine)”)}><span className="quick-chip-dot"/>Airport transfer? Set Melbourne Airport as destination</button><AddressField id="from" label="Pickup" placeholder="Enter pickup address, suburb or hotel" value={from} onChange={setFrom}/><AddressField id="to" label="Destination" placeholder="Enter destination address or airport" value={to} onChange={setTo}/><div className="f2"><div className="fg"><label className="fl">Date</label><input className=“fi” type=“date” value={date} onChange={e=>setDate(e.target.value)}/></div><div className="fg"><label className="fl">Time</label><input className=“fi” type=“time” value={time} onChange={e=>setTime(e.target.value)}/></div></div><div className="f2"><div className="fg"><label className="fl">Passengers</label><select className=“fi” value={pax} onChange={e=>setPax(e.target.value)}>{[1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></div><div className="fg"><label className="fl">Luggage</label><select className=“fi” value={bags} onChange={e=>setBags(e.target.value)}>{[0,1,2,3,4].map(n=><option key={n}>{n}</option>)}</select></div></div><FareEstimate from={from} to={to}/><button className="btn-whatsapp" onClick={hw}><WAIcon s={18}/> Confirm Booking via WhatsApp</button><p className="btn-wa-note">We usually confirm within 2-5 minutes.</p><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className=“btn-email-secondary”>Prefer email? {VERNO_EMAIL}</a></div></div></div>;}
 
-/* ─── REST (unchanged) ────────────────────────────────────────────────────── */
-const SERVICES_DATA=[{label:“Airport Transfers”,h:“Airport Transfers”,d:“Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position.”},{label:“Corporate”,h:“Corporate Travel”,d:“Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed.”},{label:“Private Hire”,h:“Private Hire”,d:“A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond.”},{label:“Events”,h:“Events & Occasions”,d:“Premium transport for weddings, corporate functions, and private occasions.”}];
-function Services(){const[active,setActive]=useState(0);const s=SERVICES_DATA[active];return <section className="sec" id="services"><div className="wrap"><div className="s-label">Services</div><h2 className="s-h">Every journey,<br/><em>handled.</em></h2><div className="svc-layout"><nav className="svc-nav">{SERVICES_DATA.map((x,i)=><button key={x.label} className={`svc-nav-item${active===i?" active":""}`} onClick={()=>setActive(i)}>{x.label}</button>)}</nav><div className="svc-content"><h3 className="svc-content-h">{s.h}</h3><p className="svc-desc">{s.d}</p><ul className="svc-feat-list"><li>Fixed fare confirmed at booking</li><li>Direct WhatsApp confirmation</li><li>Premium electric BMW i5</li></ul><a href="#book" className="btn-o">Get Fare Estimate</a></div></div></div></section>;}
-function Why(){return <section className="sec dark" id="about"><div className="wrap why-layout"><div><div className="s-label inv">Why VÉRNO</div><h2 className="s-h inv">A boutique<br/><em>standard.</em></h2><p className="s-body">Small fleet. Consistent quality. Every detail considered.</p></div><div className="why-grid">{[“Fully electric”,“Discreet by design”,“Small, intentional fleet”,“Direct booking”].map((t,i)=><div key={t} className="why-cell"><span className="why-n">0{i+1}</span><div className="why-t">{t}</div><p className="why-d">Premium, private, and consistent chauffeur service across Melbourne.</p></div>)}</div></div></section>;}
-function Areas(){const areas=[“Melbourne CBD”,“St Kilda & South Yarra”,“Mornington Peninsula”,“Yarra Valley”,“Melbourne Airport”,“Avalon Airport”,“Geelong & Surf Coast”,“Greater Melbourne”];return <section className="sec" id="areas"><div className="wrap"><div className="s-label">Coverage</div><h2 className="s-h">Across Melbourne<br/><em>and beyond.</em></h2><div className="areas-list">{areas.map((name)=><div key={name} className=“area-item” onClick={()=>document.getElementById(“book”)?.scrollIntoView({behavior:“smooth”})}><div className="area-name">{name}</div><div className="area-time">Premium transfers</div><p className="area-desc">Private chauffeur service with fixed fare confirmation.</p></div>)}</div></div></section>;}
-function Fleet(){return <section className="sec fleet-section" id="fleet"><div className="wrap"><div className="s-label inv">The Fleet</div><div className="fleet-layout"><div className="fleet-img-wrap"><img src={FLEET_IMG} alt="VERNO BMW i5 fleet" className="fleet-img" loading="lazy"/></div><div className="fleet-text"><p className="fleet-text-eyebrow">All-Electric Fleet</p><h2 className="fleet-text-title">BMW i5<br/><em>eDrive40</em></h2><p className="fleet-text-sub">Zero emissions. Executive comfort. Built for Melbourne.</p><p className="fleet-text-body">VÉRNO operates premium electric vehicles for comfort, consistency, and a seamless journey.</p><div className="fleet-ev-badge">100% Electric - BMW i5</div></div></div></div></section>;}
-function Process(){return <section className="sec night2"><div className="wrap"><div className="s-label inv">How It Works</div><h2 className="s-h inv">Simple to arrange.<br/><em>Seamless to experience.</em></h2><div className="proc-track">{[“Arrange your transfer”,“Receive confirmation”,“Arrive in comfort”].map((n,i)=><div key={n} className="proc-step"><span className="proc-roman">{[“I”,“II”,“III”][i]}</span><div className="proc-name">{n}</div><p className="proc-desc">Submit details, receive confirmation, and travel in a premium BMW i5.</p></div>)}</div></div></section>;}
-function Moments(){return <section className="moments"><div className="moments-inner"><div className="moments-img-wrap"><img src={MOMENTS_MAIN} alt="VERNO BMW i5" className="moments-img" loading="lazy"/><span className="moments-geo">Melbourne - Private Transfers</span></div><div className="moments-text"><p className="moments-eyebrow">Moments</p><h2 className="moments-title">Refined.<br/>Quiet.<br/><em>Consistent.</em></h2><div className="moments-rule"/><p className="moments-desc">Every journey is designed to feel effortless - from the first message to final arrival.</p></div></div></section>;}
-function Testimonials(){return <section className="sec"><div className="wrap"><div className="s-label">Client Words</div><h2 className="s-h">What clients<br/><em>say.</em></h2><div className="testi-row">{[“Quiet, punctual, and professional.”,“Confirmed within the hour.”,“How you arrive matters.”].map((t,i)=><div key={i} className="testi"><span className="testi-mark">”</span><p className="testi-txt">{t}</p><p className="testi-by">- Melbourne client</p></div>)}</div></div></section>;}
-function Closer(){return <section className="closer" id="contact"><div className="closer-inner"><p className="s-label inv closer-label">Melbourne, Victoria</p><h2 className="closer-h">Ready when<br/><em>you are.</em></h2><p className="closer-sub">Reserve your transfer directly. Instant confirmation, fixed price.</p><div className="closer-btns"><a href="#book" className="btn-wa">Reserve via WhatsApp</a><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className=“btn-outline”>Send an Email</a></div></div></section>;}
-function Footer(){return <footer><div className="ft-grid"><div><VernoMark h={32}/><p className="ft-tagline">Private electric chauffeur for Melbourne.</p><a href={`mailto:${VERNO_EMAIL}`} className=“ft-msg-link”><MsgIcon s={12}/>{VERNO_EMAIL}</a></div><div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="#services">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div><div><p className="ft-col-h">Coverage</p><ul className="ft-links"><li><a href="#areas">Melbourne CBD</a></li><li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div><div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div></div><div className="ft-bottom"><p>© 2025 VÉRNO Private Chauffeur - Melbourne</p><p>Melbourne - Airport - Corporate</p></div></footer>;}
+/* ── REST OF PAGE (unchanged) ───────────────────────────────────────────────── */
+const SVC=[{label:“Airport Transfers”,h:“Airport Transfers”,d:“Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position.”},{label:“Corporate”,h:“Corporate Travel”,d:“Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed.”},{label:“Private Hire”,h:“Private Hire”,d:“A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond.”},{label:“Events”,h:“Events & Occasions”,d:“Premium transport for weddings, corporate functions, and private occasions.”}];
+function Services(){const[a,setA]=useState(0);const s=SVC[a];return<section className="sec" id="services"><div className="wrap"><div className="s-label">Services</div><h2 className="s-h">Every journey,<br/><em>handled.</em></h2><div className="svc-layout"><nav className="svc-nav">{SVC.map((x,i)=><button key={x.label} className={`svc-nav-item${a===i?" active":""}`} onClick={()=>setA(i)}>{x.label}</button>)}</nav><div className="svc-content"><h3 className="svc-content-h">{s.h}</h3><p className="svc-desc">{s.d}</p><ul className="svc-feat-list"><li>Fixed fare confirmed at booking</li><li>Direct WhatsApp confirmation</li><li>Premium electric BMW i5</li></ul><a href="#book" className="btn-o">Get Fare Estimate</a></div></div></div></section>;}
+function Why(){return<section className="sec dark" id="about"><div className="wrap why-layout"><div><div className="s-label inv">Why VÉRNO</div><h2 className="s-h inv">A boutique<br/><em>standard.</em></h2><p className="s-body">Small fleet. Consistent quality. Every detail considered.</p></div><div className="why-grid">{[“Fully electric”,“Discreet by design”,“Small, intentional fleet”,“Direct booking”].map((t,i)=><div key={t} className="why-cell"><span className="why-n">0{i+1}</span><div className="why-t">{t}</div><p className="why-d">Premium, private, and consistent chauffeur service across Melbourne.</p></div>)}</div></div></section>;}
+function Areas(){const areas=[“Melbourne CBD”,“St Kilda & South Yarra”,“Mornington Peninsula”,“Yarra Valley”,“Melbourne Airport”,“Avalon Airport”,“Geelong & Surf Coast”,“Greater Melbourne”];return<section className="sec" id="areas"><div className="wrap"><div className="s-label">Coverage</div><h2 className="s-h">Across Melbourne<br/><em>and beyond.</em></h2><div className="areas-list">{areas.map(name=><div key={name} className=“area-item” onClick={()=>document.getElementById(“book”)?.scrollIntoView({behavior:“smooth”})}><div className="area-name">{name}</div><div className="area-time">Premium transfers</div><p className="area-desc">Private chauffeur service with fixed fare confirmation.</p></div>)}</div></div></section>;}
+function Fleet(){return<section className="sec fleet-section" id="fleet"><div className="wrap"><div className="s-label inv">The Fleet</div><div className="fleet-layout"><div className="fleet-img-wrap"><img src={FLEET_IMG} alt="VERNO BMW i5" className="fleet-img" loading="lazy"/></div><div className="fleet-text"><p className="fleet-text-eyebrow">All-Electric Fleet</p><h2 className="fleet-text-title">BMW i5<br/><em>eDrive40</em></h2><p className="fleet-text-sub">Zero emissions. Executive comfort. Built for Melbourne.</p><p className="fleet-text-body">VÉRNO operates premium electric vehicles for comfort, consistency, and a seamless journey.</p><div className="fleet-ev-badge">100% Electric - BMW i5</div></div></div></div></section>;}
+function Process(){return<section className="sec night2"><div className="wrap"><div className="s-label inv">How It Works</div><h2 className="s-h inv">Simple to arrange.<br/><em>Seamless to experience.</em></h2><div className="proc-track">{[“Arrange your transfer”,“Receive confirmation”,“Arrive in comfort”].map((n,i)=><div key={n} className="proc-step"><span className="proc-roman">{[“I”,“II”,“III”][i]}</span><div className="proc-name">{n}</div><p className="proc-desc">Submit details, receive confirmation, and travel in a premium BMW i5.</p></div>)}</div></div></section>;}
+function Moments(){return<section className="moments"><div className="moments-inner"><div className="moments-img-wrap"><img src={MOMENTS_MAIN} alt="VERNO BMW i5" className="moments-img" loading="lazy"/><span className="moments-geo">Melbourne - Private Transfers</span></div><div className="moments-text"><p className="moments-eyebrow">Moments</p><h2 className="moments-title">Refined.<br/>Quiet.<br/><em>Consistent.</em></h2><div className="moments-rule"/><p className="moments-desc">Every journey is designed to feel effortless - from the first message to final arrival.</p></div></div></section>;}
+function Testimonials(){return<section className="sec"><div className="wrap"><div className="s-label">Client Words</div><h2 className="s-h">What clients<br/><em>say.</em></h2><div className="testi-row">{[“Quiet, punctual, and professional.”,“Confirmed within the hour.”,“How you arrive matters.”].map((t,i)=><div key={i} className="testi"><span className="testi-mark">”</span><p className="testi-txt">{t}</p><p className="testi-by">- Melbourne client</p></div>)}</div></div></section>;}
+function Closer(){return<section className="closer" id="contact"><div className="closer-inner"><p className="s-label inv">Melbourne, Victoria</p><h2 className="closer-h">Ready when<br/><em>you are.</em></h2><p className="closer-sub">Reserve your transfer directly. Instant confirmation, fixed price.</p><div className="closer-btns"><a href="#book" className="btn-wa">Reserve via WhatsApp</a><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className=“btn-outline”>Send an Email</a></div></div></section>;}
+function Footer(){return<footer><div className="ft-grid"><div><VernoMark h={32}/><p className="ft-tagline">Private electric chauffeur for Melbourne.</p><a href={`mailto:${VERNO_EMAIL}`} className=“ft-msg-link”><MsgIcon s={12}/>{VERNO_EMAIL}</a></div><div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="#services">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div><div><p className="ft-col-h">Coverage</p><ul className="ft-links"><li><a href="#areas">Melbourne CBD</a></li><li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div><div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div></div><div className="ft-bottom"><p>© 2025 VÉRNO Private Chauffeur - Melbourne</p><p>Melbourne - Airport - Corporate</p></div></footer>;}
 
-/* ═══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════════
 CSS
-═══════════════════════════════════════════════════════ */
-const CSS = `
+══════════════════════════════════════════════════════════════════════════════ */
+const CSS=`
 @import url(‘https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap’);
-
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 :root{
-–black:#111;–white:#fff;
-–gold:#9E8A6A;–gold2:#C4A96B;
-–grey1:#F5F5F5;–grey2:#EBEBEB;–grey3:#999;–grey4:#666;
+–gold:#9E8A6A;
+–gold2:#B89A5A;
+–gold3:#C4A96B;
 –wa:#128C7E;
 –serif:‘Playfair Display’,Georgia,serif;
-–sans:‘Inter’,Arial,sans-serif
+–sans:‘Inter’,Arial,sans-serif;
 }
 body{font-family:var(–sans);background:#fff;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{text-decoration:none;color:inherit}
 button,input,select{font-family:var(–sans)}
 
-/* NAV */
+/* ── NAV ── */
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;height:72px;padding:0 5vw;border-bottom:1px solid transparent}
 .nav.solid{background:rgba(255,255,255,.98);backdrop-filter:blur(16px);border-color:#eee}
 .nav-links{display:flex;gap:2rem;list-style:none}
 .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.65)}
 .nav.solid .nav-links a,.nav.solid .nav-btn{color:#555}
-.nav-btn{border:1px solid rgba(255,255,255,.3);padding:.55rem 1.4rem}
+.nav-btn{border:1px solid rgba(255,255,255,.3);padding:.55rem 1.4rem;border-radius:0}
 .nav.solid .nav-btn{border-color:#ccc}
 .nav-right{display:flex;align-items:center}
 
 /* ══ HERO ══ */
 .hero{
-position:relative;min-height:100vh;
-display:flex;align-items:center;
-padding:100px 5vw 80px;
+position:relative;
+min-height:100vh;
+display:flex;
+align-items:center;
+padding:110px 5vw 80px;
 overflow:hidden;
 }
+/* Kendi arka plan fotoğrafın */
 .hero-bg{
 position:absolute;inset:0;
 background:
-linear-gradient(95deg,rgba(7,5,3,.90) 0%,rgba(7,5,3,.72) 38%,rgba(7,5,3,.22) 68%,rgba(7,5,3,.08) 100%),
-linear-gradient(180deg,rgba(0,0,0,.12) 0%,rgba(0,0,0,.60) 100%),
+linear-gradient(100deg,
+rgba(5,4,2,.92) 0%,
+rgba(5,4,2,.75) 35%,
+rgba(5,4,2,.20) 65%,
+rgba(5,4,2,.05) 100%
+),
+linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.55) 100%),
 url(’/images/hero-bg.jpg’) center/cover no-repeat;
-filter:contrast(1.08) brightness(.93) saturate(1.12);
+filter:contrast(1.08) brightness(.9) saturate(1.15);
 }
 .hero-inner{
 position:relative;z-index:2;
 max-width:1240px;margin:0 auto;width:100%;
-display:grid;grid-template-columns:1.05fr .95fr;
-gap:4rem;align-items:center;
+display:grid;
+grid-template-columns:1fr 420px;
+gap:5rem;
+align-items:center;
 }
+
+/* LEFT */
 .hero-eyebrow{
-font-size:.68rem;font-weight:500;letter-spacing:.22em;
-text-transform:uppercase;color:var(–gold2);margin-bottom:2rem;
+font-size:.67rem;font-weight:500;
+letter-spacing:.22em;text-transform:uppercase;
+color:var(–gold3);margin-bottom:1.8rem;
 }
+/* Başlık — görseldeki büyük boyut */
 .hero-h1{
 font-family:var(–serif);
-font-size:clamp(2.8rem,5vw,5.4rem);
-font-weight:400;line-height:1.04;letter-spacing:-.025em;
-color:rgba(255,255,255,.93);margin-bottom:1.4rem;
+font-size:clamp(3.4rem,5.5vw,6rem);
+font-weight:400;
+line-height:1.02;
+letter-spacing:-.03em;
+color:rgba(255,255,255,.95);
+margin-bottom:1.6rem;
 }
-.hero-h1 em{font-style:italic;font-weight:400;color:rgba(255,255,255,.85);}
+.hero-h1 em{
+display:block;
+font-style:italic;
+font-weight:400;
+color:rgba(255,255,255,.88);
+}
 .hero-rule{width:44px;height:2px;background:var(–gold);margin-bottom:1.8rem;}
-.hero-sub{font-size:.9rem;line-height:1.75;color:rgba(255,255,255,.5);font-weight:300;margin-bottom:2.4rem;}
-.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2.8rem;}
-.hero-btn-wa{
+.hero-sub{
+font-size:.9rem;line-height:1.75;
+color:rgba(255,255,255,.48);
+font-weight:300;max-width:440px;margin-bottom:2.4rem;
+}
+
+/* CTA butonlar — tamamen kare köşe */
+.hero-actions{display:flex;gap:.9rem;flex-wrap:wrap;margin-bottom:2.6rem;}
+.hero-btn-gold{
 display:inline-flex;align-items:center;gap:.65rem;
 padding:.9rem 1.7rem;
-background:linear-gradient(135deg,#9E8A6A 0%,#C4A96B 100%);
-color:#fff;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+background:linear-gradient(135deg, var(–gold) 0%, var(–gold3) 100%);
+color:#fff;border-radius:0;
+font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+border:none;cursor:pointer;
 }
 .hero-btn-outline{
 display:inline-flex;align-items:center;gap:.65rem;
 padding:.9rem 1.7rem;
-border:1px solid rgba(158,138,106,.5);
-color:rgba(255,255,255,.72);
+border:1px solid rgba(255,255,255,.35);
+color:rgba(255,255,255,.8);border-radius:0;
 font-size:.72rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+background:transparent;cursor:pointer;
 }
-.hero-trust{display:flex;gap:1.5rem;flex-wrap:wrap;}
+
+/* Trust items — ikonlu, küçük */
+.hero-trust{display:flex;gap:1.4rem;flex-wrap:wrap;}
 .hero-trust-item{
 display:flex;align-items:center;gap:.4rem;
 font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
-color:rgba(255,255,255,.35);
+color:rgba(255,255,255,.32);
 }
-.hero-trust-icon{display:flex;align-items:center;color:rgba(158,138,106,.65);}
+.hero-trust-ico{display:flex;align-items:center;color:rgba(158,138,106,.6);}
+
+/* RIGHT — glassmorphism servis paneli, yuvarlak köşe */
 .hero-right{display:flex;justify-content:flex-end;}
 .hero-panel{
-width:100%;max-width:415px;
-background:linear-gradient(160deg,rgba(22,17,10,.58) 0%,rgba(8,6,3,.84) 100%);
-border:1px solid rgba(158,138,106,.28);
-backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
-box-shadow:0 0 80px rgba(0,0,0,.45),inset 0 0 30px rgba(255,255,255,.015);
-border-radius:3px;
+width:100%;
+background:rgba(14,11,7,.72);
+border:1px solid rgba(158,138,106,.22);
+border-radius:14px;
+backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+overflow:hidden;
+box-shadow:0 8px 60px rgba(0,0,0,.5),inset 0 0 40px rgba(255,255,255,.015);
 }
 .hero-card{
-display:flex;align-items:flex-start;gap:1.2rem;
-padding:1.75rem 1.9rem;
+display:flex;align-items:center;gap:1.3rem;
+padding:1.65rem 1.8rem;
 border-bottom:1px solid rgba(255,255,255,.07);
 }
 .hero-card:last-child{border-bottom:none;}
-.hero-card-icon{
-flex-shrink:0;width:52px;height:52px;border-radius:50%;
-border:1px solid rgba(158,138,106,.38);
-background:rgba(158,138,106,.07);
+/* Daire ikon — koyu, subtle border */
+.hero-card-ico{
+flex-shrink:0;
+width:50px;height:50px;border-radius:50%;
+border:1px solid rgba(158,138,106,.3);
+background:rgba(158,138,106,.06);
 display:flex;align-items:center;justify-content:center;
-color:var(–gold2);
+color:rgba(200,180,140,.8);
 }
-.hero-card-text strong{
-display:block;font-family:var(–serif);
-font-size:1.05rem;font-weight:400;
-color:#fff;margin-bottom:.32rem;
+.hero-card-txt strong{
+display:block;
+font-family:var(–serif);font-size:1.05rem;font-weight:400;
+color:rgba(255,255,255,.92);margin-bottom:.28rem;
 }
-.hero-card-text p{font-size:.8rem;line-height:1.55;color:rgba(255,255,255,.4);font-weight:300;}
+.hero-card-txt p{
+font-size:.78rem;line-height:1.5;
+color:rgba(255,255,255,.38);font-weight:300;
+}
 
 /* ══ TRUST STRIP ══ */
-.trust-strip{background:#0d0b08;border-top:1px solid rgba(158,138,106,.14);padding:2.8rem 5vw;}
-.trust-strip-inner{max-width:1200px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;}
-.trust-item{display:flex;align-items:flex-start;gap:1.2rem;}
-.trust-icon{color:rgba(158,138,106,.6);flex-shrink:0;margin-top:.05rem;}
-.trust-item-h{font-size:.7rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:.4rem;}
-.trust-item-d{font-size:.8rem;line-height:1.62;color:rgba(255,255,255,.32);font-weight:300;}
+.trust-strip{
+background:#080604;
+border-top:1px solid rgba(158,138,106,.12);
+padding:3rem 5vw;
+}
+.trust-strip-inner{
+max-width:1200px;margin:auto;
+display:grid;grid-template-columns:repeat(3,1fr);
+gap:2rem;
+}
+.trust-item{display:flex;align-items:flex-start;gap:1.3rem;}
+.trust-ico{color:rgba(158,138,106,.55);flex-shrink:0;margin-top:.1rem;}
+.trust-item-h{
+font-size:.68rem;font-weight:600;
+letter-spacing:.14em;text-transform:uppercase;
+color:rgba(255,255,255,.7);margin-bottom:.4rem;
+}
+.trust-item-d{font-size:.8rem;line-height:1.65;color:rgba(255,255,255,.3);font-weight:300;}
 
-/* ── BUTONLAR ── */
-.btn-wa,.btn-p,.btn-o,.btn-outline{display:inline-flex;align-items:center;gap:.6rem;padding:1rem 1.8rem;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+/* ── GENEL BUTONLAR ── */
+.btn-wa,.btn-p,.btn-o,.btn-outline{display:inline-flex;align-items:center;gap:.6rem;padding:1rem 1.8rem;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:0;}
 .btn-wa{background:var(–wa);color:#fff;}
 .btn-p{background:var(–gold);color:#fff;}
 .btn-outline{border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.7);}
@@ -295,20 +350,20 @@ color:#fff;margin-bottom:.32rem;
 .booking-panel-sub,.svc-desc,.area-desc{font-size:.9rem;line-height:1.75;color:#666;font-weight:300;}
 .fg{position:relative;margin-bottom:1.3rem;}
 .fl{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:.5rem;}
-.fi{width:100%;padding:.9rem 1rem;background:#f5f5f5;border:1px solid transparent;outline:none;}
+.fi{width:100%;padding:.9rem 1rem;background:#f5f5f5;border:1px solid transparent;outline:none;border-radius:0;}
 .fi:focus{background:#fff;border-color:var(–gold);}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-.quick-chip{border:1px solid rgba(158,138,106,.35);color:var(–gold);padding:.45rem 1rem;margin-bottom:1.5rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;}
+.quick-chip{border:1px solid rgba(158,138,106,.35);color:var(–gold);padding:.45rem 1rem;margin-bottom:1.5rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-radius:0;}
 .quick-chip-dot{display:inline-block;width:5px;height:5px;background:var(–wa);border-radius:50%;margin-right:.5rem;}
 .ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;z-index:10;border:1px solid #eee;box-shadow:0 8px 20px rgba(0,0,0,.08);}
-.ac-item{width:100%;text-align:left;padding:.8rem 1rem;border-bottom:1px solid #eee;}
+.ac-item{width:100%;text-align:left;padding:.8rem 1rem;border-bottom:1px solid #eee;border-radius:0;}
 .ac-item-main{display:block;font-weight:500;}
 .fare-estimate{margin-top:1.5rem;background:#111;color:#fff;padding:2rem;}
 .fare-label{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.7rem;}
 .fare-price{font-family:var(–serif);font-size:4rem;line-height:1;}
 .fare-guarantee{color:rgba(255,255,255,.35);font-size:.75rem;}
 .fare-trust{display:flex;gap:1rem;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08);padding-top:1rem;margin-top:1rem;color:rgba(255,255,255,.35);font-size:.7rem;}
-.btn-whatsapp{width:100%;display:flex;justify-content:center;align-items:center;gap:.6rem;background:var(–wa);color:#fff;padding:1.1rem;margin-top:1.5rem;border:0;font-weight:600;}
+.btn-whatsapp{width:100%;display:flex;justify-content:center;align-items:center;gap:.6rem;background:var(–wa);color:#fff;padding:1.1rem;margin-top:1.5rem;border:0;font-weight:600;border-radius:0;}
 .btn-wa-note,.btn-email-secondary{font-size:.75rem;color:#999;text-align:center;margin-top:.8rem;display:block;}
 
 /* ── SECTIONS ── */
@@ -318,7 +373,7 @@ color:#fff;margin-bottom:.32rem;
 .inv{color:var(–gold);}.s-h.inv{color:#fff;}
 .svc-layout{display:grid;grid-template-columns:210px 1fr;gap:5rem;margin-top:4rem;}
 .svc-nav{display:flex;flex-direction:column;}
-.svc-nav-item{text-align:left;padding:1rem 0;border-bottom:1px solid #e5e5e5;color:#999;}
+.svc-nav-item{text-align:left;padding:1rem 0;border-bottom:1px solid #e5e5e5;color:#999;border-radius:0;}
 .svc-nav-item.active{color:#111;font-weight:600;}
 .svc-content-h,.fleet-text-title,.closer-h{font-family:var(–serif);font-size:clamp(1.8rem,3vw,2.6rem);font-weight:400;line-height:1.15;margin-bottom:1rem;}
 .svc-feat-list{list-style:none;display:grid;gap:.7rem;margin:1.5rem 0;color:#555;}
@@ -369,9 +424,18 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 .ft-col-h{font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.25);margin-bottom:1rem;}
 .ft-links{list-style:none;display:grid;gap:.5rem;}
 .ft-bottom{max-width:1200px;margin:4rem auto 0;border-top:1px solid rgba(255,255,255,.08);padding-top:2rem;display:flex;justify-content:space-between;}
-.wa-float{position:fixed;right:2rem;bottom:2rem;background:#25D366;color:#fff;padding:.8rem 1.3rem;z-index:999;display:flex;gap:.6rem;align-items:center;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
 
-/* RESPONSIVE */
+/* Float WA butonu */
+.wa-float{
+position:fixed;right:2rem;bottom:2rem;
+background:#25D366;color:#fff;
+padding:.8rem 1.3rem;z-index:999;
+display:flex;gap:.6rem;align-items:center;
+font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;
+border-radius:4px;
+}
+
+/* ── RESPONSIVE ── */
 @media(max-width:1024px){
 .hero-inner{grid-template-columns:1fr;gap:3rem;}
 .hero-panel{max-width:100%;}
@@ -386,9 +450,9 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 @media(max-width:768px){
 .nav-links,.nav-btn{display:none;}
 .hero{padding:100px 5vw 60px;}
-.hero-h1{font-size:2.6rem;}
+.hero-h1{font-size:2.8rem;}
 .hero-actions{flex-direction:column;}
-.hero-btn-wa,.hero-btn-outline{width:100%;justify-content:center;}
+.hero-btn-gold,.hero-btn-outline{width:100%;justify-content:center;}
 .booking-panel,.sec{padding:5rem 5vw;}
 .f2,.areas-list,.testi-row,.proc-track,.why-grid,.ft-grid{grid-template-columns:1fr;}
 .ft-bottom{flex-direction:column;}
@@ -399,8 +463,8 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 `;
 
 export default function Home(){
-const wa = buildWhatsAppLink({from:””,to:””,fare:null});
-return (
+const wa=buildWhatsAppLink({from:””,to:””,fare:null});
+return(
 <>
 <style dangerouslySetInnerHTML={{__html:CSS}}/>
 <Nav/><Hero/><TrustStrip/><InlineBooking/>
