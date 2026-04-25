@@ -75,45 +75,64 @@ function Hero() {
 
   return (
     <section className="hero">
-      <div className="hero-inner">
-        <div className="hero-brandline">VÉRNO · Private Chauffeur — Melbourne</div>
+      <div className="hero-content">
+        <div className="hero-left">
+          <p className="hero-label">Private Chauffeur — Melbourne</p>
 
-        <h1 className="hero-h1">
-          Arrive in<br />
-          <em>complete confidence.</em>
-        </h1>
+          <h1 className="hero-h1">
+            Arrive in<br />
+            <em>complete confidence.</em>
+          </h1>
 
-        <div className="hero-services">
-          <div className="hero-card">
-            <span>✈️</span>
-            <strong>Airport Transfers</strong>
-            <p>Tullamarine & Avalon — fixed fare, flight tracked.</p>
+          <div className="hero-line" />
+
+          <p className="hero-sub">
+            Private airport, corporate and point-to-point transfers across Melbourne.
+            Fixed fares. Direct booking. Premium comfort.
+          </p>
+
+          <div className="hero-actions">
+            <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold">
+              <WAIcon s={17} /> Reserve via WhatsApp
+            </a>
+            <a href="#book" className="btn-outline hero-outline">Get Instant Fare</a>
           </div>
 
-          <div className="hero-card hero-card-active">
-            <span>💼</span>
-            <strong>Corporate Travel</strong>
-            <p>Executive ground transport — discreet & reliable.</p>
-          </div>
-
-          <div className="hero-card">
-            <span>🚘</span>
-            <strong>Private Hire</strong>
-            <p>Mornington, Yarra Valley & beyond — BMW i5.</p>
+          <div className="hero-trust">
+            <div>Fixed pricing</div>
+            <div>No surge</div>
+            <div>Direct contact</div>
+            <div>Premium BMW i5</div>
           </div>
         </div>
 
-        <div className="hero-actions">
-          <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa">
-            <WAIcon s={17} /> Reserve via WhatsApp
-          </a>
-          <a href="#book" className="btn-outline">Get Instant Fare</a>
-        </div>
+        <div className="hero-service-panel">
+          <div className="hero-service-row">
+            <div className="hero-service-icon">✈</div>
+            <div>
+              <h3>Airport Transfers</h3>
+              <p>Tullamarine &amp; Avalon</p>
+              <p>Fixed fare, flight tracked</p>
+            </div>
+          </div>
 
-        <div className="hero-trust">
-          {["Fixed pricing", "No surge", "Direct contact", "Premium BMW i5"].map((t) => (
-            <div key={t} className="hero-trust-item">{t}</div>
-          ))}
+          <div className="hero-service-row">
+            <div className="hero-service-icon">💼</div>
+            <div>
+              <h3>Corporate Travel</h3>
+              <p>Executive ground transport</p>
+              <p>Discreet &amp; reliable</p>
+            </div>
+          </div>
+
+          <div className="hero-service-row">
+            <div className="hero-service-icon">🚘</div>
+            <div>
+              <h3>Private Hire</h3>
+              <p>Mornington, Yarra Valley</p>
+              <p>&amp; beyond — BMW i5</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -136,104 +155,278 @@ function Footer() { return <footer><div className="ft-grid"><div><VernoMark h={3
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth} :root{--black:#111;--white:#fff;--gold:#9E8A6A;--gold2:#B8A48A;--grey1:#F5F5F5;--grey2:#EBEBEB;--grey3:#999;--grey4:#666;--wa:#128C7E;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',Arial,sans-serif} body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;height:72px;padding:0 5vw;border-bottom:1px solid transparent}.nav.solid{background:rgba(255,255,255,.98);backdrop-filter:blur(16px);border-color:#eee}.nav-links{display:flex;gap:2rem;list-style:none}.nav-links a,.nav-btn{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.6)}.nav.solid .nav-links a,.nav.solid .nav-btn{color:#555}.nav-btn{border:1px solid rgba(255,255,255,.2);padding:.55rem 1.2rem}.nav.solid .nav-btn{border-color:#ddd}.nav-right{display:flex;align-items:center}.hamburger,.mob-drawer{display:none}
+.nav{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:100;
+  height:82px;
+  padding:0 5vw;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:transparent;
+  border-bottom:1px solid transparent;
+}
+.nav.solid{
+  background:rgba(12,12,12,.86);
+  backdrop-filter:blur(16px);
+  border-color:rgba(255,255,255,.08);
+}
+.nav-links{
+  display:flex;
+  gap:2.4rem;
+  list-style:none;
+}
+.nav-links a,.nav-btn{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  color:rgba(255,255,255,.72);
+}
+.nav-btn{
+  border:1px solid rgba(184,164,138,.65);
+  padding:.85rem 1.7rem;
+}
+.nav-right{display:flex;align-items:center}
+.hamburger,.mob-drawer{display:none}
 
 .hero{
   position:relative;
   min-height:100vh;
+  padding:120px 5vw 0;
   background:
-    radial-gradient(circle at 70% 25%, rgba(158,138,106,.16), transparent 34%),
-    linear-gradient(135deg, rgba(8,8,8,.96) 0%, rgba(16,15,14,.92) 55%, rgba(8,8,8,.98) 100%);
-  display:flex;
-  align-items:flex-end;
-  padding:120px 5vw 7vw;
+    linear-gradient(90deg, rgba(8,8,8,.96) 0%, rgba(8,8,8,.83) 34%, rgba(8,8,8,.42) 62%, rgba(8,8,8,.55) 100%),
+    linear-gradient(180deg, rgba(8,8,8,.18) 0%, rgba(8,8,8,.72) 100%),
+    url("/images/hero-bg.jpg") center/cover no-repeat;
+  color:#fff;
   overflow:hidden;
 }
-.hero::before{
+.hero::after{
   content:"";
   position:absolute;
-  inset:0;
-  background:linear-gradient(to top, rgba(0,0,0,.55), transparent 55%);
+  left:0;
+  right:0;
+  bottom:0;
+  height:160px;
+  background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));
+  pointer-events:none;
 }
-.hero-inner{
+.hero-content{
   position:relative;
-  z-index:1;
-  width:100%;
-  max-width:760px;
+  z-index:2;
+  min-height:calc(100vh - 120px);
+  max-width:1280px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:minmax(0, 1.05fr) 460px;
+  gap:7vw;
+  align-items:center;
 }
-.hero-brandline{
-  font-size:.68rem;
+.hero-left{
+  padding-bottom:5vh;
+}
+.hero-label{
+  font-size:.72rem;
   font-weight:500;
   letter-spacing:.22em;
   text-transform:uppercase;
-  color:var(--gold);
+  color:#b89870;
   margin-bottom:1.8rem;
 }
 .hero-h1{
   font-family:var(--serif);
-  font-size:clamp(3rem,6.4vw,6.4rem);
+  font-size:clamp(4rem,6.2vw,6.8rem);
   font-weight:400;
   line-height:.98;
   letter-spacing:-.045em;
   color:#fff;
-  margin-bottom:3rem;
+  margin-bottom:1.9rem;
+  max-width:780px;
 }
 .hero-h1 em{
   font-style:italic;
-  font-weight:400;
-  color:rgba(255,255,255,.72);
+  color:rgba(255,255,255,.92);
 }
-.hero-services{
-  width:100%;
-  max-width:620px;
-  border-top:1px solid rgba(158,138,106,.35);
-  border-bottom:1px solid rgba(255,255,255,.08);
-  margin-bottom:2.2rem;
+.hero-line{
+  width:52px;
+  height:2px;
+  background:#b89870;
+  margin-bottom:1.7rem;
 }
-.hero-card{
-  padding:1.25rem 1.4rem;
-  background:rgba(255,255,255,.035);
-  border-bottom:1px solid rgba(255,255,255,.07);
-}
-.hero-card-active{
-  background:rgba(158,138,106,.16);
-}
-.hero-card span{
-  display:block;
-  font-size:1rem;
-  margin-bottom:.55rem;
-}
-.hero-card strong{
-  display:block;
-  font-family:var(--serif);
-  font-size:1.08rem;
-  font-weight:400;
-  color:#fff;
-  margin-bottom:.25rem;
-}
-.hero-card p{
-  font-size:.78rem;
+.hero-sub{
+  max-width:520px;
+  font-size:1.02rem;
+  line-height:1.65;
   font-weight:300;
-  line-height:1.55;
-  color:rgba(255,255,255,.45);
+  color:rgba(255,255,255,.62);
+  margin-bottom:2.5rem;
 }
 .hero-actions{
   display:flex;
-  gap:1rem;
+  align-items:center;
+  gap:1.6rem;
   flex-wrap:wrap;
-  margin-top:2rem;
+}
+.btn-wa,.btn-p,.btn-o,.btn-outline{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.65rem;
+  padding:1rem 1.9rem;
+  font-size:.8rem;
+  font-weight:600;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.btn-wa{background:var(--wa);color:#fff}
+.hero-gold{
+  background:#b18a55;
+  color:#fff;
+}
+.btn-outline,.hero-outline{
+  border:1px solid rgba(184,164,138,.7);
+  color:#fff;
+  background:rgba(0,0,0,.08);
 }
 .hero-trust{
   display:flex;
-  gap:1.8rem;
+  align-items:center;
+  gap:2.2rem;
   flex-wrap:wrap;
-  margin-top:3.2rem;
+  margin-top:2.6rem;
 }
-.hero-trust-item{
-  font-size:.67rem;
-  color:rgba(255,255,255,.28);
-  letter-spacing:.12em;
+.hero-trust div{
+  font-size:.7rem;
+  color:rgba(255,255,255,.56);
+  letter-spacing:.13em;
   text-transform:uppercase;
+}
+.hero-service-panel{
+  width:100%;
+  border:1px solid rgba(184,164,138,.38);
+  border-radius:16px;
+  background:rgba(10,10,10,.48);
+  backdrop-filter:blur(12px);
+  overflow:hidden;
+  box-shadow:0 25px 70px rgba(0,0,0,.34);
+}
+.hero-service-row{
+  display:grid;
+  grid-template-columns:70px 1fr;
+  gap:1.2rem;
+  padding:2rem;
+  border-bottom:1px solid rgba(255,255,255,.09);
+}
+.hero-service-row:last-child{
+  border-bottom:none;
+}
+.hero-service-icon{
+  width:54px;
+  height:54px;
+  border-radius:999px;
+  border:1px solid rgba(184,164,138,.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#b89870;
+  font-size:1.25rem;
+}
+.hero-service-row h3{
+  font-family:var(--serif);
+  font-size:1.25rem;
+  font-weight:600;
+  color:#fff;
+  margin-bottom:.55rem;
+}
+.hero-service-row p{
+  font-size:.88rem;
+  line-height:1.45;
+  color:rgba(255,255,255,.56);
+}
+
+.trust-strip{
+  background:#111;
+  padding:2.2rem 5vw;
+  border-top:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.trust-strip-inner{
+  max-width:1100px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:2rem;
+}
+.trust-item{
+  display:flex;
+  gap:.8rem;
+  align-items:center;
+  color:rgba(255,255,255,.55);
+  font-size:.72rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.trust-item-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#b89870;
+}
+
+@media(max-width:1024px){
+  .hero-content{
+    grid-template-columns:1fr;
+    gap:3rem;
+    padding-bottom:4rem;
+  }
+  .hero-service-panel{
+    max-width:620px;
+  }
+  .trust-strip-inner{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:768px){
+  .nav-links,.nav-btn{display:none}
+  .hero{
+    min-height:auto;
+    padding:100px 5vw 55px;
+  }
+  .hero-content{
+    min-height:auto;
+    display:block;
+  }
+  .hero-h1{
+    font-size:3.2rem;
+    letter-spacing:-.04em;
+  }
+  .hero-sub{
+    font-size:.95rem;
+  }
+  .hero-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .hero-service-panel{
+    margin-top:3rem;
+  }
+  .hero-service-row{
+    grid-template-columns:52px 1fr;
+    padding:1.4rem;
+  }
+  .hero-service-icon{
+    width:42px;
+    height:42px;
+  }
+  .hero-trust{
+    gap:1.2rem;
+  }
+  .trust-strip-inner{
+    grid-template-columns:1fr;
+  }
 }
 
 .btn-wa,.btn-p,.btn-o,.btn-outline{display:inline-flex;align-items:center;gap:.6rem;padding:1rem 1.8rem;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.btn-wa{background:var(--wa);color:#fff}.btn-p{background:var(--gold);color:#fff}.btn-outline{border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.7)}.btn-o{border:1px solid #e5e5e5;color:#555}.trust-strip{background:#111;padding:.85rem 5vw;border-top:1px solid rgba(255,255,255,.06)}.trust-strip-inner{max-width:1200px;margin:auto;display:flex;gap:2rem;flex-wrap:wrap}.trust-item{display:flex;gap:.5rem;align-items:center;color:rgba(255,255,255,.4);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase}.trust-item-dot{width:3px;height:3px;border-radius:50%;background:var(--gold)}
