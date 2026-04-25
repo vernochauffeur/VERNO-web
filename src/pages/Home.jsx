@@ -75,45 +75,73 @@ function Hero() {
 
   return (
     <section className="hero">
+      <div className="hero-bg" />
+
       <div className="hero-inner">
-        <div className="hero-brandline">VÉRNO · Private Chauffeur — Melbourne</div>
-
-        <h1 className="hero-h1">
-          Arrive in<br />
-          <em>complete confidence.</em>
-        </h1>
-
-        <div className="hero-services">
-          <div className="hero-card">
-            <span>✈️</span>
-            <strong>Airport Transfers</strong>
-            <p>Tullamarine & Avalon — fixed fare, flight tracked.</p>
+        {/* LEFT */}
+        <div className="hero-left">
+          <div className="hero-brandline">
+            PRIVATE CHAUFFEUR — MELBOURNE
           </div>
 
-          <div className="hero-card hero-card-active">
-            <span>💼</span>
-            <strong>Corporate Travel</strong>
-            <p>Executive ground transport — discreet & reliable.</p>
+          <h1 className="hero-h1">
+            Arrive in<br />
+            <em>complete confidence.</em>
+          </h1>
+
+          <div className="hero-rule" />
+
+          <p className="hero-sub">
+            Private airport, corporate and point-to-point transfers across Melbourne.
+            Fixed fares. Direct booking. Premium electric comfort.
+          </p>
+
+          <div className="hero-actions">
+            <a href={wa} target="_blank" className="btn-wa hero-gold">
+              <WAIcon s={17}/> Reserve via WhatsApp
+            </a>
+
+            <a href="#book" className="btn-outline hero-outline">
+              Get Instant Fare
+            </a>
           </div>
 
-          <div className="hero-card">
-            <span>🚘</span>
-            <strong>Private Hire</strong>
-            <p>Mornington, Yarra Valley & beyond — BMW i5.</p>
+          <div className="hero-trust">
+            {["Fixed pricing","No surge","Direct contact","Premium BMW i5"].map(t => (
+              <div key={t} className="hero-trust-item">{t}</div>
+            ))}
           </div>
         </div>
 
-        <div className="hero-actions">
-          <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa">
-            <WAIcon s={17} /> Reserve via WhatsApp
-          </a>
-          <a href="#book" className="btn-outline">Get Instant Fare</a>
-        </div>
+        {/* RIGHT */}
+        <div className="hero-right">
+          <div className="hero-service-panel">
 
-        <div className="hero-trust">
-          {["Fixed pricing", "No surge", "Direct contact", "Premium BMW i5"].map((t) => (
-            <div key={t} className="hero-trust-item">{t}</div>
-          ))}
+            <div className="hero-card">
+              <span className="hero-icon">✈</span>
+              <div>
+                <strong>Airport Transfers</strong>
+                <p>Tullamarine & Avalon<br/>Fixed fare, flight tracked</p>
+              </div>
+            </div>
+
+            <div className="hero-card">
+              <span className="hero-icon">💼</span>
+              <div>
+                <strong>Corporate Travel</strong>
+                <p>Executive ground transport<br/>Discreet & reliable</p>
+              </div>
+            </div>
+
+            <div className="hero-card">
+              <span className="hero-icon">🚘</span>
+              <div>
+                <strong>Private Hire</strong>
+                <p>Mornington, Yarra Valley<br/>& beyond — BMW i5</p>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </section>
