@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
@@ -239,13 +238,24 @@ const CSS = `
 }
 .hero-h1{
   font-family:var(--serif);
-  font-size:clamp(4rem,6.2vw,6.8rem);
+  font-size:clamp(3.8rem,5.6vw,6.1rem);
   font-weight:400;
-  line-height:.98;
-  letter-spacing:-.045em;
+  line-height:1.02;
+  letter-spacing:-.04em;
   color:#fff;
   margin-bottom:1.9rem;
-  max-width:780px;
+  max-width:820px;
+}
+
+.hero-line1{
+  display:block;
+  font-style:normal;
+}
+
+.hero-line2{
+  display:block;
+  font-style:italic;
+  color:rgba(255,255,255,.92);
 }
 .hero-h1 em{
   font-style:italic;
