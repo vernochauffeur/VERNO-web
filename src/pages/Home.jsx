@@ -166,17 +166,18 @@ function airportFixedFare(from, to) {
 function lookupRoute(from, to) { const combined = (from + " " + to).toLowerCase(); for (const route of ROUTE_TABLE) { for (const pair of route.keys) { if (combined.includes(pair[0]) && combined.includes(pair[1])) return { km: route.km, min: route.min }; } } return null; }
 function anchorSuburbFare(from, to) { const af = getAnchor(from); const at = getAnchor(to); const anchors = [af, at].filter((a) => a !== null); if (anchors.length === 0) return applyLateAndRound(PRICING.MIN_FARE + PRICING.BUFFER + 15); const nf = normalizeAddress(from); const nt = normalizeAddress(to); const cap = Math.max(...anchors); if (isSameSuburb(nf, nt)) return PRICING.MIN_FARE; let base; if (NEARBY_GROUPS.some((g) => inGroup(nf, g) && inGroup(nt, g))) { base = anchors.reduce((s, a) => s + a, 0) / anchors.length * 0.40; } else if (ZONE_GROUPS.some((g) => inGroup(nf, g) && inGroup(nt, g))) { base = Math.min(...anchors) * 0.50; } else { base = Math.max(...anchors) * 0.65; } return applyLateAndRound(Math.min(cap, Math.max(PRICING.MIN_FARE, base)) + PRICING.BUFFER); }
 function calculateFare(from, to) {
-  const airportRoute = isAirport(from + " " + to);
   const fixed = airportFixedFare(from, to);
 
-  // ✅ AIRPORT FIXED → NO LATE SURCHARGE
+  // ✅ AIRPORT FIX → HER ŞEYİ EZER
   if (fixed !== null) {
     return roundFare(fixed + PRICING.BUFFER);
   }
 
-  // 🔁 ROUTE BASED (late surcharge devam eder)
+  const airportRoute = isAirport(from + " " + to);
+
   if (airportRoute) {
     const route = lookupRoute(from, to);
+
     if (route) {
       return applyLateAndRound(
         Math.max(
@@ -191,7 +192,6 @@ function calculateFare(from, to) {
     return applyLateAndRound(120 + PRICING.BUFFER);
   }
 
-  // 🔁 NORMAL TRIP
   return anchorSuburbFare(from, to);
 }
 function estimateFare(from, to) { if (from.trim().length < 4 || to.trim().length < 4) return null; const fixed = airportFixedFare(from, to) !== null || lookupRoute(from, to) !== null; return { fare: calculateFare(from, to), isLate: isLateNight(), hasAirport: isAirport(from + " " + to), isFixed: fixed, isFallback: !fixed }; }
