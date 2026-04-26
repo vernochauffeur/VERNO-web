@@ -1716,4 +1716,32 @@ const CSS = `
 }
 `;
 
-export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
+export default function Home() {
+  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
+
+  return <>
+    <style dangerouslySetInnerHTML={{ __html: CSS }}/>
+    <Nav/>
+    <Hero/>
+    <TrustStrip/>
+    <InlineBooking/>
+
+    <Fleet/>          {/* ↑ BURAYA GELDİ */}
+
+    <Services/>
+    <Why/>
+    <Areas/>
+
+    <Moments/>        {/* ↑ BURAYA ÇIKTI (refined) */}
+    <Process/>
+
+    <Testimonials/>
+    <Closer/>
+    <Footer/>
+
+    <a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float">
+      <WAIcon s={17}/>
+      <span>Reserve</span>
+    </a>
+  </>;
+}
