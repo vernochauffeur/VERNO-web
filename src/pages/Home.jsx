@@ -1165,6 +1165,25 @@ const CSS = `
     font-size:3.2rem;
   }
 }
+.hero-top{
+  display:block;
+  font-family:var(--serif);
+  font-weight:600;
+  font-size:.85em;
+  letter-spacing:-.02em;
+  color:#fff;
+}
+
+.hero-bottom{
+  display:block;
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:400;
+  font-size:1.2em;
+  letter-spacing:-.04em;
+  color:rgba(255,255,255,.92);
+  margin-top:-6px;
+}
 `;
 
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
