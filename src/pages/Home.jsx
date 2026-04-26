@@ -56,8 +56,8 @@ const AIRPORT_FIXED = {
   "essendon": 115,
 
   // 🔵 BAYSIDE (yüksek ödeme potansiyeli)
-  "st kilda": 130,
-  "elwood": 135,
+  "st kilda": 125,
+  "elwood": 130,
   "balaclava": 130,
   "brighton": 140,
   "hampton": 145,
