@@ -134,16 +134,26 @@ function airportFixedFare(from, to) {
 
   if (!isAirport(from + " " + to)) return null;
 
-  // CBD / HOTEL OVERRIDES
-  if (combined.includes("park hyatt") || combined.includes("parliament square")) return 110;
-  if (combined.includes("grand hyatt")) return 100;
-  if (combined.includes("w melbourne") || combined.includes("flinders lane") || combined.includes("408 flinders")) return 100;
-  if (combined.includes("sofitel") || combined.includes("collins street")) return 110;
-  if (combined.includes("ritz carlton") || combined.includes("ritz") || combined.includes("lonsdale street")) return 110;
-  if (combined.includes("crown") || combined.includes("whiteman street")) return 105;
-  if (combined.includes("langham") || combined.includes("southbank promenade")) return 105;
-  if (combined.includes("marriott") || combined.includes("exhibition street")) return 105;
+  // 🔥 1. CBD GLOBAL FIX (OTEL OLSUN OLMASIN)
+  if (
+    combined.includes("melbourne") ||
+    combined.includes("cbd") ||
+    combined.includes("city") ||
+    combined.includes("3000")
+  ) {
+    return 100;
+  }
 
+  // 🏨 HOTEL OVERRIDES (daha spesifik → yukarıdan önce çalışır)
+  if (combined.includes("park hyatt")) return 110;
+  if (combined.includes("sofitel")) return 110;
+  if (combined.includes("ritz")) return 110;
+  if (combined.includes("w melbourne") || combined.includes("flinders")) return 100;
+  if (combined.includes("grand hyatt")) return 100;
+  if (combined.includes("crown")) return 105;
+  if (combined.includes("langham")) return 105;
+
+  // 🔁 NORMAL SUBURB MATCH
   const sorted = Object.entries(AIRPORT_FIXED)
     .sort((a, b) => b[0].length - a[0].length);
 
