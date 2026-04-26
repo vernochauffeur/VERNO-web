@@ -1669,6 +1669,51 @@ const CSS = `
     margin-top:2.4rem;
   }
 }
+/* RIGHT PANEL FINAL TIGHT + ALIGN PATCH */
+
+.hero-service-panel{
+  background:
+    radial-gradient(circle at 88% 18%, rgba(226,168,95,.18), transparent 34%),
+    linear-gradient(135deg, rgba(28,28,28,.82), rgba(8,8,8,.72));
+}
+
+.hero-service-row{
+  grid-template-columns:48px 1fr;
+  padding:1.2rem 1.4rem;
+  gap:.7rem;
+}
+
+.hero-service-icon{
+  width:44px;
+  height:44px;
+  margin-left:-4px; /* SOLA YAPIŞTIR */
+}
+
+.hero-service-row h3{
+  font-size:.95rem;
+  font-weight:600; /* DAHA KALIN */
+  letter-spacing:.01em;
+  margin-bottom:.35rem;
+  transform:translateX(-6px);
+}
+
+.hero-service-row p{
+  font-size:.72rem;
+  font-weight:500; /* DAHA TOK */
+  line-height:1.45;
+  color:rgba(255,255,255,.55);
+  transform:translateX(-6px);
+}
+
+/* satırlar arası boşluk azalt */
+.hero-service-row + .hero-service-row{
+  margin-top:-6px;
+}
+
+/* divider daha ince ve premium */
+.hero-service-row{
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
 `;
 
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
