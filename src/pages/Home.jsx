@@ -59,28 +59,40 @@ function anchorSuburbFare(from, to) { const af = getAnchor(from); const at = get
 function calculateFare(from, to) { const airportRoute = isAirport(from + " " + to); const fixed = airportFixedFare(from, to); if (fixed !== null) return applyLateAndRound(fixed + PRICING.BUFFER); if (airportRoute) { const route = lookupRoute(from, to); if (route) return applyLateAndRound(Math.max(PRICING.BASE_FEE + distanceCost(route.km) + route.min * PRICING.PER_MIN, PRICING.MIN_FARE) + PRICING.BUFFER); return applyLateAndRound(120 + PRICING.BUFFER); } return anchorSuburbFare(from, to); }
 function estimateFare(from, to) { if (from.trim().length < 4 || to.trim().length < 4) return null; const fixed = airportFixedFare(from, to) !== null || lookupRoute(from, to) !== null; return { fare: calculateFare(from, to), isLate: isLateNight(), hasAirport: isAirport(from + " " + to), isFixed: fixed, isFallback: !fixed }; }
 
-function AddressField({ label, placeholder, value, onChange }) {
+function AddressField({ label, placeholder, value, onChange, id }) {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (!window.google || !inputRef.current) return;
+    let timer;
 
-    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-      componentRestrictions: { country: "au" },
-      fields: ["formatted_address", "name"]
-    });
+    const initAutocomplete = () => {
+      if (!window.google?.maps?.places || !inputRef.current) {
+        timer = setTimeout(initAutocomplete, 300);
+        return;
+      }
 
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      const selected = place.formatted_address || place.name || "";
-      if (selected) onChange(selected);
-    });
+      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+        componentRestrictions: { country: "au" },
+        fields: ["formatted_address", "name"]
+      });
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        const selected = place.formatted_address || place.name || "";
+        if (selected) onChange(selected);
+      });
+    };
+
+    initAutocomplete();
+
+    return () => clearTimeout(timer);
   }, [onChange]);
 
   return (
     <div className="fg">
-      <label className="fl">{label}</label>
+      <label className="fl" htmlFor={id}>{label}</label>
       <input
+        id={id}
         ref={inputRef}
         className="fi"
         placeholder={placeholder}
