@@ -7,19 +7,95 @@ const VERNO_EMAIL = "book@vernochauffeur.com.au";
 
 const PRICING = { MIN_FARE: 75, BASE_FEE: 15, PER_MIN: 0.6, RATE_0_25: 3.2, RATE_25_50: 2.8, RATE_50UP: 2.3, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, BUFFER: 5, ROUND_TO: 5 };
 const AIRPORT_FIXED = {
-  "cbd": 105, "melbourne cbd": 105, "city": 105, "docklands": 105, "southbank": 110, "south melbourne": 110,
-  "carlton": 108, "fitzroy": 110, "collingwood": 110, "richmond": 115, "south yarra": 120, "prahran": 120,
-  "chapel street": 120, "hawthorn": 120, "toorak": 125, "malvern": 125, "camberwell": 130, "st kilda": 130,
-  "elwood": 132, "brighton": 145, "bayside": 145, "hampton": 148, "sandringham": 150, "mentone": 155,
-  "cheltenham": 155, "moorabbin": 155, "oakleigh": 158, "chadstone": 158, "glen waverley": 165,
-  "knox": 168, "dandenong": 175, "frankston": 245, "mornington": 275, "mount eliza": 260,
-  "mount martha": 285, "dromana": 300, "rosebud": 315, "rye": 330, "sorrento": 350, "portsea": 375,
-  "peninsula": 310, "essendon": 115, "brunswick": 108, "coburg": 110, "northcote": 110,
-  "footscray": 108, "williamstown": 115, "werribee": 165, "hoppers crossing": 165, "geelong": 175,
-  "torquay": 185, "barwon heads": 190, "surf coast": 195, "lilydale": 175, "healesville": 195,
-  "yarra valley": 195, "yarra glen": 195, "warburton": 215
-};
 
+  // 🟢 CBD CORE (en önemli satış bölgesi)
+  "cbd": 100,
+  "melbourne cbd": 100,
+  "city": 100,
+  "docklands": 100,
+  "southbank": 110,
+  "south melbourne": 105,
+  "east melbourne": 110,
+  "west melbourne": 105,
+  "north melbourne": 105,
+  "carlton": 105,
+  "fitzroy": 110,
+  "collingwood": 110,
+  "richmond": 120,
+
+  // 🏨 OTELLER
+  "park hyatt": 110,
+  "grand hyatt": 105,
+  "crown": 110,
+  "sofitel": 110,
+  "langham": 110,
+  "w melbourne": 100,
+  "ritz carlton": 110,
+  "marriott": 105,
+
+  // 🟡 INNER EAST / SOUTH
+  "south yarra": 120,
+  "prahran": 120,
+  "windsor": 120,
+  "toorak": 125,
+  "malvern": 125,
+  "armadale": 125,
+  "hawksburn": 125,
+  "camberwell": 130,
+  "hawthorn": 130,
+  "kew": 135,
+
+  // 🟠 INNER WEST / NORTH
+  "footscray": 105,
+  "yarraville": 110,
+  "seddon": 110,
+  "brunswick": 110,
+  "coburg": 115,
+  "northcote": 120,
+  "preston": 120,
+  "essendon": 115,
+
+  // 🔵 BAYSIDE (yüksek ödeme potansiyeli)
+  "st kilda": 130,
+  "elwood": 135,
+  "balaclava": 130,
+  "brighton": 140,
+  "hampton": 145,
+  "sandringham": 150,
+  "mentone": 155,
+  "cheltenham": 155,
+
+  // 🟣 EAST / SOUTHEAST
+  "chadstone": 140,
+  "oakleigh": 145,
+  "glen waverley": 155,
+  "knox": 160,
+  "dandenong": 170,
+
+  // 🔴 PENINSULA (en kritik profit zone)
+  "frankston": 220,
+  "mount eliza": 240,
+  "mornington": 260,
+  "mount martha": 280,
+  "dromana": 300,
+  "rosebud": 320,
+  "rye": 340,
+  "sorrento": 360,
+  "portsea": 380,
+
+  // 🟤 WEST / GEELONG
+  "werribee": 150,
+  "hoppers crossing": 155,
+  "geelong": 180,
+  "torquay": 190,
+  "barwon heads": 195,
+
+  // 🟢 YARRA VALLEY
+  "lilydale": 170,
+  "healesville": 190,
+  "yarra valley": 190,
+  "yarra glen": 185
+};
 const ROUTE_TABLE = [
   { keys: [["airport", "cbd"], ["airport", "melbourne city"], ["tullamarine", "cbd"]], km: 23, min: 32 },
   { keys: [["airport", "southbank"], ["airport", "crown"], ["airport", "docklands"]], km: 25, min: 34 },
