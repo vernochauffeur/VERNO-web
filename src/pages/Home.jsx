@@ -65,6 +65,74 @@ function AddressField({ label, placeholder, value, onChange, id, inputRef }) { c
 function buildWhatsAppLink({ from, to, date, time, pax, bags, fare }) { const msg = ["Hello, I'd like to book a transfer:", "", `Pickup: ${from || "--"}`, `Drop-off: ${to || "--"}`, ...(date ? [`Date: ${date}`] : []), ...(time ? [`Time: ${time}`] : []), ...(pax ? [`Passengers: ${pax}`] : []), ...(bags ? [`Luggage: ${bags}`] : []), ...(fare ? [`Estimated fare: $${fare}`] : []), "", "Please confirm availability."].join("\n"); return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`; }
 function WAIcon({ s = 20 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>; }
 function MsgIcon({ s = 14 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>; }
+function IconPlaneHero() {
+  return (
+    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true">
+      <path d="M57 30.5c1.6.8 1.6 2.2 0 3L39.6 41l-6.7 16.2c-.5 1.2-2.2 1.1-2.6-.1l-4.2-12.4-12 5.1-2.4 5.1c-.4.8-1.5.8-1.9.1l-2-3.8-3.8-2c-.7-.4-.7-1.5.1-1.9l5.1-2.4 5.1-12-12.4-4.2c-1.2-.4-1.3-2.1-.1-2.6L22 19.4 29.5 2c.8-1.6 2.2-1.6 3 0l4.4 15.4L57 30.5Z"/>
+    </svg>
+  );
+}
+
+function IconBriefcaseHero() {
+  return (
+    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true">
+      <path d="M19 20h26c5 0 9 4 9 9v20c0 5-4 9-9 9H19c-5 0-9-4-9-9V29c0-5 4-9 9-9Z"/>
+      <path d="M24 20v-5c0-5 3.5-9 8-9s8 4 8 9v5"/>
+      <path d="M10 34h44"/>
+      <path d="M29 34v5h6v-5"/>
+    </svg>
+  );
+}
+
+function IconCarHero() {
+  return (
+    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true">
+      <path d="M13 36l5.2-15c1-3 3.5-5 6.7-5h14.2c3.2 0 5.7 2 6.7 5L51 36"/>
+      <path d="M12 36h40c2.2 0 4 1.8 4 4v9H8v-9c0-2.2 1.8-4 4-4Z"/>
+      <path d="M17 49v5"/>
+      <path d="M47 49v5"/>
+      <circle cx="20" cy="47" r="3"/>
+      <circle cx="44" cy="47" r="3"/>
+      <path d="M22 24h20"/>
+    </svg>
+  );
+}
+
+function IconPrice() {
+  return (
+    <svg viewBox="0 0 24 24" className="trust-small-icon">
+      <path d="M20.5 13.5l-7 7a2.2 2.2 0 0 1-3.1 0l-7-7V4h9.5l7.6 7.6a1.4 1.4 0 0 1 0 1.9Z"/>
+      <circle cx="8" cy="8" r="1.4"/>
+    </svg>
+  );
+}
+
+function IconShield() {
+  return (
+    <svg viewBox="0 0 24 24" className="trust-small-icon">
+      <path d="M12 21s7-3.8 7-10V5.5L12 3 5 5.5V11c0 6.2 7 10 7 10Z"/>
+      <path d="M9 12l2 2 4-5"/>
+    </svg>
+  );
+}
+
+function IconChatSmall() {
+  return (
+    <svg viewBox="0 0 24 24" className="trust-small-icon">
+      <path d="M4 5h16v11H8l-4 4V5Z"/>
+    </svg>
+  );
+}
+
+function IconDiamond() {
+  return (
+    <svg viewBox="0 0 24 24" className="trust-small-icon">
+      <path d="M6 4h12l4 7-10 10L2 11l4-7Z"/>
+      <path d="M2 11h20"/>
+      <path d="M8 4l4 17 4-17"/>
+    </svg>
+  );
+}
 function VernoMark({ dark = false, h = 44 }) {
   return (
     <div className="verno-logo">
@@ -131,17 +199,17 @@ function Hero() {
             <a href="#book" className="btn-outline hero-outline">Get Instant Fare</a>
           </div>
 
-          <div className="hero-trust">
-            <div>Fixed pricing</div>
-            <div>No surge</div>
-            <div>Direct contact</div>
-            <div>Premium BMW i5</div>
-          </div>
+        <div className="hero-trust">
+  <div className="hero-trust-item"><IconPrice /><span>Fixed pricing</span></div>
+  <div className="hero-trust-item"><IconShield /><span>No surge</span></div>
+  <div className="hero-trust-item"><IconChatSmall /><span>Direct contact</span></div>
+  <div className="hero-trust-item"><IconDiamond /><span>Premium BMW i5</span></div>
+</div>
         </div>
 
         <div className="hero-service-panel">
           <div className="hero-service-row">
-            <div className="hero-service-icon"><IconPlane /></div>
+            <div className="hero-service-icon"><IconPlaneHero /></div>
             <div>
               <h3>Airport Transfers</h3>
               <p>Tullamarine &amp; Avalon</p>
@@ -150,7 +218,7 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon"><IconBriefcase /></div>
+            <div className="hero-service-icon"><IconBriefcaseHero /></div>
             <div>
               <h3>Corporate Travel</h3>
               <p>Executive ground transport</p>
@@ -159,7 +227,7 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon"><IconCar /></div>
+            <div className="hero-service-icon"><IconCarHero /></div>
             <div>
               <h3>Private Hire</h3>
               <p>Mornington, Yarra Valley</p>
@@ -1297,6 +1365,69 @@ const CSS = `
 
 .hero-service-row{
   grid-template-columns:92px 1fr !important;
+}
+.hero-service-icon{
+  width:68px !important;
+  height:68px !important;
+  border-radius:50% !important;
+  border:1.4px solid rgba(210,176,109,.45) !important;
+  background:rgba(210,176,109,.055) !important;
+  color:#D2B06D !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex-shrink:0 !important;
+}
+
+.lux-icon{
+  width:38px;
+  height:38px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:3.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.hero-service-row{
+  grid-template-columns:92px 1fr !important;
+  gap:1.25rem !important;
+  padding:2.05rem 2.15rem !important;
+}
+
+.hero-service-row h3{
+  font-size:1.34rem !important;
+}
+
+.hero-service-row p{
+  font-size:.92rem !important;
+}
+
+.hero-trust{
+  display:flex !important;
+  align-items:center !important;
+  gap:2.2rem !important;
+}
+
+.hero-trust-item{
+  display:flex !important;
+  align-items:center !important;
+  gap:.55rem !important;
+  font-size:.68rem !important;
+  letter-spacing:.13em !important;
+  text-transform:uppercase !important;
+  color:rgba(255,255,255,.56) !important;
+}
+
+.trust-small-icon{
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:#B98B55;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  flex-shrink:0;
 }
 `;
 
