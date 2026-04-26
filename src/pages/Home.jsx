@@ -67,14 +67,14 @@ function AddressField({ label, placeholder, value, onChange }) {
     if (!window.google || !inputRef.current) return;
 
     const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-      componentRestrictions: { country: "au" }
+      componentRestrictions: { country: "au" },
+      fields: ["formatted_address", "name"]
     });
 
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
-      if (place.formatted_address) {
-        onChange(place.formatted_address);
-      }
+      const selected = place.formatted_address || place.name || "";
+      if (selected) onChange(selected);
     });
   }, [onChange]);
 
@@ -85,7 +85,9 @@ function AddressField({ label, placeholder, value, onChange }) {
         ref={inputRef}
         className="fi"
         placeholder={placeholder}
-        defaultValue={value}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete="off"
       />
     </div>
   );
