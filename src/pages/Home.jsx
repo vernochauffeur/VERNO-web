@@ -80,17 +80,28 @@ function useReveal(ref) { useEffect(() => { const root = ref.current; if (!root)
 
 function Nav() { const [solid, setSolid] = useState(false); useEffect(() => { const fn = () => setSolid(window.scrollY > 60); window.addEventListener("scroll", fn); return () => window.removeEventListener("scroll", fn); }, []); return <nav className={`nav${solid ? " solid" : ""}`}><a href="#" className="nav-logo-wrap"><VernoMark dark={solid} h={34}/></a><ul className="nav-links"><li><a href="#services">Services</a></li><li><a href="#fleet">Fleet</a></li><li><a href="#areas">Coverage</a></li><li><a href="#about">About</a></li></ul><div className="nav-right"><a href="#book" className="nav-btn">Reserve a Transfer</a></div></nav>; }
 function IconPlane() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M22 16.5 13.5 12 22 7.5v-2L11 9 6 3H3l3 8-3 8h3l5-6 11 3.5v-2Z"/></svg>;
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M22 16.5 13.5 12 22 7.5v-2L11 9 6 3H3l3 8-3 8h3l5-6 11 3.5v-2Z"/>
+    </svg>
+  );
 }
 
 function IconBriefcase() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5.5A2.5 2.5 0 0 1 11.5 3h1A2.5 2.5 0 0 1 15 5.5V7"/></svg>;
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M7 6V5a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3Zm2 0h6V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1Z"/>
+    </svg>
+  );
 }
 
 function IconCar() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M5 16h14l-1.5-5.5A3 3 0 0 0 14.6 8H9.4a3 3 0 0 0-2.9 2.5L5 16Z"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg>;
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M5 16h14l-1.5-5a2.5 2.5 0 0 0-2.4-2H8.9A2.5 2.5 0 0 0 6.5 11L5 16Zm2.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/>
+    </svg>
+  );
 }
-
 function Hero() {
   const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
 
@@ -1229,6 +1240,41 @@ const CSS = `
     font-size:3rem !important;
     white-space:normal !important;
   }
+}
+.hero-service-icon{
+  width:78px !important;
+  height:78px !important;
+  min-width:78px !important;
+
+  border-radius:50%;
+  border:1.5px solid rgba(210,176,109,.55);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(210,176,109,.05);
+}
+
+/* ICON SIZE + STYLE */
+.hero-service-icon svg{
+  width:38px !important;
+  height:38px !important;
+  color:#D2B06D;
+}
+
+/* ROW spacing */
+.hero-service-row{
+  grid-template-columns:96px 1fr !important;
+  padding:1.9rem 1.8rem !important;
+}
+
+/* PANEL */
+.hero-service-panel{
+  width:360px !important;
+  background:rgba(10,10,10,.30) !important;
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(210,176,109,.25);
 }
 `;
 
