@@ -855,20 +855,21 @@ const CSS = `
     padding:0;
   }
 }
-/* HERO TYPOGRAPHY FINAL */
+/* HERO TITLE FINAL - TWO LINE PREMIUM */
 
 .hero-h1{
   font-family:var(--serif);
-  font-size:clamp(3rem,4.2vw,4.8rem);
-  line-height:1.05;
-  letter-spacing:-0.03em;
+  font-size:clamp(3.35rem,4.75vw,5.45rem);
+  line-height:1.03;
+  letter-spacing:-0.035em;
+  max-width:760px;
+  margin-bottom:1.7rem;
 }
 
 .hero-h1 span{
   display:block;
   font-style:normal;
   font-weight:400;
-  font-size:0.95em;   /* biraz daha küçük */
   color:#fff;
 }
 
@@ -876,9 +877,21 @@ const CSS = `
   display:block;
   font-style:italic;
   font-weight:400;
-  font-size:1.1em;   /* biraz daha büyük */
+  font-size:.98em;
   color:rgba(255,255,255,.92);
-  margin-top:0.05em;
+  margin-top:.12em;
+  white-space:nowrap;
+}
+
+@media(max-width:768px){
+  .hero-h1{
+    font-size:3rem;
+    line-height:1.06;
+  }
+
+  .hero-h1 em{
+    white-space:normal;
+  }
 }
 `;
 
