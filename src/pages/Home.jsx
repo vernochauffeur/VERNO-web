@@ -1714,6 +1714,62 @@ const CSS = `
 .hero-service-row{
   border-bottom:1px solid rgba(255,255,255,.06);
 }
+/* ===== RIGHT PANEL FIXED (ICONS + ALIGNMENT + DARK GLASS) ===== */
+
+.hero-service-panel{
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255,180,100,.12), transparent 40%),
+    linear-gradient(135deg, rgba(32,32,32,.85), rgba(12,12,12,.78));
+  border:1px solid rgba(200,160,100,.25);
+  backdrop-filter:blur(16px) saturate(120%);
+  -webkit-backdrop-filter:blur(16px) saturate(120%);
+}
+
+/* ROW STRUCTURE */
+.hero-service-row{
+  display:grid;
+  grid-template-columns:52px 1fr;
+  align-items:flex-start;
+  padding:1.25rem 1.4rem;
+  gap:.75rem;
+}
+
+/* ICONS → TAM SOL */
+.hero-service-icon{
+  width:46px;
+  height:46px;
+  margin-left:-8px;   /* SOLA YAPIŞTIR */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#C9A46D;
+}
+
+/* TEXT BLOĞU SOLA */
+.hero-service-row > div{
+  transform:translateX(-6px);
+}
+
+/* TITLE */
+.hero-service-row h3{
+  font-size:.95rem;
+  font-weight:600;
+  letter-spacing:.02em;
+  margin-bottom:.35rem;
+}
+
+/* DESCRIPTION */
+.hero-service-row p{
+  font-size:.72rem;
+  font-weight:500;
+  line-height:1.45;
+  color:rgba(255,255,255,.55);
+}
+
+/* DIVIDER DAHA SOFT */
+.hero-service-row{
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
 `;
 
 export default function Home() {
