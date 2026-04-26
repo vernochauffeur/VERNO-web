@@ -65,7 +65,17 @@ function AddressField({ label, placeholder, value, onChange, id, inputRef }) { c
 function buildWhatsAppLink({ from, to, date, time, pax, bags, fare }) { const msg = ["Hello, I'd like to book a transfer:", "", `Pickup: ${from || "--"}`, `Drop-off: ${to || "--"}`, ...(date ? [`Date: ${date}`] : []), ...(time ? [`Time: ${time}`] : []), ...(pax ? [`Passengers: ${pax}`] : []), ...(bags ? [`Luggage: ${bags}`] : []), ...(fare ? [`Estimated fare: $${fare}`] : []), "", "Please confirm availability."].join("\n"); return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`; }
 function WAIcon({ s = 20 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>; }
 function MsgIcon({ s = 14 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>; }
-function VernoMark({ dark = false, h = 44 }) { return <svg width={h * 4.6} height={h} viewBox="0 0 230 44" fill="none" style={{ display: "block" }}><rect x="0" y="19" width="3" height="3" rx="1.5" fill="#9E8A6A"/><text x="10" y="32" fontFamily="'Playfair Display',Georgia,serif" fontSize="22" fontWeight="600" letterSpacing="5" fill={dark ? "#111" : "#fff"}>VÉRNO</text><text x="10" y="42" fontFamily="Inter,Arial" fontSize="7" fontWeight="400" letterSpacing="4" fill={dark ? "rgba(17,17,17,.4)" : "rgba(255,255,255,.38)"}>MELBOURNE</text></svg>; }
+function VernoMark({ dark = false, h = 44 }) {
+  return (
+    <div className="verno-logo">
+      <div className="verno-logo-top">
+        <span className="verno-dot" />
+        <span className="verno-word">VÉRNO</span>
+      </div>
+      <span className="verno-city">MELBOURNE</span>
+    </div>
+  );
+}
 function useReveal(ref) { useEffect(() => { const root = ref.current; if (!root) return; root.querySelectorAll(".rv").forEach((el) => el.classList.add("in")); }, [ref]); }
 
 function Nav() { const [solid, setSolid] = useState(false); useEffect(() => { const fn = () => setSolid(window.scrollY > 60); window.addEventListener("scroll", fn); return () => window.removeEventListener("scroll", fn); }, []); return <nav className={`nav${solid ? " solid" : ""}`}><a href="#" className="nav-logo-wrap"><VernoMark dark={solid} h={34}/></a><ul className="nav-links"><li><a href="#services">Services</a></li><li><a href="#fleet">Fleet</a></li><li><a href="#areas">Coverage</a></li><li><a href="#about">About</a></li></ul><div className="nav-right"><a href="#book" className="nav-btn">Reserve a Transfer</a></div></nav>; }
@@ -460,5 +470,167 @@ const CSS = `
 .hero-services{max-width:100%}
 .hero-actions{flex-direction:column}.booking-panel,.sec{padding:5rem 5vw}.f2,.areas-list,.testi-row,.proc-track,.why-grid,.ft-grid{grid-template-columns:1fr}.ft-bottom{flex-direction:column}.closer-btns{flex-direction:column}.btn-wa,.btn-outline,.btn-p,.btn-o{width:100%;justify-content:center}.wa-float{right:1rem;bottom:1rem}}
 `;
+/* PREMIUM DARK GOLD STYLE PATCH */
 
+:root{
+  --gold:#D2B06D;
+  --gold2:#C49A5A;
+  --soft-gold:rgba(210,176,109,.72);
+  --panel:#050505;
+  --panel-border:rgba(210,176,109,.28);
+  --text-muted:rgba(255,255,255,.48);
+}
+
+.verno-logo{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  line-height:1;
+}
+
+.verno-logo-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.verno-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--gold);
+  display:inline-block;
+}
+
+.verno-word{
+  font-family:var(--serif);
+  font-size:24px;
+  font-weight:600;
+  letter-spacing:.22em;
+  color:#fff;
+}
+
+.verno-city{
+  margin-left:29px;
+  margin-top:5px;
+  font-family:var(--sans);
+  font-size:8px;
+  letter-spacing:.42em;
+  color:rgba(255,255,255,.36);
+}
+
+.hero{
+  background:
+    linear-gradient(90deg, rgba(4,4,4,.98) 0%, rgba(4,4,4,.9) 38%, rgba(4,4,4,.48) 68%, rgba(4,4,4,.72) 100%),
+    linear-gradient(180deg, rgba(4,4,4,.08) 0%, rgba(4,4,4,.88) 100%),
+    url("/images/hero-bg.jpg") center/cover no-repeat;
+}
+
+.hero-label{
+  color:var(--gold);
+  letter-spacing:.26em;
+}
+
+.hero-h1{
+  font-size:clamp(3.4rem,5vw,5.8rem);
+  line-height:1.08;
+  letter-spacing:-.03em;
+}
+
+.hero-h1 span{
+  display:block;
+  font-style:normal;
+  color:#fff;
+}
+
+.hero-h1 em{
+  display:block;
+  font-style:italic;
+  color:rgba(255,255,255,.92);
+  white-space:nowrap;
+}
+
+.hero-line{
+  background:var(--gold);
+}
+
+.hero-sub{
+  color:rgba(255,255,255,.55);
+}
+
+.hero-gold{
+  background:var(--gold) !important;
+  color:#080808 !important;
+  border:1px solid var(--gold) !important;
+}
+
+.hero-outline{
+  border:1px solid rgba(210,176,109,.5) !important;
+  color:rgba(255,255,255,.82) !important;
+  background:rgba(255,255,255,.02) !important;
+}
+
+.hero-service-panel{
+  background:rgba(3,3,3,.74);
+  border:1px solid var(--panel-border);
+  border-radius:28px;
+  backdrop-filter:blur(22px);
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.55),
+    inset 0 0 0 1px rgba(210,176,109,.08);
+}
+
+.hero-service-row{
+  grid-template-columns:80px 1fr;
+  padding:2.25rem 2.3rem;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.hero-service-icon{
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  border:1px solid rgba(210,176,109,.35);
+  background:rgba(210,176,109,.06);
+  color:var(--gold);
+  font-size:1.65rem;
+  font-weight:300;
+}
+
+.hero-service-row h3{
+  font-family:var(--serif);
+  font-size:1.35rem;
+  font-weight:600;
+  color:#fff;
+}
+
+.hero-service-row p{
+  font-size:.95rem;
+  line-height:1.55;
+  color:rgba(255,255,255,.48);
+}
+
+.btn-whatsapp,
+.wa-float{
+  background:var(--gold) !important;
+  color:#080808 !important;
+}
+
+.nav-btn{
+  border-color:rgba(210,176,109,.55);
+}
+
+@media(max-width:768px){
+  .hero-h1{
+    font-size:3rem;
+  }
+
+  .hero-h1 em{
+    white-space:normal;
+  }
+
+  .hero-service-panel{
+    border-radius:24px;
+  }
+}
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
