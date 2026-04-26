@@ -209,7 +209,11 @@ function Hero() {
 
         <div className="hero-service-panel">
           <div className="hero-service-row">
-            <div className="hero-service-icon"><IconPlaneHero /></div>
+            <div className="hero-service-icon">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M2 16l20-8-8 20-2-9-10-3z"/>
+  </svg>
+</div>
             <div>
               <h3>Airport Transfers</h3>
               <p>Tullamarine &amp; Avalon</p>
@@ -218,7 +222,12 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon"><IconBriefcaseHero /></div>
+            <div className="hero-service-icon">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <rect x="3" y="7" width="18" height="13" rx="2"/>
+    <path d="M16 7V5a2 2 0 00-4 0v2"/>
+  </svg>
+</div>
             <div>
               <h3>Corporate Travel</h3>
               <p>Executive ground transport</p>
@@ -227,7 +236,14 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon"><IconCarHero /></div>
+            <div className="hero-service-icon">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M3 13l2-5h14l2 5"/>
+    <path d="M5 13v6h14v-6"/>
+    <circle cx="7.5" cy="17" r="1"/>
+    <circle cx="16.5" cy="17" r="1"/>
+  </svg>
+</div>
             <div>
               <h3>Private Hire</h3>
               <p>Mornington, Yarra Valley</p>
