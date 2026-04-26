@@ -130,20 +130,41 @@ function getAnchor(text) { const n = normalizeAddress(text); const sorted = Obje
 function inGroup(n, group) { return group.some((k) => new RegExp("(?:^| )" + k.replace(/ /g, " ") + "(?= |$)").test(n)); }
 function isSameSuburb(a, b) { if (a === b) return true; const ta = suburbToken(a); const tb = suburbToken(b); return ta.length > 2 && ta === tb; }
 function airportFixedFare(from, to) {
-  if (!isAirport(from + " " + to)) return null;
-
   const combined = normalizeAddress(from + " " + to);
 
-  // 🔥 ÖNCE OTEL FIX (en kritik)
-  if (combined.includes("park hyatt")) return 110;
-  if (combined.includes("w melbourne")) return 100;
+  const airportWords =
+    combined.includes("airport") ||
+    combined.includes("tullamarine") ||
+    combined.includes("terminal") ||
+    combined.includes("melbourne airport") ||
+    combined.includes("mel");
 
-  // 🔁 NORMAL MATCH
+  if (!airportWords) return null;
+
+  // HOTEL OVERRIDES
+  if (
+    combined.includes("park hyatt") ||
+    combined.includes("park hyatt melbourne") ||
+    combined.includes("parliament square") ||
+    combined.includes("east melbourne")
+  ) {
+    return 110;
+  }
+
+  if (
+    combined.includes("w melbourne") ||
+    combined.includes("w hotel") ||
+    combined.includes("408 flinders") ||
+    combined.includes("flinders lane")
+  ) {
+    return 100;
+  }
+
   const sorted = Object.entries(AIRPORT_FIXED)
     .sort((a, b) => b[0].length - a[0].length);
 
   for (const [zone, price] of sorted) {
-    if (new RegExp("(?:^| )" + zone.replace(/ /g, " ") + "(?= |$)").test(combined)) {
+    if (combined.includes(zone)) {
       return price;
     }
   }
