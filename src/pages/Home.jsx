@@ -1117,9 +1117,9 @@ return (
 <TrustStrip/>
 <InlineBooking/>
 <Services/>
+<Fleet/>
 <Why/>
 <Areas/>
-<Fleet/>
 <Process/>
 <Moments/>
 <Testimonials/>
