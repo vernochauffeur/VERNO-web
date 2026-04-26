@@ -203,7 +203,7 @@ function AddressField({ label, placeholder, value, onChange, id }) {
     let timer;
 
     const initAutocomplete = () => {
-      if (!window.google?.maps?.places || !inputRef.current) {
+      if (!window.google || !window.google.maps || !window.google.maps.places || !inputRef.current) {
         timer = setTimeout(initAutocomplete, 300);
         return;
       }
@@ -218,7 +218,7 @@ function AddressField({ label, placeholder, value, onChange, id }) {
   const address = place.formatted_address || place.name || "";
 
   // 🔥 SADECE VICTORIA
-  if (!address.includes("VIC")) {
+  if (!address || !address.includes("VIC")) {
     alert("Please select a location within Victoria.");
     return;
   }
