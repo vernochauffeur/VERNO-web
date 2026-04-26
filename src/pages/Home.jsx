@@ -469,7 +469,6 @@ const CSS = `
 .hero-h1{font-size:2.8rem;letter-spacing:-.035em}
 .hero-services{max-width:100%}
 .hero-actions{flex-direction:column}.booking-panel,.sec{padding:5rem 5vw}.f2,.areas-list,.testi-row,.proc-track,.why-grid,.ft-grid{grid-template-columns:1fr}.ft-bottom{flex-direction:column}.closer-btns{flex-direction:column}.btn-wa,.btn-outline,.btn-p,.btn-o{width:100%;justify-content:center}.wa-float{right:1rem;bottom:1rem}}
-`;
 /* PREMIUM DARK GOLD STYLE PATCH */
 
 :root{
@@ -633,4 +632,6 @@ const CSS = `
     border-radius:24px;
   }
 }
+`;
+
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
