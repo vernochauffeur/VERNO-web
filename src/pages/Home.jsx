@@ -855,6 +855,31 @@ const CSS = `
     padding:0;
   }
 }
+/* HERO TYPOGRAPHY FINAL */
+
+.hero-h1{
+  font-family:var(--serif);
+  font-size:clamp(3rem,4.2vw,4.8rem);
+  line-height:1.05;
+  letter-spacing:-0.03em;
+}
+
+.hero-h1 span{
+  display:block;
+  font-style:normal;
+  font-weight:400;
+  font-size:0.95em;   /* biraz daha küçük */
+  color:#fff;
+}
+
+.hero-h1 em{
+  display:block;
+  font-style:italic;
+  font-weight:400;
+  font-size:1.1em;   /* biraz daha büyük */
+  color:rgba(255,255,255,.92);
+  margin-top:0.05em;
+}
 `;
 
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
