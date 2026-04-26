@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
