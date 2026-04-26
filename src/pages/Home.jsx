@@ -214,10 +214,17 @@ function AddressField({ label, placeholder, value, onChange, id }) {
       });
 
       autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        const selected = place.formatted_address || place.name || "";
-        if (selected) onChange(selected);
-      });
+  const place = autocomplete.getPlace();
+  const address = place.formatted_address || place.name || "";
+
+  // 🔥 SADECE VICTORIA
+  if (!address.includes("VIC")) {
+    alert("Please select a location within Victoria.");
+    return;
+  }
+
+  if (address) onChange(address);
+});
     };
 
     initAutocomplete();
@@ -226,20 +233,37 @@ function AddressField({ label, placeholder, value, onChange, id }) {
   }, [onChange]);
 
   return (
-    <div className="fg">
-      <label className="fl" htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        ref={inputRef}
-        className="fi"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete="off"
-      />
-    </div>
-  );
-}
+  <div className="fg" style={{ position: "relative" }}>
+    <label className="fl">{label}</label>
+
+    <input
+      ref={inputRef}
+      className="fi"
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      autoComplete="off"
+    />
+
+    {value && (
+      <button
+        onClick={() => onChange("")}
+        style={{
+          position: "absolute",
+          right: 10,
+          top: 32,
+          background: "none",
+          border: "none",
+          fontSize: 16,
+          cursor: "pointer",
+          color: "#999"
+        }}
+      >
+        ✕
+      </button>
+    )}
+  </div>
+);
 function buildWhatsAppLink({ from, to, date, time, pax, bags, fare }) { const msg = ["Hello, I'd like to book a transfer:", "", `Pickup: ${from || "--"}`, `Drop-off: ${to || "--"}`, ...(date ? [`Date: ${date}`] : []), ...(time ? [`Time: ${time}`] : []), ...(pax ? [`Passengers: ${pax}`] : []), ...(bags ? [`Luggage: ${bags}`] : []), ...(fare ? [`Estimated fare: $${fare}`] : []), "", "Please confirm availability."].join("\n"); return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`; }
 function WAIcon({ s = 20 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>; }
 function MsgIcon({ s = 14 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>; }
@@ -477,8 +501,7 @@ function TrustStrip() {
   );
 }
 function FareEstimate({ from, to }) { const result = estimateFare(from, to); if (!result) return null; return <div className="fare-estimate"><div className="fare-label">{result.isFixed ? "Fixed Price" : "Estimated Fare"}{result.isLate ? " - Late-night rate" : ""}</div><div className="fare-price">${result.fare}</div><div className="fare-guarantee">{result.isFallback ? "Estimate - final price confirmed on booking" : "Fixed price confirmed instantly via WhatsApp"}</div><div className="fare-trust"><span>No hidden costs</span><span>No surge pricing</span><span>No platform fees</span></div></div>; }
-function InlineBooking() { const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [date, setDate] = useState(""); const [time, setTime] = useState(""); const [pax, setPax] = useState("1"); const [bags, setBags] = useState("1"); const fareResult = estimateFare(from, to); const fare = fareResult ? fareResult.fare : null; const handleWA = () => window.open(buildWhatsAppLink({ from, to, date, time, pax, bags, fare }), "_blank", "noopener"); return <div className="booking-panel" id="book"><div className="booking-panel-inner"><div><h2 className="booking-panel-headline">Your fare,<br/><em>instantly.</em></h2><p className="booking-panel-sub">Enter your journey details to see your fare. Then reserve directly via WhatsApp.</p></div><div className="booking-panel-form"><button className="quick-chip" onClick={() => setTo("Melbourne Airport (Tullamarine)")}><span className="quick-chip-dot"/>Airport transfer? Set Melbourne Airport as destination</button><AddressField id="from" label="Pickup" placeholder="Enter pickup address, suburb or hotel" value={from} onChange={setFrom}/><AddressField id="to" label="Destination" placeholder="Enter destination address or airport" value={to} onChange={setTo}/><div className="f2"><div className="fg"><label className="fl">Date</label><input className="fi" type="date" value={date} onChange={(e) => setDate(e.target.value)}/></div><div className="fg"><label className="fl">Time</label><input className="fi" type="time" value={time} onChange={(e) => setTime(e.target.value)}/></div></div><div className="f2"><div className="fg"><label className="fl">Passengers</label><select className="fi" value={pax} onChange={(e) => setPax(e.target.value)}>{[1,2,3,4].map((n) => <option key={n}>{n}</option>)}</select></div><div className="fg"><label className="fl">Luggage</label><select className="fi" value={bags} onChange={(e) => setBags(e.target.value)}>{[0,1,2,3,4].map((n) => <option key={n}>{n}</option>)}</select></div></div><FareEstimate from={from} to={to}/><button className="btn-whatsapp" onClick={handleWA}><WAIcon s={18}/> Confirm Booking via WhatsApp</button><p className="btn-wa-note">We usually confirm within 2-5 minutes.</p><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-email-secondary">Prefer email? {VERNO_EMAIL}</a></div></div></div>; }
-const SERVICES = [{ label: "Airport Transfers", h: "Airport Transfers", d: "Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position." }, { label: "Corporate", h: "Corporate Travel", d: "Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed." }, { label: "Private Hire", h: "Private Hire", d: "A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond." }, { label: "Events", h: "Events & Occasions", d: "Premium transport for weddings, corporate functions, and private occasions." }];
+function InlineBooking() { const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [date, setDate] = useState(""); const [time, setTime] = useState(""); const [pax, setPax] = useState("1"); const [bags, setBags] = useState("1"); const fareResult = estimateFare(from, to); const fare = fareResult ? fareResult.fare : null; const handleWA = () => window.open(buildWhatsAppLink({ from, to, date, time, pax, bags, fare }), "_blank", "noopener"); return <div className="booking-panel" id="book"><div className="booking-panel-inner"><div><h2 className="booking-panel-headline">Your fare,<br/><em>instantly.</em></h2><p className="booking-panel-sub">Enter your journey details to see your fare. Then reserve directly via WhatsApp.</p></div><div className="booking-panel-form"><button className="quick-chip" onClick={() => setTo("Melbourne Airport (Tullamarine)")}><span className="quick-chip-dot"/>Airport transfer? Set Melbourne Airport as destination</button><AddressField id="from" label="Pickup" placeholder="Enter pickup address, suburb or hotel" value={from} onChange={setFrom}/><AddressField id="to" label="Destination" placeholder="Enter destination address or airport" value={to} onChange={setTo}/><div className="f2"><div className="fg"><label className="fl">Date</label><input className="fi" type="date" min={new Date().toISOString().split("T")[0]} value={date} onChange={(e) => setDate(e.target.value)}/></div><div className="fg"><label className="fl">Time</label><input className="fi" type="time" value={time} onChange={(e) => setTime(e.target.value)}/></div></div><div className="f2"><div className="fg"><label className="fl">Passengers</label><select className="fi" value={pax} onChange={(e) => setPax(e.target.value)}>{[1,2,3,4].map((n) => <option key={n}>{n}</option>)}</select></div><div className="fg"><label className="fl">Luggage</label><select className="fi" value={bags} onChange={(e) => setBags(e.target.value)}>{[0,1,2,3,4].map((n) => <option key={n}>{n}</option>)}</select></div></div><FareEstimate from={from} to={to}/><button className="btn-whatsapp" onClick={handleWA}><WAIcon s={18}/> Confirm Booking via WhatsApp</button><p className="btn-wa-note">We usually confirm within 2-5 minutes.</p><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-email-secondary">Prefer email? {VERNO_EMAIL}</a></div></div></div>; }
 function Services() { const [active, setActive] = useState(0); const s = SERVICES[active]; return <section className="sec" id="services"><div className="wrap"><div className="s-label">Services</div><h2 className="s-h">Every journey,<br/><em>handled.</em></h2><div className="svc-layout"><nav className="svc-nav">{SERVICES.map((x, i) => <button key={x.label} className={`svc-nav-item${active === i ? " active" : ""}`} onClick={() => setActive(i)}>{x.label}</button>)}</nav><div className="svc-content"><h3 className="svc-content-h">{s.h}</h3><p className="svc-desc">{s.d}</p><ul className="svc-feat-list"><li>Fixed fare confirmed at booking</li><li>Direct WhatsApp confirmation</li><li>Premium electric BMW i5</li></ul><a href="#book" className="btn-o">Get Fare Estimate</a></div></div></div></section>; }
 function Why() { return <section className="sec dark" id="about"><div className="wrap why-layout"><div><div className="s-label inv">Why VÉRNO</div><h2 className="s-h inv">A boutique<br/><em>standard.</em></h2><p className="s-body">Small fleet. Consistent quality. Every detail considered.</p></div><div className="why-grid">{["Fully electric", "Discreet by design", "Small, intentional fleet", "Direct booking"].map((t, i) => <div key={t} className="why-cell"><span className="why-n">0{i+1}</span><div className="why-t">{t}</div><p className="why-d">Premium, private, and consistent chauffeur service across Melbourne.</p></div>)}</div></div></section>; }
 function Areas() { const areas = ["Melbourne CBD", "St Kilda & South Yarra", "Mornington Peninsula", "Yarra Valley", "Melbourne Airport", "Avalon Airport", "Geelong & Surf Coast", "Greater Melbourne"]; return <section className="sec" id="areas"><div className="wrap"><div className="s-label">Coverage</div><h2 className="s-h">Across Melbourne<br/><em>and beyond.</em></h2><div className="areas-list">{areas.map((name) => <div key={name} className="area-item" onClick={() => document.getElementById("book")?.scrollIntoView({ behavior: "smooth" })}><div className="area-name">{name}</div><div className="area-time">Premium transfers</div><p className="area-desc">Private chauffeur service with fixed fare confirmation.</p></div>)}</div></div></section>; }
@@ -2028,6 +2051,9 @@ const CSS = `
 @media(max-width:1024px){
   .hero-left{ transform:none; }
   .hero-service-panel{ width:100%; transform:none; }
+}
+html, body {
+  overflow-x: hidden;
 }
 `;
 
