@@ -893,6 +893,146 @@ const CSS = `
     white-space:normal;
   }
 }
+/* ===== ULTRA MATCH HERO PATCH ===== */
+
+/* BACKGROUND – daha koyu + sunset glow */
+.hero{
+  background:
+    radial-gradient(circle at 85% 38%, rgba(255,170,90,.28), transparent 32%),
+    linear-gradient(90deg, rgba(3,3,3,.98) 0%, rgba(5,5,5,.92) 35%, rgba(5,5,5,.45) 65%, rgba(5,5,5,.75) 100%),
+    linear-gradient(180deg, rgba(5,5,5,.05) 0%, rgba(5,5,5,.88) 100%),
+    url("/images/hero-bg.jpg") center/cover no-repeat;
+}
+
+/* HERO LAYOUT tighten */
+.hero-content{
+  grid-template-columns:minmax(0,1.1fr) 340px;
+  gap:5vw;
+}
+
+/* TITLE – doğru weight / spacing */
+.hero-h1{
+  font-family:var(--serif);
+  font-size:clamp(3.6rem,4.9vw,5.8rem);
+  line-height:1.02;
+  letter-spacing:-.045em;
+  max-width:760px;
+}
+
+.hero-h1 span{
+  display:block;
+  font-style:normal;
+  font-weight:500;
+  color:#fff;
+}
+
+.hero-h1 em{
+  display:block;
+  font-style:italic;
+  font-weight:400;
+  font-size:1.02em;
+  color:rgba(255,255,255,.92);
+  margin-top:.05em;
+}
+
+/* ALT çizgi daha kısa */
+.hero-line{
+  width:38px;
+  height:2px;
+  margin:18px 0 22px;
+  background:#C79A63;
+}
+
+/* SUBTEXT daha soft */
+.hero-sub{
+  font-size:.92rem;
+  line-height:1.6;
+  color:rgba(255,255,255,.5);
+  max-width:480px;
+}
+
+/* BUTTON refine */
+.hero-gold{
+  background:linear-gradient(180deg,#D2A76F,#A5743E) !important;
+  border:1px solid rgba(210,176,109,.7) !important;
+}
+
+.hero-outline{
+  background:transparent !important;
+  border:1px solid rgba(210,176,109,.55) !important;
+}
+
+/* SERVICE PANEL – daha dar + daha şeffaf */
+.hero-service-panel{
+  width:340px;
+  border-radius:18px;
+  background:rgba(10,10,10,.28);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(210,176,109,.22);
+  box-shadow:0 30px 80px rgba(0,0,0,.45);
+}
+
+/* satırlar daha sıkı */
+.hero-service-row{
+  grid-template-columns:62px 1fr;
+  padding:1.6rem 1.6rem;
+}
+
+/* ICONLAR – daha büyük + daha belirgin */
+.hero-service-icon{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  border:1px solid rgba(210,176,109,.45);
+  background:rgba(210,176,109,.08);
+  color:#D2A76F;
+  font-size:1.4rem;
+}
+
+/* TEXT küçült */
+.hero-service-row h3{
+  font-size:1.05rem;
+  margin-bottom:.4rem;
+}
+
+.hero-service-row p{
+  font-size:.8rem;
+  color:rgba(255,255,255,.5);
+}
+
+/* TRUST STRIP – mat siyah */
+.trust-strip{
+  background:rgba(20,20,20,.92);
+  border-top:1px solid rgba(210,176,109,.12);
+  border-bottom:1px solid rgba(210,176,109,.12);
+}
+
+/* TRUST item spacing */
+.trust-feature{
+  padding:0 2rem;
+}
+
+/* ICON renk fix */
+.trust-icon{
+  color:#C79A63;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+  .hero-content{
+    grid-template-columns:1fr;
+  }
+
+  .hero-service-panel{
+    width:100%;
+    max-width:480px;
+  }
+
+  .hero-h1{
+    font-size:3.1rem;
+  }
+}
 `;
 
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
