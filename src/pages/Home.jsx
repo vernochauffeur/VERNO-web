@@ -1429,6 +1429,163 @@ const CSS = `
   stroke-linejoin:round;
   flex-shrink:0;
 }
+/* FINAL SUNSET CINEMATIC HERO PATCH */
+
+.hero{
+  min-height:78vh;
+  padding:105px 5vw 0;
+  background:
+    radial-gradient(circle at 88% 38%, rgba(255,185,95,.42) 0%, rgba(210,125,45,.25) 18%, transparent 43%),
+    radial-gradient(circle at 70% 18%, rgba(255,210,135,.18) 0%, transparent 34%),
+    linear-gradient(90deg, rgba(3,3,3,.86) 0%, rgba(5,5,5,.74) 33%, rgba(5,5,5,.36) 58%, rgba(5,5,5,.22) 100%),
+    linear-gradient(180deg, rgba(4,4,4,.08) 0%, rgba(4,4,4,.64) 100%),
+    url("/images/hero-bg.jpg") center/cover no-repeat;
+}
+
+.hero::after{
+  height:150px;
+  background:linear-gradient(to bottom, transparent, rgba(8,8,8,.88));
+}
+
+.hero-content{
+  min-height:calc(78vh - 105px);
+  grid-template-columns:minmax(0, 1fr) 370px;
+  gap:6.2vw;
+  align-items:center;
+}
+
+.hero-left{
+  padding-bottom:3vh;
+}
+
+.hero-h1{
+  font-size:clamp(3rem,4.25vw,4.85rem);
+  line-height:1.05;
+  letter-spacing:-.028em;
+  max-width:760px;
+}
+
+.hero-h1 span{
+  display:block;
+  font-style:normal;
+  font-weight:600;
+  color:#fff;
+}
+
+.hero-h1 em{
+  display:block;
+  font-style:italic;
+  font-weight:400;
+  font-size:.96em;
+  color:rgba(255,255,255,.92);
+  white-space:nowrap;
+  margin-top:.03em;
+}
+
+.hero-label{
+  color:#D0A064;
+}
+
+.hero-line{
+  width:48px;
+  background:#D0A064;
+}
+
+.hero-sub{
+  max-width:520px;
+  font-size:.95rem;
+  color:rgba(255,255,255,.62);
+}
+
+.hero-service-panel{
+  width:370px;
+  border-radius:18px;
+  background:rgba(12,9,7,.36);
+  border:1px solid rgba(208,160,100,.34);
+  backdrop-filter:blur(10px);
+  box-shadow:
+    0 26px 75px rgba(0,0,0,.38),
+    inset 0 0 42px rgba(208,135,65,.08);
+}
+
+.hero-service-row{
+  grid-template-columns:68px 1fr;
+  padding:1.65rem 1.75rem;
+  border-bottom:1px solid rgba(255,255,255,.13);
+}
+
+.hero-service-icon{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  border:1px solid rgba(208,160,100,.52);
+  background:rgba(208,160,100,.08);
+  color:#D0A064;
+  font-size:1.42rem;
+}
+
+.hero-service-row h3{
+  font-size:1.08rem;
+}
+
+.hero-service-row p{
+  font-size:.8rem;
+  color:rgba(255,255,255,.58);
+}
+
+.hero-gold{
+  background:linear-gradient(180deg,#D2A66B,#A8733E) !important;
+  color:#fff !important;
+  border:1px solid rgba(225,180,115,.72) !important;
+}
+
+.hero-outline{
+  border-color:rgba(210,166,107,.62) !important;
+}
+
+.trust-strip{
+  background:rgba(28,28,27,.96);
+  padding:2.35rem 5vw;
+  border-top:1px solid rgba(208,160,100,.16);
+}
+
+.trust-feature h4{
+  color:rgba(255,255,255,.9);
+}
+
+.trust-feature p{
+  color:rgba(255,255,255,.46);
+}
+
+.trust-icon{
+  color:#C9955A;
+}
+
+@media(max-width:1024px){
+  .hero{
+    min-height:auto;
+    padding-bottom:3rem;
+  }
+
+  .hero-content{
+    grid-template-columns:1fr;
+  }
+
+  .hero-service-panel{
+    width:100%;
+    max-width:520px;
+  }
+}
+
+@media(max-width:768px){
+  .hero-h1{
+    font-size:3rem;
+  }
+
+  .hero-h1 em{
+    white-space:normal;
+  }
+}
 `;
 
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
