@@ -132,41 +132,23 @@ function isSameSuburb(a, b) { if (a === b) return true; const ta = suburbToken(a
 function airportFixedFare(from, to) {
   const combined = normalizeAddress(from + " " + to);
 
-  const airportWords =
-    combined.includes("airport") ||
-    combined.includes("tullamarine") ||
-    combined.includes("terminal") ||
-    combined.includes("melbourne airport") ||
-    combined.includes("mel");
+  if (!isAirport(from + " " + to)) return null;
 
-  if (!airportWords) return null;
-
-  // HOTEL OVERRIDES
-  if (
-    combined.includes("park hyatt") ||
-    combined.includes("park hyatt melbourne") ||
-    combined.includes("parliament square") ||
-    combined.includes("east melbourne")
-  ) {
-    return 110;
-  }
-
-  if (
-    combined.includes("w melbourne") ||
-    combined.includes("w hotel") ||
-    combined.includes("408 flinders") ||
-    combined.includes("flinders lane")
-  ) {
-    return 100;
-  }
+  // CBD / HOTEL OVERRIDES
+  if (combined.includes("park hyatt") || combined.includes("parliament square")) return 110;
+  if (combined.includes("grand hyatt")) return 100;
+  if (combined.includes("w melbourne") || combined.includes("flinders lane") || combined.includes("408 flinders")) return 100;
+  if (combined.includes("sofitel") || combined.includes("collins street")) return 110;
+  if (combined.includes("ritz carlton") || combined.includes("ritz") || combined.includes("lonsdale street")) return 110;
+  if (combined.includes("crown") || combined.includes("whiteman street")) return 105;
+  if (combined.includes("langham") || combined.includes("southbank promenade")) return 105;
+  if (combined.includes("marriott") || combined.includes("exhibition street")) return 105;
 
   const sorted = Object.entries(AIRPORT_FIXED)
     .sort((a, b) => b[0].length - a[0].length);
 
   for (const [zone, price] of sorted) {
-    if (combined.includes(zone)) {
-      return price;
-    }
+    if (combined.includes(zone)) return price;
   }
 
   return null;
