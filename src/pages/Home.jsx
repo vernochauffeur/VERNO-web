@@ -90,8 +90,8 @@ function Hero() {
           <p className="hero-label">Private Chauffeur — Melbourne</p>
 
           <h1 className="hero-h1">
-  <span>Arrive in</span>
-  <em>complete confidence.</em>
+  <span className="hero-top">Arrive in</span>
+  <span className="hero-bottom">complete confidence.</span>
 </h1>
 
           <div className="hero-line" />
@@ -1183,6 +1183,41 @@ const CSS = `
   letter-spacing:-.04em;
   color:rgba(255,255,255,.92);
   margin-top:-6px;
+}
+/* HERO TITLE EXACT FIX */
+
+.hero-h1{
+  font-family:var(--serif) !important;
+  line-height:.95 !important;
+  letter-spacing:-.055em !important;
+  margin-bottom:1.8rem !important;
+  max-width:720px !important;
+}
+
+.hero-h1 .hero-top{
+  display:block !important;
+  font-style:normal !important;
+  font-weight:600 !important;
+  font-size:clamp(3.6rem,5vw,5.8rem) !important;
+  color:#fff !important;
+}
+
+.hero-h1 .hero-bottom{
+  display:block !important;
+  font-style:italic !important;
+  font-weight:400 !important;
+  font-size:clamp(3.45rem,4.8vw,5.55rem) !important;
+  color:rgba(255,255,255,.92) !important;
+  margin-top:.05rem !important;
+  white-space:nowrap !important;
+}
+
+@media(max-width:768px){
+  .hero-h1 .hero-top,
+  .hero-h1 .hero-bottom{
+    font-size:3rem !important;
+    white-space:normal !important;
+  }
 }
 `;
 
