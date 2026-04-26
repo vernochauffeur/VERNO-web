@@ -64,7 +64,7 @@ function AddressField({ label, placeholder, value, onChange }) {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (!window.google) return;
+    if (!window.google || !inputRef.current) return;
 
     const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
       componentRestrictions: { country: "au" }
@@ -76,7 +76,7 @@ function AddressField({ label, placeholder, value, onChange }) {
         onChange(place.formatted_address);
       }
     });
-  }, []);
+  }, [onChange]);
 
   return (
     <div className="fg">
