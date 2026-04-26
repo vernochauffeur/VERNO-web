@@ -1586,6 +1586,89 @@ const CSS = `
     white-space:normal;
   }
 }
+/* FINAL PROFESSIONAL POSITION + GLASS PATCH */
+
+.hero-content{
+  max-width:1320px;
+  grid-template-columns:minmax(0, 1fr) 350px;
+  gap:5.5vw;
+}
+
+.hero-left{
+  transform:translateX(-28px);
+}
+
+.hero-service-panel{
+  width:350px;
+  transform:translateY(-18px);
+  background:
+    radial-gradient(circle at 88% 18%, rgba(226,168,95,.22), transparent 34%),
+    linear-gradient(135deg, rgba(42,39,36,.62), rgba(13,13,13,.46));
+  border:1px solid rgba(210,166,107,.32);
+  backdrop-filter:blur(14px) saturate(115%);
+  -webkit-backdrop-filter:blur(14px) saturate(115%);
+  box-shadow:
+    0 28px 80px rgba(0,0,0,.42),
+    inset 0 0 38px rgba(230,160,90,.08),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.hero-service-panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(255,190,115,.18), transparent 38%),
+    linear-gradient(90deg, transparent 0%, rgba(255,190,115,.08) 78%, rgba(255,190,115,.16) 100%);
+  pointer-events:none;
+}
+
+.hero-service-row{
+  grid-template-columns:60px 1fr;
+  padding:1.55rem 1.55rem;
+  gap:.95rem;
+}
+
+.hero-service-icon{
+  width:50px;
+  height:50px;
+}
+
+.hero-service-row h3,
+.hero-service-row p{
+  transform:translateX(-4px);
+}
+
+.hero-trust{
+  margin-top:3.35rem;
+}
+
+.trust-strip{
+  background:
+    linear-gradient(180deg, #242424 0%, #202020 100%);
+  border-top:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(0,0,0,.45);
+}
+
+.trust-feature{
+  padding-top:.15rem;
+}
+
+@media(max-width:1024px){
+  .hero-left{
+    transform:none;
+  }
+
+  .hero-service-panel{
+    width:100%;
+    transform:none;
+  }
+
+  .hero-trust{
+    margin-top:2.4rem;
+  }
+}
 `;
 
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
