@@ -1786,6 +1786,71 @@ const CSS = `
 .hero-service-row{
   border-bottom:1px solid rgba(255,255,255,.06);
 }
+/* ===== HERO POSITION + PANEL TIGHTEN ===== */
+
+/* SOL BLOK → DAHA SOLA */
+.hero-content{
+  max-width:1360px;
+  grid-template-columns:minmax(0,1fr) 340px; /* sağ panel biraz dar */
+  gap:4.5vw;
+}
+.hero-left{
+  transform:translateX(-48px); /* sola kaydır */
+}
+
+/* SAĞ PANEL → DAHA DARK + DAHA KOMPAKT */
+.hero-service-panel{
+  width:340px;
+  transform:translateY(-12px); /* hafif yukarı */
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255,180,100,.10), transparent 40%),
+    linear-gradient(135deg, rgba(24,24,24,.90), rgba(8,8,8,.86)); /* daha dark grey */
+  border:1px solid rgba(200,160,100,.22);
+  backdrop-filter:blur(14px) saturate(110%);
+  -webkit-backdrop-filter:blur(14px) saturate(110%);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.45),
+    inset 0 0 28px rgba(230,160,90,.06);
+}
+
+/* ROW → YÜKSEKLİK VE ARALIK KISALT */
+.hero-service-row{
+  grid-template-columns:44px 1fr;
+  padding:1rem 1.2rem;      /* daha kısa */
+  gap:.6rem;                 /* daha sıkı */
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.hero-service-row:last-child{
+  border-bottom:none;
+}
+
+/* ICON → SOLA YAPIŞIK */
+.hero-service-icon{
+  width:40px;
+  height:40px;
+  margin-left:-10px;         /* sola çek */
+}
+
+/* YAZILAR → DAHA KOMPAKT VE SOLA */
+.hero-service-row > div{
+  transform:translateX(-6px);
+}
+.hero-service-row h3{
+  font-size:.92rem;
+  font-weight:600;
+  margin-bottom:.25rem;
+}
+.hero-service-row p{
+  font-size:.70rem;
+  line-height:1.4;
+  color:rgba(255,255,255,.55);
+}
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+  .hero-left{ transform:none; }
+  .hero-service-panel{ width:100%; transform:none; }
+}
 `;
 
 export default function Home() {
