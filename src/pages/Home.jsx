@@ -2054,6 +2054,66 @@ const CSS = `
 html, body {
   overflow-x: hidden;
 }
+/* ===== MOBILE CLEAN FIX ===== */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .hero,
+  .booking-panel,
+  .sec,
+  .moments,
+  .closer,
+  footer {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .hero-content,
+  .booking-panel-inner,
+  .wrap,
+  .fleet-layout,
+  .moments-inner,
+  .why-layout {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .hero-left {
+    transform: none !important;
+  }
+
+  .hero-service-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+  }
+
+  .hero-trust {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .wa-float {
+    right: 14px;
+    bottom: 14px;
+  }
+}
 `;
 
 export default function Home() {
