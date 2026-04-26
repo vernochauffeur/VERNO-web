@@ -79,6 +79,17 @@ function VernoMark({ dark = false, h = 44 }) {
 function useReveal(ref) { useEffect(() => { const root = ref.current; if (!root) return; root.querySelectorAll(".rv").forEach((el) => el.classList.add("in")); }, [ref]); }
 
 function Nav() { const [solid, setSolid] = useState(false); useEffect(() => { const fn = () => setSolid(window.scrollY > 60); window.addEventListener("scroll", fn); return () => window.removeEventListener("scroll", fn); }, []); return <nav className={`nav${solid ? " solid" : ""}`}><a href="#" className="nav-logo-wrap"><VernoMark dark={solid} h={34}/></a><ul className="nav-links"><li><a href="#services">Services</a></li><li><a href="#fleet">Fleet</a></li><li><a href="#areas">Coverage</a></li><li><a href="#about">About</a></li></ul><div className="nav-right"><a href="#book" className="nav-btn">Reserve a Transfer</a></div></nav>; }
+function IconPlane() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M22 16.5 13.5 12 22 7.5v-2L11 9 6 3H3l3 8-3 8h3l5-6 11 3.5v-2Z"/></svg>;
+}
+
+function IconBriefcase() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5.5A2.5 2.5 0 0 1 11.5 3h1A2.5 2.5 0 0 1 15 5.5V7"/></svg>;
+}
+
+function IconCar() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M5 16h14l-1.5-5.5A3 3 0 0 0 14.6 8H9.4a3 3 0 0 0-2.9 2.5L5 16Z"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg>;
+}
 
 function Hero() {
   const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
@@ -119,7 +130,7 @@ function Hero() {
 
         <div className="hero-service-panel">
           <div className="hero-service-row">
-            <div className="hero-service-icon">✈</div>
+            <div className="hero-service-icon"><IconPlane /></div>
             <div>
               <h3>Airport Transfers</h3>
               <p>Tullamarine &amp; Avalon</p>
@@ -128,7 +139,7 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon">▣</div>
+            <div className="hero-service-icon"><IconBriefcase /></div>
             <div>
               <h3>Corporate Travel</h3>
               <p>Executive ground transport</p>
@@ -137,7 +148,7 @@ function Hero() {
           </div>
 
           <div className="hero-service-row">
-            <div className="hero-service-icon">▰</div>
+            <div className="hero-service-icon"><IconCar /></div>
             <div>
               <h3>Private Hire</h3>
               <p>Mornington, Yarra Valley</p>
