@@ -149,7 +149,49 @@ function Hero() {
     </section>
   );
 }
-function TrustStrip() { return <div className="trust-strip"><div className="trust-strip-inner">{["Professional chauffeur", "Melbourne based", "Private service", "No platform fees"].map((t) => <div key={t} className="trust-item"><div className="trust-item-dot"/><span>{t}</span></div>)}</div></div>; }
+function IconClock() {
+  return <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>;
+}
+
+function IconPerson() {
+  return <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><circle cx="12" cy="7" r="4"/><path d="M4 21c1.7-4 4.2-6 8-6s6.3 2 8 6"/></svg>;
+}
+
+function IconStar() {
+  return <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.7 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5-4.8-4.7 6.6-.9L12 2.5z"/></svg>;
+}
+
+function TrustStrip() {
+  return (
+    <div className="trust-strip">
+      <div className="trust-strip-inner">
+        <div className="trust-feature">
+          <div className="trust-icon"><IconClock /></div>
+          <div>
+            <h4>On Time, Every Time</h4>
+            <p>Punctual, professional and always reliable.</p>
+          </div>
+        </div>
+
+        <div className="trust-feature">
+          <div className="trust-icon"><IconPerson /></div>
+          <div>
+            <h4>Discreet & Professional</h4>
+            <p>Your privacy is respected. Always.</p>
+          </div>
+        </div>
+
+        <div className="trust-feature">
+          <div className="trust-icon"><IconStar /></div>
+          <div>
+            <h4>Premium Experience</h4>
+            <p>Luxury electric comfort from start to finish.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 function FareEstimate({ from, to }) { const result = estimateFare(from, to); if (!result) return null; return <div className="fare-estimate"><div className="fare-label">{result.isFixed ? "Fixed Price" : "Estimated Fare"}{result.isLate ? " - Late-night rate" : ""}</div><div className="fare-price">${result.fare}</div><div className="fare-guarantee">{result.isFallback ? "Estimate - final price confirmed on booking" : "Fixed price confirmed instantly via WhatsApp"}</div><div className="fare-trust"><span>No hidden costs</span><span>No surge pricing</span><span>No platform fees</span></div></div>; }
 function InlineBooking() { const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [date, setDate] = useState(""); const [time, setTime] = useState(""); const [pax, setPax] = useState("1"); const [bags, setBags] = useState("1"); const fareResult = estimateFare(from, to); const fare = fareResult ? fareResult.fare : null; const handleWA = () => window.open(buildWhatsAppLink({ from, to, date, time, pax, bags, fare }), "_blank", "noopener"); return <div className="booking-panel" id="book"><div className="booking-panel-inner"><div><h2 className="booking-panel-headline">Your fare,<br/><em>instantly.</em></h2><p className="booking-panel-sub">Enter your journey details to see your fare. Then reserve directly via WhatsApp.</p></div><div className="booking-panel-form"><button className="quick-chip" onClick={() => setTo("Melbourne Airport (Tullamarine)")}><span className="quick-chip-dot"/>Airport transfer? Set Melbourne Airport as destination</button><AddressField id="from" label="Pickup" placeholder="Enter pickup address, suburb or hotel" value={from} onChange={setFrom}/><AddressField id="to" label="Destination" placeholder="Enter destination address or airport" value={to} onChange={setTo}/><div className="f2"><div className="fg"><label className="fl">Date</label><input className="fi" type="date" value={date} onChange={(e) => setDate(e.target.value)}/></div><div className="fg"><label className="fl">Time</label><input className="fi" type="time" value={time} onChange={(e) => setTime(e.target.value)}/></div></div><div className="f2"><div className="fg"><label className="fl">Passengers</label><select className="fi" value={pax} onChange={(e) => setPax(e.target.value)}>{[1,2,3,4].map((n) => <option key={n}>{n}</option>)}</select></div><div className="fg"><label className="fl">Luggage</label><select className="fi" value={bags} onChange={(e) => setBags(e.target.value)}>{[0,1,2,3,4].map((n) => <option key={n}>{n}</option>)}</select></div></div><FareEstimate from={from} to={to}/><button className="btn-whatsapp" onClick={handleWA}><WAIcon s={18}/> Confirm Booking via WhatsApp</button><p className="btn-wa-note">We usually confirm within 2-5 minutes.</p><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-email-secondary">Prefer email? {VERNO_EMAIL}</a></div></div></div>; }
 const SERVICES = [{ label: "Airport Transfers", h: "Airport Transfers", d: "Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position." }, { label: "Corporate", h: "Corporate Travel", d: "Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed." }, { label: "Private Hire", h: "Private Hire", d: "A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond." }, { label: "Events", h: "Events & Occasions", d: "Premium transport for weddings, corporate functions, and private occasions." }];
@@ -630,6 +672,187 @@ const CSS = `
 
   .hero-service-panel{
     border-radius:24px;
+  }
+}
+/* FINAL CINEMATIC HERO PATCH */
+
+:root{
+  --gold:#B98B55;
+  --gold-soft:#C9A46D;
+  --burnt:#8C5F35;
+}
+
+.hero{
+  min-height:78vh;
+  padding:105px 5vw 0;
+  background:
+    radial-gradient(circle at 88% 42%, rgba(185,139,85,.34), transparent 28%),
+    linear-gradient(90deg, rgba(5,5,5,.97) 0%, rgba(8,8,8,.88) 38%, rgba(8,8,8,.42) 66%, rgba(8,8,8,.58) 100%),
+    linear-gradient(180deg, rgba(5,5,5,.18) 0%, rgba(5,5,5,.78) 100%),
+    url("/images/hero-bg.jpg") center/cover no-repeat;
+}
+
+.hero-content{
+  min-height:calc(78vh - 105px);
+  grid-template-columns:minmax(0, 1.05fr) 390px;
+  gap:6vw;
+  align-items:center;
+}
+
+.hero-label{
+  color:#C29A66;
+}
+
+.hero-h1{
+  font-size:clamp(3.1rem,4.55vw,5.25rem);
+  line-height:1.02;
+  letter-spacing:-.035em;
+  max-width:720px;
+}
+
+.hero-h1 span{
+  display:block;
+  font-style:normal;
+}
+
+.hero-h1 em{
+  display:block;
+  font-style:italic;
+  white-space:normal;
+  color:rgba(255,255,255,.9);
+}
+
+.hero-line{
+  background:#C29A66;
+  width:46px;
+}
+
+.hero-sub{
+  font-size:.95rem;
+  color:rgba(255,255,255,.55);
+}
+
+.hero-gold{
+  background:linear-gradient(180deg,#C49A60,#A8753F) !important;
+  color:#fff !important;
+  border:1px solid rgba(201,164,109,.65) !important;
+}
+
+.hero-outline{
+  border-color:rgba(201,164,109,.58) !important;
+}
+
+.hero-service-panel{
+  width:390px;
+  border-radius:18px;
+  background:rgba(10,10,10,.34);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(201,164,109,.26);
+  box-shadow:0 25px 70px rgba(0,0,0,.35);
+}
+
+.hero-service-row{
+  grid-template-columns:58px 1fr;
+  padding:1.55rem 1.7rem;
+}
+
+.hero-service-icon{
+  width:46px;
+  height:46px;
+  color:#C29A66;
+  border-color:rgba(194,154,102,.36);
+  background:rgba(194,154,102,.06);
+  font-size:1.25rem;
+}
+
+.hero-service-row h3{
+  font-size:1.04rem;
+}
+
+.hero-service-row p{
+  font-size:.78rem;
+  color:rgba(255,255,255,.52);
+}
+
+.hero-trust{
+  color:#B98B55;
+}
+
+.trust-strip{
+  background:rgba(18,18,18,.96);
+  padding:2.25rem 5vw;
+  border-top:1px solid rgba(201,164,109,.11);
+  border-bottom:1px solid rgba(201,164,109,.11);
+}
+
+.trust-strip-inner{
+  max-width:1050px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:0;
+}
+
+.trust-feature{
+  display:grid;
+  grid-template-columns:52px 1fr;
+  gap:1.3rem;
+  align-items:flex-start;
+  padding:0 2.6rem;
+  border-right:1px solid rgba(255,255,255,.08);
+}
+
+.trust-feature:last-child{
+  border-right:none;
+}
+
+.trust-icon{
+  color:#B98B55;
+  opacity:.95;
+}
+
+.trust-feature h4{
+  font-size:.72rem;
+  color:rgba(255,255,255,.9);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:.55rem;
+}
+
+.trust-feature p{
+  font-size:.82rem;
+  line-height:1.65;
+  color:rgba(255,255,255,.42);
+}
+
+.wa-float{
+  background:#128C7E !important;
+  color:#fff !important;
+}
+
+@media(max-width:1024px){
+  .hero{
+    min-height:auto;
+    padding-bottom:3rem;
+  }
+
+  .hero-content{
+    grid-template-columns:1fr;
+  }
+
+  .hero-service-panel{
+    width:100%;
+    max-width:520px;
+  }
+
+  .trust-strip-inner{
+    grid-template-columns:1fr;
+    gap:2rem;
+  }
+
+  .trust-feature{
+    border-right:none;
+    padding:0;
   }
 }
 `;
