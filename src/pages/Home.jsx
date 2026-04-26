@@ -136,7 +136,6 @@ function airportFixedFare(from, to) {
 
   // 🔥 1. CBD GLOBAL FIX (OTEL OLSUN OLMASIN)
   if (
-    combined.includes("melbourne") ||
     combined.includes("cbd") ||
     combined.includes("city") ||
     combined.includes("3000")
