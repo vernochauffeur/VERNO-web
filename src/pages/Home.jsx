@@ -129,7 +129,27 @@ function suburbToken(n) { const words = n.split(" "); const two = words.length >
 function getAnchor(text) { const n = normalizeAddress(text); const sorted = Object.entries(AIRPORT_FIXED).sort((a, b) => b[0].length - a[0].length); for (const [key, val] of sorted) { if (new RegExp("(?:^| )" + key.replace(/ /g, " ") + "(?= |$)").test(n)) return val; } return null; }
 function inGroup(n, group) { return group.some((k) => new RegExp("(?:^| )" + k.replace(/ /g, " ") + "(?= |$)").test(n)); }
 function isSameSuburb(a, b) { if (a === b) return true; const ta = suburbToken(a); const tb = suburbToken(b); return ta.length > 2 && ta === tb; }
-function airportFixedFare(from, to) { if (!isAirport(from + " " + to)) return null; const combined = normalizeAddress(from + " " + to); const sorted = Object.entries(AIRPORT_FIXED).sort((a, b) => b[0].length - a[0].length); for (const [zone, price] of sorted) { if (new RegExp("(?:^| )" + zone.replace(/ /g, " ") + "(?= |$)").test(combined)) return price; } return null; }
+function airportFixedFare(from, to) {
+  if (!isAirport(from + " " + to)) return null;
+
+  const combined = normalizeAddress(from + " " + to);
+
+  // 🔥 ÖNCE OTEL FIX (en kritik)
+  if (combined.includes("park hyatt")) return 110;
+  if (combined.includes("w melbourne")) return 100;
+
+  // 🔁 NORMAL MATCH
+  const sorted = Object.entries(AIRPORT_FIXED)
+    .sort((a, b) => b[0].length - a[0].length);
+
+  for (const [zone, price] of sorted) {
+    if (new RegExp("(?:^| )" + zone.replace(/ /g, " ") + "(?= |$)").test(combined)) {
+      return price;
+    }
+  }
+
+  return null;
+}
 function lookupRoute(from, to) { const combined = (from + " " + to).toLowerCase(); for (const route of ROUTE_TABLE) { for (const pair of route.keys) { if (combined.includes(pair[0]) && combined.includes(pair[1])) return { km: route.km, min: route.min }; } } return null; }
 function anchorSuburbFare(from, to) { const af = getAnchor(from); const at = getAnchor(to); const anchors = [af, at].filter((a) => a !== null); if (anchors.length === 0) return applyLateAndRound(PRICING.MIN_FARE + PRICING.BUFFER + 15); const nf = normalizeAddress(from); const nt = normalizeAddress(to); const cap = Math.max(...anchors); if (isSameSuburb(nf, nt)) return PRICING.MIN_FARE; let base; if (NEARBY_GROUPS.some((g) => inGroup(nf, g) && inGroup(nt, g))) { base = anchors.reduce((s, a) => s + a, 0) / anchors.length * 0.40; } else if (ZONE_GROUPS.some((g) => inGroup(nf, g) && inGroup(nt, g))) { base = Math.min(...anchors) * 0.50; } else { base = Math.max(...anchors) * 0.65; } return applyLateAndRound(Math.min(cap, Math.max(PRICING.MIN_FARE, base)) + PRICING.BUFFER); }
 function calculateFare(from, to) {
