@@ -215,15 +215,17 @@ function AddressField({ label, placeholder, value, onChange, id }) {
 
       autocomplete.addListener("place_changed", () => {
   const place = autocomplete.getPlace();
-  const address = place.formatted_address || place.name || "";
 
-  // 🔥 SADECE VICTORIA
+  // güvenli şekilde al
+  const address = place?.formatted_address || place?.name || "";
+
+  // boşsa veya VIC değilse engelle
   if (!address || !address.includes("VIC")) {
     alert("Please select a location within Victoria.");
     return;
   }
 
-  if (address) onChange(address);
+  onChange(address);
 });
     };
 
