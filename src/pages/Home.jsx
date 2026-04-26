@@ -59,7 +59,6 @@ function anchorSuburbFare(from, to) { const af = getAnchor(from); const at = get
 function calculateFare(from, to) { const airportRoute = isAirport(from + " " + to); const fixed = airportFixedFare(from, to); if (fixed !== null) return applyLateAndRound(fixed + PRICING.BUFFER); if (airportRoute) { const route = lookupRoute(from, to); if (route) return applyLateAndRound(Math.max(PRICING.BASE_FEE + distanceCost(route.km) + route.min * PRICING.PER_MIN, PRICING.MIN_FARE) + PRICING.BUFFER); return applyLateAndRound(120 + PRICING.BUFFER); } return anchorSuburbFare(from, to); }
 function estimateFare(from, to) { if (from.trim().length < 4 || to.trim().length < 4) return null; const fixed = airportFixedFare(from, to) !== null || lookupRoute(from, to) !== null; return { fare: calculateFare(from, to), isLate: isLateNight(), hasAirport: isAirport(from + " " + to), isFixed: fixed, isFallback: !fixed }; }
 
-const DEMO_SUGGESTIONS = ["Melbourne Airport (Tullamarine)", "Avalon Airport", "Melbourne CBD", "Southbank", "Docklands", "Crown Melbourne", "St Kilda", "South Yarra", "Prahran", "Toorak", "Richmond", "Hawthorn", "Brighton", "Sandringham", "Mornington", "Mount Eliza", "Frankston", "Geelong CBD", "Yarra Valley", "Sorrento", "Portsea"];
 function AddressField({ label, placeholder, value, onChange }) {
   const inputRef = useRef(null);
 
