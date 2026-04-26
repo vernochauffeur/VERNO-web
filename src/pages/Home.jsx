@@ -82,7 +82,7 @@ function Nav() { const [solid, setSolid] = useState(false); useEffect(() => { co
 function IconPlane() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M22 16.5 13.5 12 22 7.5v-2L11 9 6 3H3l3 8-3 8h3l5-6 11 3.5v-2Z"/>
+      <path d="M21.7 16.2 13.3 12l8.4-4.2c.4-.2.4-.8 0-1l-1.1-.6c-.2-.1-.4-.1-.6 0l-9.4 3.1-4.1-5.2c-.1-.2-.3-.3-.6-.3H3.8c-.5 0-.8.5-.5.9L6.8 11 3.3 19.3c-.2.4.1.9.5.9h2.1c.2 0 .4-.1.6-.3l4.1-5.2 9.4 3.1c.2.1.4.1.6 0l1.1-.6c.4-.2.4-.8 0-1Z"/>
     </svg>
   );
 }
@@ -90,7 +90,7 @@ function IconPlane() {
 function IconBriefcase() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M7 6V5a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3Zm2 0h6V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1Z"/>
+      <path d="M9 6V5.2C9 3.4 10.4 2 12.2 2h1.6C15.6 2 17 3.4 17 5.2V6h2.2C20.7 6 22 7.3 22 8.8v9.4c0 1.5-1.3 2.8-2.8 2.8H4.8C3.3 21 2 19.7 2 18.2V8.8C2 7.3 3.3 6 4.8 6H9Zm2 0h4v-.8c0-.7-.5-1.2-1.2-1.2h-1.6c-.7 0-1.2.5-1.2 1.2V6Zm-7 6.2V18c0 .6.4 1 1 1h14c.6 0 1-.4 1-1v-5.8h-6.6v1.1h-2.8v-1.1H4Zm6.6-2.2h2.8v1h-2.8v-1Z"/>
     </svg>
   );
 }
@@ -98,7 +98,7 @@ function IconBriefcase() {
 function IconCar() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M5 16h14l-1.5-5a2.5 2.5 0 0 0-2.4-2H8.9A2.5 2.5 0 0 0 6.5 11L5 16Zm2.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/>
+      <path d="M6.2 10.2 7.4 6.8C7.8 5.7 8.8 5 10 5h4c1.2 0 2.2.7 2.6 1.8l1.2 3.4 1.3.4c1.1.4 1.9 1.4 1.9 2.6V18c0 .6-.4 1-1 1h-1.1a2.4 2.4 0 0 1-4.6 0H9.7a2.4 2.4 0 0 1-4.6 0H4c-.6 0-1-.4-1-1v-4.8c0-1.2.8-2.2 1.9-2.6l1.3-.4Zm2.4-.3h6.8l-.8-2.3c-.1-.4-.5-.6-.9-.6h-3.4c-.4 0-.8.2-.9.6l-.8 2.3ZM7.4 17.8a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm9.2 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/>
     </svg>
   );
 }
@@ -1275,6 +1275,28 @@ const CSS = `
   background:rgba(10,10,10,.30) !important;
   backdrop-filter:blur(14px);
   border:1px solid rgba(210,176,109,.25);
+}
+.hero-service-icon{
+  width:72px !important;
+  height:72px !important;
+  min-width:72px !important;
+  border-radius:999px !important;
+  border:1.4px solid rgba(210,176,109,.48) !important;
+  background:rgba(210,176,109,.055) !important;
+  color:#D2B06D !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.hero-service-icon svg{
+  width:38px !important;
+  height:38px !important;
+  display:block !important;
+}
+
+.hero-service-row{
+  grid-template-columns:92px 1fr !important;
 }
 `;
 
