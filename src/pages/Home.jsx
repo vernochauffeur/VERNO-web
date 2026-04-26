@@ -1033,6 +1033,138 @@ const CSS = `
     font-size:3.1rem;
   }
 }
+/* ===== PERFECT MATCH HERO FINAL ===== */
+
+.hero{
+  background:
+    radial-gradient(circle at 85% 40%, rgba(255,160,80,.25), transparent 30%),
+    linear-gradient(90deg, rgba(2,2,2,.98) 0%, rgba(4,4,4,.93) 35%, rgba(4,4,4,.5) 65%, rgba(4,4,4,.78) 100%),
+    linear-gradient(180deg, rgba(2,2,2,.05) 0%, rgba(2,2,2,.9) 100%),
+    url("/images/hero-bg.jpg") center/cover no-repeat;
+}
+
+.hero-content{
+  grid-template-columns:minmax(0,1.1fr) 320px;
+  gap:4.5vw;
+}
+
+.hero-h1{
+  font-family:var(--serif);
+  font-size:clamp(3.8rem,5vw,6rem);
+  line-height:1.01;
+  letter-spacing:-.05em;
+  max-width:780px;
+}
+
+.hero-h1 span{
+  display:block;
+  font-style:normal;
+  font-weight:500;
+  color:#fff;
+}
+
+.hero-h1 em{
+  display:block;
+  font-style:italic;
+  font-weight:400;
+  font-size:1.04em;
+  color:rgba(255,255,255,.92);
+  margin-top:.02em;
+}
+
+.hero-line{
+  width:34px;
+  height:2px;
+  margin:20px 0 24px;
+  background:#C79A63;
+}
+
+.hero-sub{
+  font-size:.9rem;
+  line-height:1.6;
+  color:rgba(255,255,255,.48);
+  max-width:460px;
+}
+
+.hero-gold{
+  background:linear-gradient(180deg,#D4A96F,#A8753F) !important;
+  border:1px solid rgba(212,169,111,.75) !important;
+  color:#fff !important;
+}
+
+.hero-outline{
+  background:transparent !important;
+  border:1px solid rgba(212,169,111,.55) !important;
+  color:#fff !important;
+}
+
+.hero-service-panel{
+  width:320px;
+  border-radius:20px;
+  background:rgba(8,8,8,.28);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(212,169,111,.22);
+  box-shadow:0 30px 90px rgba(0,0,0,.5);
+}
+
+.hero-service-row{
+  grid-template-columns:64px 1fr;
+  padding:1.6rem 1.6rem;
+}
+
+.hero-service-icon{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  border:1px solid rgba(212,169,111,.45);
+  background:rgba(212,169,111,.08);
+  color:#D4A96F;
+  font-size:1.5rem;
+}
+
+.hero-service-row h3{
+  font-size:1.05rem;
+  margin-bottom:.4rem;
+}
+
+.hero-service-row p{
+  font-size:.78rem;
+  color:rgba(255,255,255,.48);
+}
+
+.trust-strip{
+  background:rgba(18,18,18,.9);
+  border-top:1px solid rgba(212,169,111,.1);
+  border-bottom:1px solid rgba(212,169,111,.1);
+}
+
+.trust-strip-inner{
+  grid-template-columns:repeat(3,1fr);
+}
+
+.trust-feature{
+  padding:0 2.2rem;
+}
+
+.trust-icon{
+  color:#C79A63;
+}
+
+@media(max-width:768px){
+
+  .hero-content{
+    grid-template-columns:1fr;
+  }
+
+  .hero-service-panel{
+    width:100%;
+    max-width:480px;
+  }
+
+  .hero-h1{
+    font-size:3.2rem;
+  }
+}
 `;
 
 export default function Home() { const wa = buildWhatsAppLink({ from: "", to: "", fare: null }); return <><style dangerouslySetInnerHTML={{ __html: CSS }}/><Nav/><Hero/><TrustStrip/><InlineBooking/><Services/><Why/><Areas/><Fleet/><Process/><Moments/><Testimonials/><Closer/><Footer/><a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float" aria-label="Reserve via WhatsApp"><WAIcon s={17}/><span>Reserve</span></a></>; }
