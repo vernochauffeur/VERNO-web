@@ -225,17 +225,29 @@ function AddressField({ label, placeholder, value, onChange, id }) {
   }, [onChange]);
 
   return (
-    <div className="fg">
+    <div className="fg address-field">
       <label className="fl" htmlFor={id}>{label}</label>
+
       <input
         id={id}
         ref={inputRef}
-        className="fi"
+        className="fi address-input"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoComplete="off"
       />
+
+      {value && (
+        <button
+          type="button"
+          className="clear-address-btn"
+          onClick={() => onChange("")}
+          aria-label={`Clear ${label}`}
+        >
+          ×
+        </button>
+      )}
     </div>
   );
 }
@@ -2246,6 +2258,36 @@ const CSS = `
   .trust-icon {
     flex-shrink: 0;
   }
+}
+.address-field{
+  position:relative;
+}
+
+.address-input{
+  padding-right:42px !important;
+}
+
+.clear-address-btn{
+  position:absolute;
+  right:12px;
+  top:34px;
+  width:24px;
+  height:24px;
+  border:0;
+  border-radius:50%;
+  background:rgba(0,0,0,.08);
+  color:#777;
+  font-size:18px;
+  line-height:24px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.clear-address-btn:hover{
+  background:rgba(0,0,0,.14);
+  color:#111;
 }
 `;
 
