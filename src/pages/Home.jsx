@@ -538,12 +538,23 @@ function InlineBooking() {
             <div className="fg">
               <label className="fl">Date</label>
               <input
-                className="fi"
-                type="date"
-                value={date}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setDate(e.target.value)}
-              />
+  className="fi"
+  type="date"
+  value={date}
+  min={new Date().toISOString().split("T")[0]}
+  onChange={(e) => {
+    const selected = e.target.value;
+    const today = new Date().toISOString().split("T")[0];
+
+    if (selected < today) {
+      alert("Please select a valid date.");
+      setDate(today);
+      return;
+    }
+
+    setDate(selected);
+  }}
+/>
             </div>
 
             <div className="fg">
