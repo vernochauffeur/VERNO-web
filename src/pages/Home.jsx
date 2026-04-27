@@ -476,6 +476,20 @@ function TrustStrip() {
   );
 }
 function FareEstimate({ from, to }) { const result = estimateFare(from, to); if (!result) return null; return <div className="fare-estimate"><div className="fare-label">{result.isFixed ? "Fixed Price" : "Estimated Fare"}{result.isLate ? " - Late-night rate" : ""}</div><div className="fare-price">${result.fare}</div><div className="fare-guarantee">{result.isFallback ? "Estimate - final price confirmed on booking" : "Fixed price confirmed instantly via WhatsApp"}</div><div className="fare-trust"><span>No hidden costs</span><span>No surge pricing</span><span>No platform fees</span></div></div>; }
+function getTodayLocal() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getMinBookingTime() {
+  const min = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const h = String(min.getHours()).padStart(2, "0");
+  const m = String(min.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
 function InlineBooking() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -541,18 +555,20 @@ function InlineBooking() {
   className="fi"
   type="date"
   value={date}
-  min={new Date().toISOString().split("T")[0]}
+  min={getTodayLocal()}
   onChange={(e) => {
     const selected = e.target.value;
-    const today = new Date().toISOString().split("T")[0];
+    const today = getTodayLocal();
 
     if (selected < today) {
       alert("Please select a valid date.");
       setDate(today);
+      setTime("");
       return;
     }
 
     setDate(selected);
+    setTime("");
   }}
 />
             </div>
@@ -563,14 +579,9 @@ function InlineBooking() {
   className="fi"
   type="time"
   value={time}
-  min={
-    date === new Date().toISOString().split("T")[0]
-      ? new Date(Date.now() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5)
-      : undefined
-  }
+  min={date === getTodayLocal() ? getMinBookingTime() : undefined}
   onChange={(e) => {
     const selectedTime = e.target.value;
-    const today = new Date().toISOString().split("T")[0];
 
     if (!date) {
       alert("Please select a date first.");
@@ -578,16 +589,10 @@ function InlineBooking() {
       return;
     }
 
-    if (date === today) {
-      const minimumTime = new Date(Date.now() + 3 * 60 * 60 * 1000)
-        .toTimeString()
-        .slice(0, 5);
-
-      if (selectedTime < minimumTime) {
-        alert("Please select a time at least 3 hours from now.");
-        setTime("");
-        return;
-      }
+    if (date === getTodayLocal() && selectedTime < getMinBookingTime()) {
+      alert("Please select a time at least 3 hours from now.");
+      setTime("");
+      return;
     }
 
     setTime(selectedTime);
