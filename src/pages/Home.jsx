@@ -416,24 +416,32 @@ function Hero() {
           </div>
 
           <div className="hero-trust">
-            <div className="hero-trust-item">
-              <IconPrice />
-              <span>Fixed pricing</span>
-            </div>
-            <div className="hero-trust-item">
-              <IconShield />
-              <span>No surge</span>
-            </div>
-            <div className="hero-trust-item">
-              <IconChatSmall />
-              <span>Direct contact</span>
-            </div>
-            <div className="hero-trust-item">
-              <IconDiamond />
-              <span>Premium BMW i5</span>
-            </div>
-          </div>
-        </div>
+  <div className="hero-trust-item">
+    <IconPrice />
+    <span>Fixed pricing</span>
+  </div>
+
+  <div className="hero-trust-item">
+    <IconShield />
+    <span>No surge</span>
+  </div>
+
+  <div className="hero-trust-item">
+    <IconChatSmall />
+    <span>Direct contact</span>
+  </div>
+
+  <div className="hero-trust-item">
+    <IconDiamond />
+    <span>Premium BMW i5</span>
+  </div>
+
+  {/* 🔥 TRUST BOOST (perfect placement) */}
+  <div className="hero-trust-item">
+    <IconShield />
+    <span>Licensed CPV</span>
+  </div>
+</div>
 
         <div className="hero-service-panel">
           <div className="hero-service-row">
