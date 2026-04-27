@@ -725,7 +725,66 @@ function Process() { return <section className="sec night2"><div className="wrap
 function Moments() { return <section className="moments"><div className="moments-inner"><div className="moments-img-wrap"><img src={MOMENTS_MAIN} alt="VERNO BMW i5" className="moments-img" loading="lazy"/><span className="moments-geo">Melbourne - Private Transfers</span></div><div className="moments-text"><p className="moments-eyebrow">Moments</p><h2 className="moments-title">Refined.<br/>Quiet.<br/><em>Consistent.</em></h2><div className="moments-rule"/><p className="moments-desc">Every journey is designed to feel effortless - from the first message to final arrival.</p></div></div></section>; }
 function Testimonials() { return <section className="sec"><div className="wrap"><div className="s-label">Client Words</div><h2 className="s-h">What clients<br/><em>say.</em></h2><div className="testi-row">{["Quiet, punctual, and professional.", "Confirmed within the hour.", "How you arrive matters."].map((t, i) => <div key={i} className="testi"><span className="testi-mark">\"</span><p className="testi-txt">{t}</p><p className="testi-by">- Melbourne client</p></div>)}</div></div></section>; }
 function Closer() { return <section className="closer" id="contact"><div className="closer-inner"><p className="s-label inv closer-label">Melbourne, Victoria</p><h2 className="closer-h">Ready when<br/><em>you are.</em></h2><p className="closer-sub">Reserve your transfer directly. Instant confirmation, fixed price.</p><div className="closer-btns"><a href="#book" className="btn-wa">Reserve via WhatsApp</a><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-outline">Send an Email</a></div></div></section>; }
-function Footer() { return <footer><div className="ft-grid"><div><VernoMark h={32}/><p className="ft-tagline">Private electric chauffeur for Melbourne.</p><a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12}/>{VERNO_EMAIL}</a></div><div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="#services">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div><div><p className="ft-col-h">Coverage</p><ul className="ft-links"><li><a href="#areas">Melbourne CBD</a></li><li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div><div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div></div><div className="ft-bottom"><p>© 2025 VÉRNO Private Chauffeur - Melbourne</p><p>Melbourne - Airport - Corporate</p></div></footer>; }
+function Footer() {
+  return (
+    <footer>
+      <div className="ft-grid">
+        <div>
+          <VernoMark h={32}/>
+          <p className="ft-tagline">Private electric chauffeur for Melbourne.</p>
+          <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link">
+            <MsgIcon s={12}/>{VERNO_EMAIL}
+          </a>
+        </div>
+
+        <div>
+          <p className="ft-col-h">Services</p>
+          <ul className="ft-links">
+            <li><a href="#services">Airport Transfers</a></li>
+            <li><a href="#services">Corporate Travel</a></li>
+            <li><a href="#services">Private Hire</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="ft-col-h">Coverage</p>
+          <ul className="ft-links">
+            <li><a href="#areas">Melbourne CBD</a></li>
+            <li><a href="#areas">Melbourne Airport</a></li>
+            <li><a href="#areas">Mornington Peninsula</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="ft-col-h">Reservations</p>
+          <ul className="ft-links">
+            <li><a href="#book">Fare Estimate</a></li>
+            <li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="ft-bottom">
+        <p>© 2025 VÉRNO Private Chauffeur - Melbourne</p>
+        <p>Melbourne - Airport - Corporate</p>
+      </div>
+
+      {/* 🔥 SEO SATIRI */}
+      <p
+        style={{
+          maxWidth: "1200px",
+          margin: "18px auto 0",
+          fontSize: "11px",
+          color: "rgba(255,255,255,.25)",
+          textAlign: "center"
+        }}
+      >
+        Melbourne chauffeur service | Airport transfers Melbourne | Private driver Melbourne
+      </p>
+
+    </footer>
+  );
+}
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
