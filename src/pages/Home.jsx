@@ -436,9 +436,7 @@ function Hero() {
     <span>Premium BMW i5</span>
   </div>
 
-  {/* 🔥 TRUST BOOST (perfect placement) */}
   <div className="hero-trust-item">
-    <IconShield />
     <span>Licensed CPV</span>
   </div>
 </div>
