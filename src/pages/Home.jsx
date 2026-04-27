@@ -563,17 +563,27 @@ function InlineBooking() {
   className="fi"
   type="time"
   value={time}
+  min={
+    date === new Date().toISOString().split("T")[0]
+      ? new Date(Date.now() + 3 * 60 * 60 * 1000).toTimeString().slice(0, 5)
+      : undefined
+  }
   onChange={(e) => {
     const selectedTime = e.target.value;
     const today = new Date().toISOString().split("T")[0];
 
+    if (!date) {
+      alert("Please select a date first.");
+      setTime("");
+      return;
+    }
+
     if (date === today) {
-      const now = new Date();
-      now.setHours(now.getHours() + 3);
+      const minimumTime = new Date(Date.now() + 3 * 60 * 60 * 1000)
+        .toTimeString()
+        .slice(0, 5);
 
-      const minTime = now.toTimeString().slice(0, 5);
-
-      if (selectedTime < minTime) {
+      if (selectedTime < minimumTime) {
         alert("Please select a time at least 3 hours from now.");
         setTime("");
         return;
