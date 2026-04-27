@@ -2028,6 +2028,37 @@ const CSS = `
   .hero-left{ transform:none; }
   .hero-service-panel{ width:100%; transform:none; }
 }
+@media (max-width: 768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .trust-strip {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .trust-strip-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  .trust-feature {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+    border: none !important;
+  }
+
+  .trust-icon {
+    flex-shrink: 0;
+  }
+}
 `;
 
 export default function Home() {
