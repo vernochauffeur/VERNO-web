@@ -215,7 +215,16 @@ function AddressField({ label, placeholder, value, onChange, id }) {
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
         const selected = place.formatted_address || place.name || "";
-        if (selected) onChange(selected);
+        const lower = selected.toLowerCase();
+
+if (
+  lower.includes(" vic") ||
+  lower.includes(" victoria")
+) {
+  onChange(selected);
+} else {
+  alert("Please select a location within Victoria.");
+}
       });
     };
 
