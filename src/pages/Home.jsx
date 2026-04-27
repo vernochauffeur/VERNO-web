@@ -769,7 +769,7 @@ function Footer() {
         <p>Melbourne - Airport - Corporate</p>
       </div>
 
-      {/* 🔥 SEO SATIRI */}
+      {/* 🔥 SEO */}
       <p
         style={{
           maxWidth: "1200px",
@@ -782,10 +782,34 @@ function Footer() {
         Melbourne chauffeur service | Airport transfers Melbourne | Private driver Melbourne
       </p>
 
+      {/* 🔥 TRUST (EN KRİTİK EKLEME) */}
+      <p
+        style={{
+          maxWidth: "1200px",
+          margin: "12px auto 0",
+          fontSize: "11px",
+          color: "rgba(255,255,255,.32)",
+          textAlign: "center"
+        }}
+      >
+        Licensed Chauffeur Service — Airport & Corporate Transfers — Melbourne, Victoria
+      </p>
+
+      <p
+        style={{
+          maxWidth: "1200px",
+          margin: "4px auto 0",
+          fontSize: "10px",
+          color: "rgba(255,255,255,.22)",
+          textAlign: "center"
+        }}
+      >
+        Registered CPV Operator — ABN 37 903 967 567
+      </p>
+
     </footer>
   );
 }
-
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth} :root{--black:#111;--white:#fff;--gold:#9E8A6A;--gold2:#B8A48A;--grey1:#F5F5F5;--grey2:#EBEBEB;--grey3:#999;--grey4:#666;--wa:#128C7E;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',Arial,sans-serif} body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
