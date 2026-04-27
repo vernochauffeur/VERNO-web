@@ -560,11 +560,29 @@ function InlineBooking() {
             <div className="fg">
               <label className="fl">Time</label>
               <input
-                className="fi"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-              />
+  className="fi"
+  type="time"
+  value={time}
+  onChange={(e) => {
+    const selectedTime = e.target.value;
+    const today = new Date().toISOString().split("T")[0];
+
+    if (date === today) {
+      const now = new Date();
+      now.setHours(now.getHours() + 3);
+
+      const minTime = now.toTimeString().slice(0, 5);
+
+      if (selectedTime < minTime) {
+        alert("Please select a time at least 3 hours from now.");
+        setTime("");
+        return;
+      }
+    }
+
+    setTime(selectedTime);
+  }}
+/>
             </div>
           </div>
 
