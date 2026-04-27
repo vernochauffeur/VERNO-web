@@ -582,31 +582,37 @@ function InlineBooking() {
   >
     <option value="">Select time</option>
 
-    {Array.from({ length: 48 }, (_, i) => {
-      const hour = Math.floor(i / 2);
-      const minute = i % 2 === 0 ? "00" : "30";
-      const slot = `${String(hour).padStart(2, "0")}:${minute}`;
+    {(() => {
+      if (!date) {
+        return <option disabled>Please select date first</option>;
+      }
 
-      const today = getTodayLocal();
+      const minBooking = new Date(Date.now() + 3 * 60 * 60 * 1000);
+      const slots = [];
 
-if (date === today) {
-  const now = new Date();
-  const minBooking = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      for (let i = 0; i < 48; i++) {
+        const hour = Math.floor(i / 2);
+        const minute = i % 2 === 0 ? "00" : "30";
+        const slot = `${String(hour).padStart(2, "0")}:${minute}`;
+        const slotDateTime = new Date(`${date}T${slot}`);
 
-  const slotDate = new Date(`${today}T${slot}`);
+        if (slotDateTime >= minBooking) {
+          slots.push(slot);
+        }
+      }
 
-  if (slotDate < minBooking) return null;
-}
+      if (slots.length === 0) {
+        return <option disabled>No available times for this date</option>;
+      }
 
-      return (
+      return slots.map((slot) => (
         <option key={slot} value={slot}>
           {slot}
         </option>
-      );
-    })}
+      ));
+    })()}
   </select>
-</div>
-          </div>
+</div>   </div>
 
           {/* PAX + BAGS */}
           <div className="f2">
