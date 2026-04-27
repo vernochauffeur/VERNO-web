@@ -574,31 +574,32 @@ function InlineBooking() {
             </div>
 
             <div className="fg">
-              <label className="fl">Time</label>
-              <input
-  className="fi"
-  type="time"
-  value={time}
-  min={date === getTodayLocal() ? getMinBookingTime() : undefined}
-  onChange={(e) => {
-    const selectedTime = e.target.value;
+  <label className="fl">Time</label>
+  <select
+    className="fi"
+    value={time}
+    onChange={(e) => setTime(e.target.value)}
+  >
+    <option value="">Select time</option>
 
-    if (!date) {
-      alert("Please select a date first.");
-      setTime("");
-      return;
-    }
+    {Array.from({ length: 48 }, (_, i) => {
+      const hour = Math.floor(i / 2);
+      const minute = i % 2 === 0 ? "00" : "30";
+      const slot = `${String(hour).padStart(2, "0")}:${minute}`;
 
-    if (date === getTodayLocal() && selectedTime < getMinBookingTime()) {
-      alert("Please select a time at least 3 hours from now.");
-      setTime("");
-      return;
-    }
+      const today = getTodayLocal();
+      const minTime = getMinBookingTime();
 
-    setTime(selectedTime);
-  }}
-/>
-            </div>
+      if (date === today && slot < minTime) return null;
+
+      return (
+        <option key={slot} value={slot}>
+          {slot}
+        </option>
+      );
+    })}
+  </select>
+</div>
           </div>
 
           {/* PAX + BAGS */}
