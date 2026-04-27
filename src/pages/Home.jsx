@@ -390,7 +390,6 @@ function Hero() {
             Fixed fares. Direct booking. Premium comfort.
           </p>
 
-          {/* 🔥 SEO SATIRI (minimal ve görünümü bozmaz) */}
           <p
             style={{
               fontSize: "13px",
@@ -416,30 +415,27 @@ function Hero() {
           </div>
 
           <div className="hero-trust">
-  <div className="hero-trust-item">
-    <IconPrice />
-    <span>Fixed pricing</span>
-  </div>
-
-  <div className="hero-trust-item">
-    <IconShield />
-    <span>No surge</span>
-  </div>
-
-  <div className="hero-trust-item">
-    <IconChatSmall />
-    <span>Direct contact</span>
-  </div>
-
-  <div className="hero-trust-item">
-    <IconDiamond />
-    <span>Premium BMW i5</span>
-  </div>
-
-  <div className="hero-trust-item">
-    <span>Licensed CPV</span>
-  </div>
-</div>
+            <div className="hero-trust-item">
+              <IconPrice />
+              <span>Fixed pricing</span>
+            </div>
+            <div className="hero-trust-item">
+              <IconShield />
+              <span>No surge</span>
+            </div>
+            <div className="hero-trust-item">
+              <IconChatSmall />
+              <span>Direct contact</span>
+            </div>
+            <div className="hero-trust-item">
+              <IconDiamond />
+              <span>Premium BMW i5</span>
+            </div>
+            <div className="hero-trust-item">
+              <span>Licensed CPV</span>
+            </div>
+          </div>
+        </div>
 
         <div className="hero-service-panel">
           <div className="hero-service-row">
@@ -487,239 +483,6 @@ function Hero() {
         </div>
       </div>
     </section>
-  );
-}
-function IconClock() {
-  return <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>;
-}
-
-function IconPerson() {
-  return <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><circle cx="12" cy="7" r="4"/><path d="M4 21c1.7-4 4.2-6 8-6s6.3 2 8 6"/></svg>;
-}
-
-function IconStar() {
-  return <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.7 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5-4.8-4.7 6.6-.9L12 2.5z"/></svg>;
-}
-
-function TrustStrip() {
-  return (
-    <div className="trust-strip">
-      <div className="trust-strip-inner">
-        <div className="trust-feature">
-          <div className="trust-icon"><IconClock /></div>
-          <div>
-            <h4>On Time, Every Time</h4>
-            <p>Punctual, professional and always reliable.</p>
-          </div>
-        </div>
-
-        <div className="trust-feature">
-          <div className="trust-icon"><IconPerson /></div>
-          <div>
-            <h4>Discreet & Professional</h4>
-            <p>Your privacy is respected. Always.</p>
-          </div>
-        </div>
-
-        <div className="trust-feature">
-          <div className="trust-icon"><IconStar /></div>
-          <div>
-            <h4>Premium Experience</h4>
-            <p>Luxury electric comfort from start to finish.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-function FareEstimate({ from, to }) { const result = estimateFare(from, to); if (!result) return null; return <div className="fare-estimate"><div className="fare-label">{result.isFixed ? "Fixed Price" : "Estimated Fare"}{result.isLate ? " - Late-night rate" : ""}</div><div className="fare-price">${result.fare}</div><div className="fare-guarantee">{result.isFallback ? "Estimate - final price confirmed on booking" : "Fixed price confirmed instantly via WhatsApp"}</div><div className="fare-trust"><span>No hidden costs</span><span>No surge pricing</span><span>No platform fees</span></div></div>; }
-function getTodayLocal() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function getMinBookingTime() {
-  const min = new Date(Date.now() + 3 * 60 * 60 * 1000);
-  const h = String(min.getHours()).padStart(2, "0");
-  const m = String(min.getMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
-}
-function InlineBooking() {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [pax, setPax] = useState("1");
-  const [bags, setBags] = useState("1");
-
-  const fareResult = estimateFare(from, to);
-  const fare = fareResult ? fareResult.fare : null;
-
-  const handleWA = () =>
-    window.open(
-      buildWhatsAppLink({ from, to, date, time, pax, bags, fare }),
-      "_blank",
-      "noopener"
-    );
-
-  return (
-    <div className="booking-panel" id="book">
-      <div className="booking-panel-inner">
-
-        <div>
-          <h2 className="booking-panel-headline">
-            Your fare,<br /><em>instantly.</em>
-          </h2>
-          <p className="booking-panel-sub">
-            Enter your journey details to see your fare. Then reserve directly via WhatsApp.
-          </p>
-        </div>
-
-        <div className="booking-panel-form">
-
-          <button
-            className="quick-chip"
-            onClick={() => setTo("Melbourne Airport (Tullamarine)")}
-          >
-            <span className="quick-chip-dot" />
-            Airport transfer? Set Melbourne Airport as destination
-          </button>
-
-          <AddressField
-            id="from"
-            label="Pickup"
-            placeholder="Enter pickup address, suburb or hotel"
-            value={from}
-            onChange={setFrom}
-          />
-
-          <AddressField
-            id="to"
-            label="Destination"
-            placeholder="Enter destination address or airport"
-            value={to}
-            onChange={setTo}
-          />
-
-          {/* DATE + TIME */}
-          <div className="f2">
-            <div className="fg">
-              <label className="fl">Date</label>
-              <input
-  className="fi"
-  type="date"
-  value={date}
-  min={getTodayLocal()}
-  onChange={(e) => {
-    const selected = e.target.value;
-    const today = getTodayLocal();
-
-    if (selected < today) {
-      alert("Please select a valid date.");
-      setDate(today);
-      setTime("");
-      return;
-    }
-
-    setDate(selected);
-    setTime("");
-  }}
-/>
-            </div>
-
-            <div className="fg">
-  <label className="fl">Time</label>
-  <select
-    className="fi"
-    value={time}
-    onChange={(e) => setTime(e.target.value)}
-  >
-    <option value="">Select time</option>
-
-    {(() => {
-      if (!date) {
-        return <option disabled>Please select date first</option>;
-      }
-
-      const minBooking = new Date(Date.now() + 3 * 60 * 60 * 1000);
-      const slots = [];
-
-      for (let i = 0; i < 48; i++) {
-        const hour = Math.floor(i / 2);
-        const minute = i % 2 === 0 ? "00" : "30";
-        const slot = `${String(hour).padStart(2, "0")}:${minute}`;
-        const slotDateTime = new Date(`${date}T${slot}`);
-
-        if (slotDateTime >= minBooking) {
-          slots.push(slot);
-        }
-      }
-
-      if (slots.length === 0) {
-        return <option disabled>No available times for this date</option>;
-      }
-
-      return slots.map((slot) => (
-        <option key={slot} value={slot}>
-          {slot}
-        </option>
-      ));
-    })()}
-  </select>
-</div>   </div>
-
-          {/* PAX + BAGS */}
-          <div className="f2">
-            <div className="fg">
-              <label className="fl">Passengers</label>
-              <select
-                className="fi"
-                value={pax}
-                onChange={(e) => setPax(e.target.value)}
-              >
-                {[1, 2, 3, 4].map((n) => (
-                  <option key={n}>{n}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="fg">
-              <label className="fl">Luggage</label>
-              <select
-                className="fi"
-                value={bags}
-                onChange={(e) => setBags(e.target.value)}
-              >
-                {[0, 1, 2, 3, 4].map((n) => (
-                  <option key={n}>{n}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <FareEstimate from={from} to={to} />
-
-          <button className="btn-whatsapp" onClick={handleWA}>
-            <WAIcon s={18} /> Confirm Booking via WhatsApp
-          </button>
-
-          <p className="btn-wa-note">
-            We usually confirm within 2-5 minutes.
-          </p>
-
-          <a
-            href={`mailto:${VERNO_EMAIL}?subject=Booking Request`}
-            className="btn-email-secondary"
-          >
-            Prefer email? {VERNO_EMAIL}
-          </a>
-
-        </div>
-      </div>
-    </div>
   );
 }
 const SERVICES = [{ label: "Airport Transfers", h: "Airport Transfers", d: "Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position." }, { label: "Corporate", h: "Corporate Travel", d: "Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed." }, { label: "Private Hire", h: "Private Hire", d: "A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond." }, { label: "Events", h: "Events & Occasions", d: "Premium transport for weddings, corporate functions, and private occasions." }];
