@@ -378,9 +378,9 @@ function Hero() {
           <p className="hero-label">Private Chauffeur — Melbourne</p>
 
           <h1 className="hero-h1">
-  <span className="hero-top">Arrive in</span>
-  <span className="hero-bottom">complete confidence.</span>
-</h1>
+            <span className="hero-top">Arrive in</span>
+            <span className="hero-bottom">complete confidence.</span>
+          </h1>
 
           <div className="hero-line" />
 
@@ -390,28 +390,58 @@ function Hero() {
             Fixed fares. Direct booking. Premium comfort.
           </p>
 
+          {/* 🔥 SEO SATIRI (minimal ve görünümü bozmaz) */}
+          <p
+            style={{
+              fontSize: "13px",
+              color: "rgba(255,255,255,.35)",
+              marginTop: "10px",
+            }}
+          >
+            Melbourne private chauffeur and airport transfer service.
+          </p>
+
           <div className="hero-actions">
-            <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold">
+            <a
+              href={wa}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-wa hero-gold"
+            >
               <WAIcon s={18} /> Reserve via WhatsApp
             </a>
-            <a href="#book" className="btn-outline hero-outline">Get Instant Fare</a>
+            <a href="#book" className="btn-outline hero-outline">
+              Get Instant Fare
+            </a>
           </div>
 
-        <div className="hero-trust">
-  <div className="hero-trust-item"><IconPrice /><span>Fixed pricing</span></div>
-  <div className="hero-trust-item"><IconShield /><span>No surge</span></div>
-  <div className="hero-trust-item"><IconChatSmall /><span>Direct contact</span></div>
-  <div className="hero-trust-item"><IconDiamond /><span>Premium BMW i5</span></div>
-</div>
+          <div className="hero-trust">
+            <div className="hero-trust-item">
+              <IconPrice />
+              <span>Fixed pricing</span>
+            </div>
+            <div className="hero-trust-item">
+              <IconShield />
+              <span>No surge</span>
+            </div>
+            <div className="hero-trust-item">
+              <IconChatSmall />
+              <span>Direct contact</span>
+            </div>
+            <div className="hero-trust-item">
+              <IconDiamond />
+              <span>Premium BMW i5</span>
+            </div>
+          </div>
         </div>
 
         <div className="hero-service-panel">
           <div className="hero-service-row">
             <div className="hero-service-icon">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M2 16l20-8-8 20-2-9-10-3z"/>
-  </svg>
-</div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M2 16l20-8-8 20-2-9-10-3z" />
+              </svg>
+            </div>
             <div>
               <h3>Airport Transfers</h3>
               <p>Tullamarine &amp; Avalon</p>
@@ -421,11 +451,11 @@ function Hero() {
 
           <div className="hero-service-row">
             <div className="hero-service-icon">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <rect x="3" y="7" width="18" height="13" rx="2"/>
-    <path d="M16 7V5a2 2 0 00-4 0v2"/>
-  </svg>
-</div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="3" y="7" width="18" height="13" rx="2" />
+                <path d="M16 7V5a2 2 0 00-4 0v2" />
+              </svg>
+            </div>
             <div>
               <h3>Corporate Travel</h3>
               <p>Executive ground transport</p>
@@ -435,13 +465,13 @@ function Hero() {
 
           <div className="hero-service-row">
             <div className="hero-service-icon">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M3 13l2-5h14l2 5"/>
-    <path d="M5 13v6h14v-6"/>
-    <circle cx="7.5" cy="17" r="1"/>
-    <circle cx="16.5" cy="17" r="1"/>
-  </svg>
-</div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 13l2-5h14l2 5" />
+                <path d="M5 13v6h14v-6" />
+                <circle cx="7.5" cy="17" r="1" />
+                <circle cx="16.5" cy="17" r="1" />
+              </svg>
+            </div>
             <div>
               <h3>Private Hire</h3>
               <p>Mornington, Yarra Valley</p>
