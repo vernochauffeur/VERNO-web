@@ -588,9 +588,15 @@ function InlineBooking() {
       const slot = `${String(hour).padStart(2, "0")}:${minute}`;
 
       const today = getTodayLocal();
-      const minTime = getMinBookingTime();
 
-      if (date === today && slot < minTime) return null;
+if (date === today) {
+  const now = new Date();
+  const minBooking = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+
+  const slotDate = new Date(`${today}T${slot}`);
+
+  if (slotDate < minBooking) return null;
+}
 
       return (
         <option key={slot} value={slot}>
