@@ -548,6 +548,7 @@ function InlineBooking() {
   const [time, setTime] = useState("");
   const [pax, setPax] = useState("1");
   const [bags, setBags] = useState("1");
+  const [flightNumber, setFlightNumber] = useState("");
 
   const fareResult = estimateFare(from, to);
   const fare = fareResult ? fareResult.fare : null;
@@ -597,6 +598,17 @@ function InlineBooking() {
             value={to}
             onChange={setTo}
           />
+          {from.toLowerCase().includes("airport") && (
+  <div className="fg">
+    <label className="fl">Flight Number</label>
+    <input
+      className="fi"
+      placeholder="e.g. EK408"
+      value={flightNumber}
+      onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
+    />
+  </div>
+)}
 
           {/* DATE + TIME */}
           <div className="f2">
