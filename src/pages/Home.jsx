@@ -794,37 +794,56 @@ ${details}
 
         <div className="booking-panel-form">
 
-          <div className="fg">
-            <label className="fl">Full Name</label>
-            <input className="fi" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
+  <div className="fg">
+    <label className="fl">Full Name</label>
+    <input className="fi" value={name} onChange={(e) => setName(e.target.value)} />
+  </div>
 
-          <div className="fg">
-            <label className="fl">Company</label>
-            <input className="fi" value={company} onChange={(e) => setCompany(e.target.value)} />
-          </div>
+  <div className="fg">
+    <label className="fl">Company</label>
+    <input className="fi" value={company} onChange={(e) => setCompany(e.target.value)} />
+  </div>
 
-          <div className="fg">
-            <label className="fl">Email</label>
-            <input className="fi" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
+  <div className="fg">
+    <label className="fl">Work Email</label>
+    <input className="fi" value={email} onChange={(e) => setEmail(e.target.value)} />
+  </div>
 
-          <div className="fg">
-            <label className="fl">Travel Requirements</label>
-            <textarea
-              className="fi"
-              rows="4"
-              placeholder="e.g. weekly airport transfers, executive travel..."
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-            />
-          </div>
+  <div className="fg">
+    <label className="fl">Estimated Monthly Trips</label>
+    <select className="fi" onChange={(e) => setDetails(e.target.value)}>
+      <option value="">Select</option>
+      <option>1–5 trips</option>
+      <option>5–15 trips</option>
+      <option>15+ trips</option>
+    </select>
+  </div>
 
-          <button className="btn-whatsapp" onClick={handleSubmit}>
-            Send Enquiry
-          </button>
+  <div className="fg">
+    <label className="fl">Typical Route</label>
+    <input
+      className="fi"
+      placeholder="e.g. Melbourne Airport ↔ CBD"
+      onChange={(e) => setDetails((prev) => prev + "\nRoute: " + e.target.value)}
+    />
+  </div>
 
-        </div>
+  <div className="fg">
+    <label className="fl">Additional Details (optional)</label>
+    <textarea
+      className="fi"
+      rows="3"
+      placeholder="Any specific requirements..."
+      value={details}
+      onChange={(e) => setDetails(e.target.value)}
+    />
+  </div>
+
+  <button className="btn-whatsapp" onClick={handleSubmit}>
+    Request Corporate Account
+  </button>
+
+</div>
       </div>
     </section>
   );
