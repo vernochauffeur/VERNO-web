@@ -758,6 +758,77 @@ function InlineBooking() {
   );
 }
 const SERVICES = [{ label: "Airport Transfers", h: "Airport Transfers", d: "Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position." }, { label: "Corporate", h: "Corporate Travel", d: "Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed." }, { label: "Private Hire", h: "Private Hire", d: "A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond." }, { label: "Events", h: "Events & Occasions", d: "Premium transport for weddings, corporate functions, and private occasions." }];
+function CorporateSection() {
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [details, setDetails] = useState("");
+
+  const handleSubmit = () => {
+    const subject = "Corporate Chauffeur Enquiry";
+
+    const body = `
+Name: ${name}
+Company: ${company}
+Email: ${email}
+
+Details:
+${details}
+    `;
+
+    window.location.href = `mailto:${VERNO_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  return (
+    <section id="corporate" className="corporate-section">
+      <div className="booking-panel-inner">
+
+        <div>
+          <h2 className="booking-panel-headline">
+            Corporate Accounts
+          </h2>
+          <p className="booking-panel-sub">
+            Dedicated chauffeur services for businesses, executives and frequent travel needs.
+          </p>
+        </div>
+
+        <div className="booking-panel-form">
+
+          <div className="fg">
+            <label className="fl">Full Name</label>
+            <input className="fi" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+
+          <div className="fg">
+            <label className="fl">Company</label>
+            <input className="fi" value={company} onChange={(e) => setCompany(e.target.value)} />
+          </div>
+
+          <div className="fg">
+            <label className="fl">Email</label>
+            <input className="fi" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+
+          <div className="fg">
+            <label className="fl">Travel Requirements</label>
+            <textarea
+              className="fi"
+              rows="4"
+              placeholder="e.g. weekly airport transfers, executive travel..."
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+            />
+          </div>
+
+          <button className="btn-whatsapp" onClick={handleSubmit}>
+            Send Enquiry
+          </button>
+
+        </div>
+      </div>
+    </section>
+  );
+}
 function Services() { const [active, setActive] = useState(0); const s = SERVICES[active]; return <section className="sec" id="services"><div className="wrap"><div className="s-label">Services</div><h2 className="s-h">Every journey,<br/><em>handled.</em></h2><div className="svc-layout"><nav className="svc-nav">{SERVICES.map((x, i) => <button key={x.label} className={`svc-nav-item${active === i ? " active" : ""}`} onClick={() => setActive(i)}>{x.label}</button>)}</nav><div className="svc-content"><h3 className="svc-content-h">{s.h}</h3><p className="svc-desc">{s.d}</p><ul className="svc-feat-list"><li>Fixed fare confirmed at booking</li><li>Direct WhatsApp confirmation</li><li>Premium electric BMW i5</li></ul><a href="#book" className="btn-o">Get Fare Estimate</a></div></div></div></section>; }
 function Why() { return <section className="sec dark" id="about"><div className="wrap why-layout"><div><div className="s-label inv">Why VÉRNO</div><h2 className="s-h inv">A boutique<br/><em>standard.</em></h2><p className="s-body">Small fleet. Consistent quality. Every detail considered.</p></div><div className="why-grid">{["Fully electric", "Discreet by design", "Small, intentional fleet", "Direct booking"].map((t, i) => <div key={t} className="why-cell"><span className="why-n">0{i+1}</span><div className="why-t">{t}</div><p className="why-d">Premium, private, and consistent chauffeur service across Melbourne.</p></div>)}</div></div></section>; }
 function Areas() { const areas = ["Melbourne CBD", "St Kilda & South Yarra", "Mornington Peninsula", "Yarra Valley", "Melbourne Airport", "Avalon Airport", "Geelong & Surf Coast", "Greater Melbourne"]; return <section className="sec" id="areas"><div className="wrap"><div className="s-label">Coverage</div><h2 className="s-h">Across Melbourne<br/><em>and beyond.</em></h2><div className="areas-list">{areas.map((name) => <div key={name} className="area-item" onClick={() => document.getElementById("book")?.scrollIntoView({ behavior: "smooth" })}><div className="area-name">{name}</div><div className="area-time">Premium transfers</div><p className="area-desc">Private chauffeur service with fixed fare confirmation.</p></div>)}</div></div></section>; }
