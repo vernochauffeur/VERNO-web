@@ -423,18 +423,23 @@ function Hero() {
           </p>
 
           <div className="hero-actions">
-            <a
-              href={wa}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-wa hero-gold"
-            >
-              <WAIcon s={18} /> Reserve via WhatsApp
-            </a>
-            <a href="#book" className="btn-outline hero-outline">
-              Get Instant Fare
-            </a>
-          </div>
+  <a
+    href={wa}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="btn-wa hero-gold"
+  >
+    <WAIcon s={18} /> Reserve via WhatsApp
+  </a>
+
+  <a href="#book" className="btn-outline hero-outline">
+    Get Instant Fare
+  </a>
+
+  <a href="#corporate" className="btn-outline hero-outline">
+    Corporate Enquiries
+  </a>
+</div>
 
           <div className="hero-trust">
             <div className="hero-trust-item">
