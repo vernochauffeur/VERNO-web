@@ -574,9 +574,11 @@ function InlineBooking() {
   const fareResult = estimateFare(from, to);
   const fare = fareResult ? fareResult.fare : null;
 
+  const isAirportPickup = from.toLowerCase().includes("airport");
+
   const handleWA = () =>
     window.open(
-      buildWhatsAppLink({ from, to, date, time, pax, bags, fare }),
+      buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber }),
       "_blank",
       "noopener"
     );
@@ -584,7 +586,6 @@ function InlineBooking() {
   return (
     <div className="booking-panel" id="book">
       <div className="booking-panel-inner">
-
         <div>
           <h2 className="booking-panel-headline">
             Your fare,<br /><em>instantly.</em>
@@ -595,7 +596,6 @@ function InlineBooking() {
         </div>
 
         <div className="booking-panel-form">
-
           <button
             className="quick-chip"
             onClick={() => setTo("Melbourne Airport (Tullamarine)")}
@@ -619,93 +619,90 @@ function InlineBooking() {
             value={to}
             onChange={setTo}
           />
-          {from.toLowerCase().includes("airport") && (
-  
-    <p style={{ fontSize: "12px", color: "#999", marginTop: "6px" }}>
-      We monitor your flight to ensure perfect pickup timing.
-    </p>
-  </div>
-)}
-          {from.toLowerCase().includes("airport") && (
-  <div className="fg">
-    <label className="fl">Flight Number</label>
-    <input
-      className="fi"
-      placeholder="e.g. EK408"
-      value={flightNumber}
-      onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
-    />
-  </div>
-)}
 
-          {/* DATE + TIME */}
+          {isAirportPickup && (
+            <div className="fg">
+              <label className="fl">Flight Number</label>
+              <input
+                className="fi"
+                placeholder="e.g. EK408"
+                value={flightNumber}
+                onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
+              />
+
+              <p style={{ fontSize: "12px", color: "#999", marginTop: "6px" }}>
+                We monitor your flight to ensure perfect pickup timing.
+              </p>
+            </div>
+          )}
+
           <div className="f2">
             <div className="fg">
               <label className="fl">Date</label>
               <input
-  className="fi"
-  type="date"
-  value={date}
-  min={getTodayLocal()}
-  onChange={(e) => {
-    const selected = e.target.value;
-    const today = getTodayLocal();
+                className="fi"
+                type="date"
+                value={date}
+                min={getTodayLocal()}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  const today = getTodayLocal();
 
-    if (selected < today) {
-      alert("Please select a valid date.");
-      setDate(today);
-      setTime("");
-      return;
-    }
+                  if (selected < today) {
+                    alert("Please select a valid date.");
+                    setDate(today);
+                    setTime("");
+                    return;
+                  }
 
-    setDate(selected);
-    setTime("");
-  }}
-/>
+                  setDate(selected);
+                  setTime("");
+                }}
+              />
             </div>
 
             <div className="fg">
-  <label className="fl">Time</label>
-  <select
-    className="fi"
-    value={time}
-    onChange={(e) => setTime(e.target.value)}
-  >
-    <option value="">Select time</option>
+              <label className="fl">Time</label>
+              <select
+                className="fi"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+              >
+                <option value="">Select time</option>
 
-    {(() => {
-      if (!date) {
-        return <option disabled>Please select date first</option>;
-      }
+                {(() => {
+                  if (!date) {
+                    return <option disabled>Please select date first</option>;
+                  }
 
-      const minBooking = new Date(Date.now() + 3 * 60 * 60 * 1000);
-      const slots = [];
+                  const minBooking = new Date(Date.now() + 3 * 60 * 60 * 1000);
+                  const slots = [];
 
-      for (let i = 0; i < 48; i++) {
-        const hour = Math.floor(i / 2);
-        const minute = i % 2 === 0 ? "00" : "30";
-        const slot = `${String(hour).padStart(2, "0")}:${minute}`;
-        const slotDateTime = new Date(`${date}T${slot}`);
+                  for (let i = 0; i < 48; i++) {
+                    const hour = Math.floor(i / 2);
+                    const minute = i % 2 === 0 ? "00" : "30";
+                    const slot = `${String(hour).padStart(2, "0")}:${minute}`;
+                    const slotDateTime = new Date(`${date}T${slot}`);
 
-        if (slotDateTime >= minBooking) {
-          slots.push(slot);
-        }
-      }
+                    if (slotDateTime >= minBooking) {
+                      slots.push(slot);
+                    }
+                  }
 
-      if (slots.length === 0) {
-        return <option disabled>No available times for this date</option>;
-      }
+                  if (slots.length === 0) {
+                    return <option disabled>No available times for this date</option>;
+                  }
 
-      return slots.map((slot) => (
-        <option key={slot} value={slot}>
-          {slot}
-        </option>
-      ));
-    })()}
-  </select>
-</div>   </div>
+                  return slots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ));
+                })()}
+              </select>
+            </div>
+          </div>
 
-          {/* PAX + BAGS */}
           <div className="f2">
             <div className="fg">
               <label className="fl">Passengers</label>
@@ -750,7 +747,6 @@ function InlineBooking() {
           >
             Prefer email? {VERNO_EMAIL}
           </a>
-
         </div>
       </div>
     </div>
