@@ -840,8 +840,8 @@ ${details}
   </div>
 
   <button className="btn-whatsapp" onClick={handleSubmit}>
-    Request Corporate Account
-  </button>
+  Request Corporate Account Access
+</button>
 
 </div>
       </div>
