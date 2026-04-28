@@ -2535,13 +2535,15 @@ export default function Home() {
     <TrustStrip/>
     <InlineBooking/>
 
-    <Fleet/>          {/* ↑ BURAYA GELDİ */}
+    <CorporateSection/>  {/* ✅ BURAYA EKLENDİ */}
+
+    <Fleet/>
 
     <Services/>
     <Why/>
     <Areas/>
 
-    <Moments/>        {/* ↑ BURAYA ÇIKTI (refined) */}
+    <Moments/>
     <Process/>
 
     <Testimonials/>
