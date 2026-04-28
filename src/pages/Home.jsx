@@ -856,7 +856,29 @@ function Areas() { const areas = ["Melbourne CBD", "St Kilda & South Yarra", "Mo
 function Fleet() { return <section className="sec fleet-section" id="fleet"><div className="wrap"><div className="s-label inv">The Fleet</div><div className="fleet-layout"><div className="fleet-img-wrap"><img src={FLEET_IMG} alt="VERNO BMW i5 fleet" className="fleet-img" loading="lazy"/></div><div className="fleet-text"><p className="fleet-text-eyebrow">All-Electric Fleet</p><h2 className="fleet-text-title">BMW i5<br/><em>eDrive40</em></h2><p className="fleet-text-sub">Zero emissions. Executive comfort. Built for Melbourne.</p><p className="fleet-text-body">VÉRNO operates premium electric vehicles for comfort, consistency, and a seamless journey.</p><div className="fleet-ev-badge">100% Electric - BMW i5</div></div></div></div></section>; }
 function Process() { return <section className="sec night2"><div className="wrap"><div className="s-label inv">How It Works</div><h2 className="s-h inv">Simple to arrange.<br/><em>Seamless to experience.</em></h2><div className="proc-track">{["Arrange your transfer", "Receive confirmation", "Arrive in comfort"].map((n, i) => <div key={n} className="proc-step"><span className="proc-roman">{["I", "II", "III"][i]}</span><div className="proc-name">{n}</div><p className="proc-desc">Submit details, receive confirmation, and travel in a premium BMW i5.</p></div>)}</div></div></section>; }
 function Moments() { return <section className="moments"><div className="moments-inner"><div className="moments-img-wrap"><img src={MOMENTS_MAIN} alt="VERNO BMW i5" className="moments-img" loading="lazy"/><span className="moments-geo">Melbourne - Private Transfers</span></div><div className="moments-text"><p className="moments-eyebrow">Moments</p><h2 className="moments-title">Refined.<br/>Quiet.<br/><em>Consistent.</em></h2><div className="moments-rule"/><p className="moments-desc">Every journey is designed to feel effortless - from the first message to final arrival.</p></div></div></section>; }
-function Testimonials() { return <section className="sec"><div className="wrap"><div className="s-label">Client Words</div><h2 className="s-h">What clients<br/><em>say.</em></h2><div className="testi-row">{["Quiet, punctual, and professional.", "Confirmed within the hour.", "How you arrive matters."].map((t, i) => <div key={i} className="testi"><span className="testi-mark">\"</span><p className="testi-txt">{t}</p><p className="testi-by">- Melbourne client</p></div>)}</div></div></section>; }
+function Testimonials() {
+  return (
+    <section className="sec">
+      <div className="wrap">
+        <div className="s-label">Client Experience</div>
+
+        <h2 className="s-h">
+          A service defined by consistency.
+        </h2>
+
+        <div style={{ maxWidth: "520px", marginTop: "20px" }}>
+          <p style={{ color: "#555", lineHeight: "1.7" }}>
+            Every journey is handled with precision, discretion and care.
+          </p>
+
+          <p style={{ color: "#999", fontSize: "13px", marginTop: "12px" }}>
+            Verified client feedback will be shared here as VÉRNO continues to grow.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
 function Closer() { return <section className="closer" id="contact"><div className="closer-inner"><p className="s-label inv closer-label">Melbourne, Victoria</p><h2 className="closer-h">Ready when<br/><em>you are.</em></h2><p className="closer-sub">Reserve your transfer directly. Instant confirmation, fixed price.</p><div className="closer-btns"><a href="#book" className="btn-wa">Reserve via WhatsApp</a><a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-outline">Send an Email</a></div></div></section>; }
 function Footer() {
   return (
