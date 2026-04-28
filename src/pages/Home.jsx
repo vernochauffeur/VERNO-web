@@ -620,15 +620,7 @@ function InlineBooking() {
             onChange={setTo}
           />
           {from.toLowerCase().includes("airport") && (
-  <div className="fg">
-    <label className="fl">Flight Number</label>
-    <input
-      className="fi"
-      placeholder="e.g. EK408"
-      value={flightNumber}
-      onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
-    />
-
+  
     <p style={{ fontSize: "12px", color: "#999", marginTop: "6px" }}>
       We monitor your flight to ensure perfect pickup timing.
     </p>
