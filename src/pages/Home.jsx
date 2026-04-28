@@ -785,11 +785,11 @@ ${details}
 
         <div>
           <h2 className="booking-panel-headline">
-            Corporate Accounts
-          </h2>
+  Corporate Chauffeur Accounts
+</h2>
           <p className="booking-panel-sub">
-            Dedicated chauffeur services for businesses, executives and frequent travel needs.
-          </p>
+  Tailored chauffeur services for businesses, executives and ongoing travel requirements.
+</p>
         </div>
 
         <div className="booking-panel-form">
