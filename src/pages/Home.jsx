@@ -842,7 +842,9 @@ ${details}
   <button className="btn-whatsapp" onClick={handleSubmit}>
   Request Corporate Account Access
 </button>
-
+<p style={{ fontSize: "12px", color: "#999", marginTop: "14px" }}>
+  Suitable for businesses of all sizes — from occasional bookings to ongoing travel requirements.
+</p>
 </div>
       </div>
     </section>
