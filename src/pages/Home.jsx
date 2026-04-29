@@ -260,25 +260,30 @@ if (
     </div>
   );
 }
-function buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber }) {
+function buildWhatsAppLink({
+  from,
+  to,
+  date,
+  time,
+  pax,
+  bags,
+  fare,
+  flightNumber
+}) {
   const msg = [
-    "Hello, I'd like to book a transfer:",
+    "Hi, I’d like to arrange a Verno chauffeur service.",
     "",
-    `Pickup: ${from || "--"}`,
-    `Drop-off: ${to || "--"}`,
-    ...(date ? [`Date: ${date}`] : []),
-    ...(time ? [`Time: ${time}`] : []),
-
-    ...(flightNumber
-      ? [`Flight number: ${flightNumber}`, "Flight tracking required"]
-      : []),
-
-    ...(pax ? [`Passengers: ${pax}`] : []),
-    ...(bags ? [`Luggage: ${bags}`] : []),
-    ...(fare ? [`Estimated fare: $${fare}`] : []),
+    `Pickup: ${from || ""}`,
+    `Drop-off: ${to || ""}`,
+    date && `Date: ${date}`,
+    time && `Time: ${time}`,
+    pax && `Passengers: ${pax}`,
+    flightNumber && `Flight number: ${flightNumber}`,
     "",
-    "Please confirm availability."
-  ].join("\n");
+    "Please provide a quote and confirm availability."
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 }
@@ -429,7 +434,7 @@ function Hero() {
     rel="noopener noreferrer"
     className="btn-wa hero-gold"
   >
-    <WAIcon s={18} /> Reserve via WhatsApp
+    <WAIcon s={18} /> Get Instant Quote
   </a>
 
   <a href="#book" className="btn-outline hero-outline">
@@ -439,6 +444,9 @@ function Hero() {
   <a href="#corporate" className="btn-outline hero-outline">
     Corporate Enquiries
   </a>
+   <p className="btn-wa-note">
+  Response within minutes
+</p>         
 </div>
 
           <div className="hero-trust">
