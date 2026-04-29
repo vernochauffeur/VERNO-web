@@ -266,7 +266,7 @@ function buildWhatsAppLink({
   date,
   time,
   pax,
-  flightNumber
+  Flight number (if required):
 }) {
   const msg = [
     "Hi, I’d like to arrange a Verno chauffeur service.",
