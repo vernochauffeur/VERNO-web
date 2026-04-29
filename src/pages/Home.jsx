@@ -608,168 +608,164 @@ function InlineBooking() {
           </p>
         </div>
 
-        {/* 🔥 CARD WRAP EKLENDİ */}
         <div className="booking-panel-form">
-          <div className="form-card">
+          <button
+            className="quick-chip"
+            onClick={() => setTo("Melbourne Airport (Tullamarine)")}
+          >
+            <span className="quick-chip-dot" />
+            Airport transfer? Set Melbourne Airport as destination
+          </button>
 
-            <button
-              className="quick-chip"
-              onClick={() => setTo("Melbourne Airport (Tullamarine)")}
-            >
-              <span className="quick-chip-dot" />
-              Airport transfer? Set Melbourne Airport as destination
-            </button>
+          <AddressField
+            id="from"
+            label="Pickup"
+            placeholder="Enter pickup address, suburb or hotel"
+            value={from}
+            onChange={setFrom}
+          />
 
-            <AddressField
-              id="from"
-              label="Pickup"
-              placeholder="Enter pickup address, suburb or hotel"
-              value={from}
-              onChange={setFrom}
-            />
+          <AddressField
+            id="to"
+            label="Destination"
+            placeholder="Enter destination address or airport"
+            value={to}
+            onChange={setTo}
+          />
 
-            <AddressField
-              id="to"
-              label="Destination"
-              placeholder="Enter destination address or airport"
-              value={to}
-              onChange={setTo}
-            />
+          {isAirportPickup && (
+            <div className="fg">
+              <label className="fl">Flight Number</label>
+              <input
+                className="fi"
+                placeholder="e.g. EK408"
+                value={flightNumber}
+                onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
+              />
 
-            {isAirportPickup && (
-              <div className="fg">
-                <label className="fl">Flight Number</label>
-                <input
-                  className="fi"
-                  placeholder="e.g. EK408"
-                  value={flightNumber}
-                  onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
-                />
+              <p style={{ fontSize: "12px", color: "#999", marginTop: "6px" }}>
+                We monitor your flight to ensure perfect pickup timing.
+              </p>
+            </div>
+          )}
 
-                <p style={{ fontSize: "12px", color: "#999", marginTop: "6px" }}>
-                  We monitor your flight to ensure perfect pickup timing.
-                </p>
-              </div>
-            )}
+          <div className="f2">
+            <div className="fg">
+              <label className="fl">Date</label>
+              <input
+                className="fi"
+                type="date"
+                value={date}
+                min={getTodayLocal()}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  const today = getTodayLocal();
 
-            <div className="f2">
-              <div className="fg">
-                <label className="fl">Date</label>
-                <input
-                  className="fi"
-                  type="date"
-                  value={date}
-                  min={getTodayLocal()}
-                  onChange={(e) => {
-                    const selected = e.target.value;
-                    const today = getTodayLocal();
-
-                    if (selected < today) {
-                      alert("Please select a valid date.");
-                      setDate(today);
-                      setTime("");
-                      return;
-                    }
-
-                    setDate(selected);
+                  if (selected < today) {
+                    alert("Please select a valid date.");
+                    setDate(today);
                     setTime("");
-                  }}
-                />
-              </div>
+                    return;
+                  }
 
-              <div className="fg">
-                <label className="fl">Time</label>
-                <select
-                  className="fi"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                >
-                  <option value="">Select time</option>
-
-                  {(() => {
-                    if (!date) {
-                      return <option disabled>Please select date first</option>;
-                    }
-
-                    const minBooking = new Date(Date.now() + 3 * 60 * 60 * 1000);
-                    const slots = [];
-
-                    for (let i = 0; i < 48; i++) {
-                      const hour = Math.floor(i / 2);
-                      const minute = i % 2 === 0 ? "00" : "30";
-                      const slot = `${String(hour).padStart(2, "0")}:${minute}`;
-                      const slotDateTime = new Date(`${date}T${slot}`);
-
-                      if (slotDateTime >= minBooking) {
-                        slots.push(slot);
-                      }
-                    }
-
-                    if (slots.length === 0) {
-                      return <option disabled>No available times</option>;
-                    }
-
-                    return slots.map((slot) => (
-                      <option key={slot} value={slot}>
-                        {slot}
-                      </option>
-                    ));
-                  })()}
-                </select>
-              </div>
+                  setDate(selected);
+                  setTime("");
+                }}
+              />
             </div>
 
-            <div className="f2">
-              <div className="fg">
-                <label className="fl">Passengers</label>
-                <select
-                  className="fi"
-                  value={pax}
-                  onChange={(e) => setPax(e.target.value)}
-                >
-                  {[1, 2, 3, 4].map((n) => (
-                    <option key={n}>{n}</option>
-                  ))}
-                </select>
-              </div>
+            <div className="fg">
+              <label className="fl">Time</label>
+              <select
+                className="fi"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+              >
+                <option value="">Select time</option>
 
-              <div className="fg">
-                <label className="fl">Luggage</label>
-                <select
-                  className="fi"
-                  value={bags}
-                  onChange={(e) => setBags(e.target.value)}
-                >
-                  {[0, 1, 2, 3, 4].map((n) => (
-                    <option key={n}>{n}</option>
-                  ))}
-                </select>
-              </div>
+                {(() => {
+                  if (!date) {
+                    return <option disabled>Please select date first</option>;
+                  }
+
+                  const minBooking = new Date(Date.now() + 3 * 60 * 60 * 1000);
+                  const slots = [];
+
+                  for (let i = 0; i < 48; i++) {
+                    const hour = Math.floor(i / 2);
+                    const minute = i % 2 === 0 ? "00" : "30";
+                    const slot = `${String(hour).padStart(2, "0")}:${minute}`;
+                    const slotDateTime = new Date(`${date}T${slot}`);
+
+                    if (slotDateTime >= minBooking) {
+                      slots.push(slot);
+                    }
+                  }
+
+                  if (slots.length === 0) {
+                    return <option disabled>No available times for this date</option>;
+                  }
+
+                  return slots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ));
+                })()}
+              </select>
             </div>
-
-            <FareEstimate from={from} to={to} />
-
-            <button className="btn-whatsapp" onClick={handleWA}>
-              <WAIcon s={18} /> Confirm Booking via WhatsApp
-            </button>
-
-            <p className="btn-wa-note">
-              We usually confirm within 2-5 minutes.
-            </p>
-
-            <a
-              href={`mailto:${VERNO_EMAIL}?subject=Booking Request`}
-              className="btn-email-secondary"
-            >
-              Prefer email? {VERNO_EMAIL}
-            </a>
-
           </div>
+
+          <div className="f2">
+            <div className="fg">
+              <label className="fl">Passengers</label>
+              <select
+                className="fi"
+                value={pax}
+                onChange={(e) => setPax(e.target.value)}
+              >
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="fg">
+              <label className="fl">Luggage</label>
+              <select
+                className="fi"
+                value={bags}
+                onChange={(e) => setBags(e.target.value)}
+              >
+                {[0, 1, 2, 3, 4].map((n) => (
+                  <option key={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <FareEstimate from={from} to={to} />
+
+          <button className="btn-whatsapp" onClick={handleWA}>
+            <WAIcon s={18} /> Confirm Booking via WhatsApp
+          </button>
+
+          <p className="btn-wa-note">
+            We usually confirm within 2-5 minutes.
+          </p>
+
+          <a
+            href={`mailto:${VERNO_EMAIL}?subject=Booking Request`}
+            className="btn-email-secondary"
+          >
+            Prefer email? {VERNO_EMAIL}
+          </a>
         </div>
       </div>
     </div>
   );
 }
+const SERVICES = [{ label: "Airport Transfers", h: "Airport Transfers", d: "Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position." }, { label: "Corporate", h: "Corporate Travel", d: "Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed." }, { label: "Private Hire", h: "Private Hire", d: "A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond." }, { label: "Events", h: "Events & Occasions", d: "Premium transport for weddings, corporate functions, and private occasions." }];
 function CorporateSection() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
@@ -2577,13 +2573,6 @@ const CSS = `
 .clear-address-btn:hover{
   background:rgba(0,0,0,.14);
   color:#111;
-}
-.form-card{
-  background:#fff;
-  padding:32px;
-  border-radius:18px;
-  box-shadow:0 20px 60px rgba(0,0,0,.08);
-  border:1px solid #eee;
 }
 `;
 
