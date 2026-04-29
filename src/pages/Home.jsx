@@ -266,7 +266,9 @@ function buildWhatsAppLink({
   date,
   time,
   pax,
-  Flight number (if required):
+  bags,
+  fare,
+  flightNumber
 }) {
   const msg = [
     "Hi, I’d like to arrange a Verno chauffeur service.",
@@ -276,7 +278,9 @@ function buildWhatsAppLink({
     `Date: ${date || ""}`,
     `Time: ${time || ""}`,
     `Passengers: ${pax || ""}`,
-    `Flight number: ${flightNumber || ""}`,
+    `Luggage: ${bags || ""}`,
+    `Flight number (if required): ${flightNumber || ""}`,
+    ...(fare ? [`Estimated fare: $${fare}`] : []),
     "",
     "Please provide a quote and confirm availability."
   ].join("\n");
