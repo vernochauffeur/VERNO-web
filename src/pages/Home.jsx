@@ -266,8 +266,6 @@ function buildWhatsAppLink({
   date,
   time,
   pax,
-  bags,
-  fare,
   flightNumber
 }) {
   const msg = [
@@ -275,15 +273,13 @@ function buildWhatsAppLink({
     "",
     `Pickup: ${from || ""}`,
     `Drop-off: ${to || ""}`,
-    date && `Date: ${date}`,
-    time && `Time: ${time}`,
-    pax && `Passengers: ${pax}`,
-    flightNumber && `Flight number: ${flightNumber}`,
+    `Date: ${date || ""}`,
+    `Time: ${time || ""}`,
+    `Passengers: ${pax || ""}`,
+    `Flight number: ${flightNumber || ""}`,
     "",
     "Please provide a quote and confirm availability."
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ].join("\n");
 
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 }
