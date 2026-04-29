@@ -746,13 +746,13 @@ function InlineBooking() {
 
           <FareEstimate from={from} to={to} />
 
-          <button className="btn-whatsapp" onClick={handleWA}>
-            <WAIcon s={18} /> Confirm Booking via WhatsApp
-          </button>
+          <button className="btn-whatsapp premium-btn" onClick={handleWA}>
+  <WAIcon s={18} /> Get Instant Quote on WhatsApp
+</button>
 
-          <p className="btn-wa-note">
-            We usually confirm within 2-5 minutes.
-          </p>
+<p className="wa-trust-line">
+  Instant response · No commitment · Fixed pricing
+</p>
 
           <a
             href={`mailto:${VERNO_EMAIL}?subject=Booking Request`}
@@ -2617,6 +2617,35 @@ const CSS = `
 /* FARE BOX */
 .fare-estimate{
   border-radius:14px;
+}
+.premium-btn{
+  width:100%;
+  padding:16px;
+  border-radius:14px;
+  border:1px solid rgba(212,169,111,.7);
+  background:linear-gradient(180deg,#D4A96F,#A8753F);
+  color:#fff;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.04em;
+  transition:all .25s ease;
+}
+
+.premium-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px rgba(168,117,63,.35);
+}
+
+.premium-btn:active{
+  transform:scale(0.98);
+}
+
+.wa-trust-line{
+  text-align:center;
+  font-size:12px;
+  color:#888;
+  margin-top:10px;
+  letter-spacing:.03em;
 }
 `;
 
