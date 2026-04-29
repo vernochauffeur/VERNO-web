@@ -2574,6 +2574,50 @@ const CSS = `
   background:rgba(0,0,0,.14);
   color:#111;
 }
+/* BOOKING FORM PREMIUM UPGRADE */
+
+.booking-panel-form{
+  background:#fff;
+  padding:32px;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.08);
+  border:1px solid #eee;
+}
+
+/* INPUTS */
+.fi{
+  background:#fafafa;
+  border:1px solid #e6e6e6;
+  border-radius:10px;
+  padding:14px 16px;
+  font-size:14px;
+}
+
+.fi:focus{
+  background:#fff;
+  border-color:#B98B55;
+}
+
+/* LABEL */
+.fl{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:#999;
+}
+
+/* BUTTON */
+.btn-whatsapp{
+  border-radius:12px;
+  padding:16px;
+  font-size:14px;
+  background:linear-gradient(180deg,#D2A76F,#A8753F);
+}
+
+/* FARE BOX */
+.fare-estimate{
+  border-radius:14px;
+}
 `;
 
 export default function Home() {
