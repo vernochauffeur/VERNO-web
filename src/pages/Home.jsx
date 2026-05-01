@@ -2717,6 +2717,145 @@ const CSS = `
   margin-top:10px;
   letter-spacing:.03em;
 }
+/* ===== FINAL BOOKING SECTION OVERRIDE ===== */
+
+.booking-panel{
+  padding:7rem 5vw 6rem !important;
+  background:#fff !important;
+}
+
+.booking-panel-inner{
+  max-width:1180px !important;
+  margin:0 auto !important;
+  display:grid !important;
+  grid-template-columns:360px 620px !important;
+  gap:6rem !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.booking-panel-headline{
+  font-size:clamp(2.2rem,3vw,3rem) !important;
+  line-height:1.05 !important;
+  margin-bottom:1.6rem !important;
+}
+
+.booking-panel-sub{
+  max-width:330px !important;
+  font-size:.95rem !important;
+  line-height:1.75 !important;
+  color:#777 !important;
+}
+
+.booking-panel-form{
+  width:100% !important;
+  max-width:620px !important;
+  background:#fff !important;
+  padding:2.7rem !important;
+  border-radius:22px !important;
+  border:1px solid rgba(0,0,0,.06) !important;
+  box-shadow:0 28px 80px rgba(0,0,0,.09) !important;
+}
+
+.quick-chip{
+  width:auto !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#f7f3ed !important;
+  border:1px solid rgba(185,139,85,.28) !important;
+  color:#B98B55 !important;
+  padding:.65rem 1rem !important;
+  margin-bottom:1.6rem !important;
+  font-size:.68rem !important;
+  letter-spacing:.09em !important;
+  border-radius:0 !important;
+}
+
+.fg{
+  margin-bottom:1.15rem !important;
+}
+
+.fl{
+  font-size:.68rem !important;
+  letter-spacing:.14em !important;
+  color:#999 !important;
+  margin-bottom:.55rem !important;
+}
+
+.fi{
+  width:100% !important;
+  height:56px !important;
+  padding:0 18px !important;
+  background:#fafafa !important;
+  border:1px solid #e6e6e6 !important;
+  border-radius:12px !important;
+  outline:none !important;
+  font-size:.9rem !important;
+  color:#111 !important;
+}
+
+.fi:focus{
+  background:#fff !important;
+  border-color:#B98B55 !important;
+  box-shadow:0 0 0 3px rgba(185,139,85,.12) !important;
+}
+
+.f2{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:1.15rem !important;
+  align-items:end !important;
+}
+
+.btn-whatsapp{
+  width:100% !important;
+  height:58px !important;
+  margin-top:1.8rem !important;
+  border-radius:14px !important;
+  border:1px solid rgba(212,169,111,.65) !important;
+  background:linear-gradient(180deg,#D4A96F,#A8753F) !important;
+  color:#111 !important;
+  font-size:.86rem !important;
+  font-weight:700 !important;
+  letter-spacing:.03em !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:.65rem !important;
+}
+
+.wa-trust-line{
+  text-align:center !important;
+  font-size:.76rem !important;
+  color:#999 !important;
+  margin-top:.9rem !important;
+  letter-spacing:.02em !important;
+}
+
+.btn-email-secondary{
+  text-align:center !important;
+  font-size:.75rem !important;
+  color:#999 !important;
+  margin-top:.85rem !important;
+}
+
+/* mobile */
+@media(max-width:900px){
+  .booking-panel-inner{
+    grid-template-columns:1fr !important;
+    gap:3rem !important;
+  }
+
+  .booking-panel-form{
+    max-width:100% !important;
+    padding:2rem !important;
+  }
+
+  .f2{
+    grid-template-columns:1fr !important;
+  }
+}
 `;
 
 export default function Home() {
