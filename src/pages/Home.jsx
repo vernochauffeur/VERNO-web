@@ -425,7 +425,7 @@ function TrustStrip() {
   );
 }
 
-function FareEstimate({ from, to, time, fromSelected, toSelected }) {
+function FareEstimate({ from, to, time, fromSelected, toSelected, returnTrip }) {
   const result = estimateFare(from, to, time);
   if (!result) return null;
 
@@ -476,9 +476,26 @@ function FareEstimate({ from, to, time, fromSelected, toSelected }) {
           <span>Late-night surcharge applied (00:00–05:00)</span>
         </div>
       )}
-      <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>{label}</div>
+      <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>
+        {label}{returnTrip ? " — Outbound only" : ""}
+      </div>
       <div className="fare-price">${result.fare}</div>
       <div className="fare-guarantee">{guarantee}</div>
+      {returnTrip && (
+        <div style={{
+          marginTop:".8rem",
+          padding:".65rem .9rem",
+          background:"rgba(255,255,255,.07)",
+          borderRadius:8,
+          fontSize:".75rem",
+          color:"rgba(255,255,255,.55)",
+          display:"flex", alignItems:"center", gap:".5rem",
+          borderTop:"1px solid rgba(255,255,255,.08)",
+        }}>
+          <span>↩</span>
+          <span>Return journey included in your request — final price confirmed via WhatsApp.</span>
+        </div>
+      )}
       <div className="fare-trust">
         <span>No hidden costs</span>
         <span>No surge pricing</span>
@@ -702,7 +719,7 @@ function InlineBooking() {
             </div>
           )}
 
-          <FareEstimate from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} />
+          <FareEstimate from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} />
 
           <button className="btn-whatsapp premium-btn" onClick={handleWA}>
             <WAIcon s={18} /> Get Instant Quote on WhatsApp
