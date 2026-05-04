@@ -427,7 +427,6 @@ function Hero() {
             <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold"><WAIcon s={18} /> Get Instant Quote</a>
             <a href="#book" className="btn-outline hero-outline" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Instant Fare</a>
             <a href="#corporate" className="btn-outline hero-outline" onClick={(e) => { e.preventDefault(); document.getElementById("corporate")?.scrollIntoView({ behavior:"smooth" }); }}>Corporate Enquiries</a>
-            <p className="btn-wa-note">Response within minutes</p>
           </div>
           <div className="hero-trust">
             <div className="hero-trust-item"><IconPrice /><span>Fixed pricing</span></div>
@@ -1033,8 +1032,8 @@ body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:a
 .hero-left{padding-bottom:5vh;}
 .hero-label{font-size:.72rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:#C29A66;margin-bottom:1.8rem;}
 .hero-h1{font-family:var(--serif);line-height:.95;letter-spacing:-.055em;margin-bottom:1.8rem;max-width:720px;}
-.hero-top{display:block;font-style:normal;font-weight:600;font-size:clamp(3.6rem,5vw,5.8rem);color:#fff;}
-.hero-bottom{display:block;font-style:italic;font-weight:300;font-size:clamp(3.45rem,4.8vw,5.55rem);color:rgba(255,255,255,.82);margin-top:.05rem;white-space:nowrap;}
+.hero-top{display:block;font-style:normal;font-weight:600;font-size:clamp(2.8rem,3.8vw,4.6rem);color:#fff;}
+.hero-bottom{display:block;font-style:italic;font-weight:300;font-size:clamp(2.6rem,3.6vw,4.4rem);color:rgba(255,255,255,.82);margin-top:.05rem;white-space:nowrap;}
 .hero-line{background:#C29A66;width:46px;height:2px;margin-bottom:1.6rem;}
 .hero-sub{max-width:520px;font-size:.95rem;line-height:1.65;font-weight:300;color:rgba(255,255,255,.55);margin-bottom:2.5rem;}
 .hero-tagline{font-size:.72rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;}
@@ -1050,8 +1049,8 @@ body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:a
 .hero-service-row:last-child{border-bottom:none;}
 .hero-service-icon{width:68px;height:68px;border-radius:50%;border:1.4px solid rgba(210,176,109,.45);background:rgba(210,176,109,.055);color:#D2B06D;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .lux-icon{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;}
-.hero-service-row h3{font-family:var(--serif);font-size:1.34rem;font-weight:600;color:#fff;margin-bottom:.4rem;}
-.hero-service-row p{font-size:.92rem;line-height:1.45;color:rgba(255,255,255,.52);}
+.hero-service-row h3{font-family:var(--serif);font-size:1.15rem;font-weight:600;color:#fff;margin-bottom:.3rem;}
+.hero-service-row p{font-size:.78rem;line-height:1.4;color:rgba(255,255,255,.52);}
 .trust-strip{background:rgba(18,18,18,.96);padding:2.25rem 5vw;border-top:1px solid rgba(201,164,109,.11);border-bottom:1px solid rgba(201,164,109,.11);}
 .trust-strip-inner{max-width:1050px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
 .trust-feature{display:grid;grid-template-columns:52px 1fr;gap:1.3rem;align-items:flex-start;padding:0 2.6rem;border-right:1px solid rgba(255,255,255,.08);}
