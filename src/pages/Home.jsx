@@ -134,15 +134,57 @@ function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
 }
 
 function buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber }) {
-  const msg = ["Hi, I'd like to arrange a Verno chauffeur service.", "", `Pickup: ${from || ""}`, `Drop-off: ${to || ""}`, `Date: ${date || ""}`, `Time: ${time || ""}`, `Passengers: ${pax || ""}`, `Luggage: ${bags || ""}`, `Flight number (if required): ${flightNumber || ""}`, ...(fare ? [`Estimated fare: $${fare}`] : []), "", "Please provide a quote and confirm availability."].join("\n");
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+  const lines = [
+    "VÉRNO — Transfer Request",
+    "",
+    `PICKUP     : ${from || ""}`,
+    `DROP-OFF   : ${to || ""}`,
+    `DATE       : ${date || ""}`,
+    `TIME       : ${time || ""}`,
+    `PASSENGERS : ${pax || ""}`,
+    `LUGGAGE    : ${bags || ""}`,
+    ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
+    "",
+    ...(fare ? [`Fare estimate: $${fare}`] : []),
+    "",
+    "Please confirm availability.",
+  ];
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 function WAIcon({ s = 20 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>; }
 function MsgIcon({ s = 14 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>; }
-function IconPlaneHero() { return <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true"><path d="M57 30.5c1.6.8 1.6 2.2 0 3L39.6 41l-6.7 16.2c-.5 1.2-2.2 1.1-2.6-.1l-4.2-12.4-12 5.1-2.4 5.1c-.4.8-1.5.8-1.9.1l-2-3.8-3.8-2c-.7-.4-.7-1.5.1-1.9l5.1-2.4 5.1-12-12.4-4.2c-1.2-.4-1.3-2.1-.1-2.6L22 19.4 29.5 2c.8-1.6 2.2-1.6 3 0l4.4 15.4L57 30.5Z"/></svg>; }
-function IconBriefcaseHero() { return <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true"><path d="M19 20h26c5 0 9 4 9 9v20c0 5-4 9-9 9H19c-5 0-9-4-9-9V29c0-5 4-9 9-9Z"/><path d="M24 20v-5c0-5 3.5-9 8-9s8 4 8 9v5"/><path d="M10 34h44"/><path d="M29 34v5h6v-5"/></svg>; }
-function IconCarHero() { return <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true"><path d="M13 36l5.2-15c1-3 3.5-5 6.7-5h14.2c3.2 0 5.7 2 6.7 5L51 36"/><path d="M12 36h40c2.2 0 4 1.8 4 4v9H8v-9c0-2.2 1.8-4 4-4Z"/><path d="M17 49v5"/><path d="M47 49v5"/><circle cx="20" cy="47" r="3"/><circle cx="44" cy="47" r="3"/><path d="M22 24h20"/></svg>; }
+function IconPlaneHero() {
+  return (
+    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true" fill="currentColor">
+      <path d="M54 10c-1.5-1.5-3.8-1.8-5.6-.7L36 16.8l-20-6.8L10 16l16 10-8 8-8-2-4 4 10 6 6 10 4-4-2-8 8-8 10 16 6-6-6.8-20L53 9.6c.2.1.4.2.6.4.3.3.5.6.6 1l.7-.7c-.2-.8-.5-1.5-1-2.3Z"/>
+    </svg>
+  );
+}
+
+function IconBriefcaseHero() {
+  return (
+    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="22" width="48" height="34" rx="4"/>
+      <path d="M22 22v-4a10 10 0 0 1 20 0v4"/>
+      <path d="M8 38h48"/>
+      <path d="M26 38v6h12v-6"/>
+    </svg>
+  );
+}
+
+function IconCarHero() {
+  return (
+    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 38h44v10H10z" rx="2"/>
+      <path d="M14 38l6-14h24l6 14"/>
+      <circle cx="20" cy="48" r="4"/>
+      <circle cx="44" cy="48" r="4"/>
+      <path d="M10 44h4M50 44h4"/>
+      <path d="M20 28h24"/>
+    </svg>
+  );
+}
 function IconPrice() { return <svg viewBox="0 0 24 24" className="trust-small-icon"><path d="M20.5 13.5l-7 7a2.2 2.2 0 0 1-3.1 0l-7-7V4h9.5l7.6 7.6a1.4 1.4 0 0 1 0 1.9Z"/><circle cx="8" cy="8" r="1.4"/></svg>; }
 function IconShield() { return <svg viewBox="0 0 24 24" className="trust-small-icon"><path d="M12 21s7-3.8 7-10V5.5L12 3 5 5.5V11c0 6.2 7 10 7 10Z"/><path d="M9 12l2 2 4-5"/></svg>; }
 function IconChatSmall() { return <svg viewBox="0 0 24 24" className="trust-small-icon"><path d="M4 5h16v11H8l-4 4V5Z"/></svg>; }
@@ -211,7 +253,7 @@ function Nav() {
         </ul>
 
         <div className="nav-right">
-          <a href="#book" className="nav-btn">Reserve a Transfer</a>
+          <a href="#book" className="nav-btn" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Reserve a Transfer</a>
           <button
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
@@ -375,16 +417,16 @@ function Hero() {
         <div className="hero-left">
           <p className="hero-label">Private Chauffeur — Melbourne</p>
           <h1 className="hero-h1">
-            <span className="hero-top">Arrive in</span>
-            <span className="hero-bottom">complete confidence.</span>
+            <span className="hero-top">Melbourne's finest</span>
+            <span className="hero-bottom">private chauffeur.</span>
           </h1>
           <div className="hero-line" />
-          <p className="hero-sub">Private airport, corporate and point-to-point transfers across Melbourne.<br />Fixed fares. Direct booking. Premium comfort.</p>
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", marginTop: "10px" }}>Melbourne private chauffeur and airport transfer service.</p>
+          <p className="hero-tagline">Airport. Boardroom. Beyond.</p>
+          <p className="hero-sub">As Melbourne as it gets.</p>
           <div className="hero-actions">
             <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold"><WAIcon s={18} /> Get Instant Quote</a>
-            <a href="#book" className="btn-outline hero-outline">Get Instant Fare</a>
-            <a href="#corporate" className="btn-outline hero-outline">Corporate Enquiries</a>
+            <a href="#book" className="btn-outline hero-outline" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Instant Fare</a>
+            <a href="#corporate" className="btn-outline hero-outline" onClick={(e) => { e.preventDefault(); document.getElementById("corporate")?.scrollIntoView({ behavior:"smooth" }); }}>Corporate Enquiries</a>
             <p className="btn-wa-note">Response within minutes</p>
           </div>
           <div className="hero-trust">
@@ -397,15 +439,15 @@ function Hero() {
         <div className="hero-service-panel">
           <div className="hero-service-row">
             <div className="hero-service-icon"><IconPlaneHero /></div>
-            <div><h3>Airport Transfers</h3><p>Tullamarine &amp; Avalon</p><p>Fixed fare, flight tracked</p></div>
+            <div><h3>Airport Transfers</h3><p>Tullamarine &amp; Avalon</p><p>Flight tracked. Driver ready.</p></div>
           </div>
           <div className="hero-service-row">
             <div className="hero-service-icon"><IconBriefcaseHero /></div>
-            <div><h3>Corporate Travel</h3><p>Executive ground transport</p><p>Discreet &amp; reliable</p></div>
+            <div><h3>Corporate Travel</h3><p>Executives &amp; business guests</p><p>Discreet, punctual, consistent.</p></div>
           </div>
           <div className="hero-service-row">
             <div className="hero-service-icon"><IconCarHero /></div>
-            <div><h3>Private Hire</h3><p>Mornington, Yarra Valley</p><p>&amp; beyond — BMW i5</p></div>
+            <div><h3>Private Hire</h3><p>Great Ocean Road &amp; Yarra Valley</p><p>Day trips across Victoria.</p></div>
           </div>
         </div>
       </div>
@@ -425,7 +467,7 @@ function TrustStrip() {
   );
 }
 
-function FareEstimate({ from, to, time, fromSelected, toSelected, returnTrip }) {
+function FareEstimate({ from, to, time, fromSelected, toSelected, returnTrip, returnDate, returnTime }) {
   const result = estimateFare(from, to, time);
   if (!result) return null;
 
@@ -477,11 +519,11 @@ function FareEstimate({ from, to, time, fromSelected, toSelected, returnTrip }) 
         </div>
       )}
       <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>
-        {label}{returnTrip ? " — Outbound only" : ""}
+        {label}{returnTrip && returnDate && returnTime ? " — Outbound only" : ""}
       </div>
       <div className="fare-price">${result.fare}</div>
       <div className="fare-guarantee">{guarantee}</div>
-      {returnTrip && (
+      {returnTrip && returnDate && returnTime && (
         <div style={{
           marginTop:".8rem",
           padding:".65rem .9rem",
@@ -493,7 +535,7 @@ function FareEstimate({ from, to, time, fromSelected, toSelected, returnTrip }) 
           borderTop:"1px solid rgba(255,255,255,.08)",
         }}>
           <span>↩</span>
-          <span>Return journey included in your request — final price confirmed via WhatsApp.</span>
+          <span>Return fare not included — final price confirmed via WhatsApp.</span>
         </div>
       )}
       <div className="fare-trust">
@@ -508,28 +550,29 @@ function FareEstimate({ from, to, time, fromSelected, toSelected, returnTrip }) 
 function getTodayLocal() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`; }
 
 function buildWhatsAppLinkReturn({ from, to, date, time, pax, bags, fare, flightNumber, returnDate, returnTime }) {
-  const msg = [
-    "Hi, I'd like to arrange a Verno chauffeur service.",
+  const lines = [
+    "VÉRNO — Transfer Request",
     "",
-    "— OUTBOUND —",
-    `Pickup: ${from || ""}`,
-    `Drop-off: ${to || ""}`,
-    `Date: ${date || ""}`,
-    `Time: ${time || ""}`,
-    `Passengers: ${pax || ""}`,
-    `Luggage: ${bags || ""}`,
-    ...(flightNumber ? [`Flight number: ${flightNumber}`] : []),
-    ...(fare ? [`Estimated fare: $${fare}`] : []),
+    "OUTBOUND",
+    `PICKUP     : ${from || ""}`,
+    `DROP-OFF   : ${to || ""}`,
+    `DATE       : ${date || ""}`,
+    `TIME       : ${time || ""}`,
+    `PASSENGERS : ${pax || ""}`,
+    `LUGGAGE    : ${bags || ""}`,
+    ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
     "",
-    "— RETURN —",
-    `Pickup: ${to || ""}`,
-    `Drop-off: ${from || ""}`,
-    `Date: ${returnDate || ""}`,
-    `Time: ${returnTime || ""}`,
+    ...(fare ? [`Fare estimate: $${fare}`] : []),
     "",
-    "Please provide a quote and confirm availability.",
-  ].join("\n");
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+    "RETURN",
+    `PICKUP     : ${to || ""}`,
+    `DROP-OFF   : ${from || ""}`,
+    `DATE       : ${returnDate || ""}`,
+    `TIME       : ${returnTime || ""}`,
+    "",
+    "Please confirm availability.",
+  ];
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 function InlineBooking() {
@@ -696,8 +739,20 @@ function InlineBooking() {
               <div className="f2">
                 <div className="fg">
                   <label className="fl">Return Date</label>
-                  <input className="fi" type="date" value={returnDate} min={date || getTodayLocal()}
-                    onChange={(e) => { setReturnDate(e.target.value); setReturnTime(""); setErrors((p) => ({ ...p, returnDate: null })); }}
+                  <input className="fi" type="date" value={returnDate}
+                    min={date || getTodayLocal()}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      if (date && selected < date) {
+                        alert("Return date cannot be before the outbound date.");
+                        setReturnDate("");
+                        setReturnTime("");
+                        return;
+                      }
+                      setReturnDate(selected);
+                      setReturnTime("");
+                      setErrors((p) => ({ ...p, returnDate: null }));
+                    }}
                     style={{ background:"#fff" }}
                   />
                   {errors.returnDate && <span style={errStyle}>{errors.returnDate}</span>}
@@ -719,7 +774,7 @@ function InlineBooking() {
             </div>
           )}
 
-          <FareEstimate from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} />
+          <FareEstimate from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
 
           <button className="btn-whatsapp premium-btn" onClick={handleWA}>
             <WAIcon s={18} /> Get Instant Quote on WhatsApp
@@ -734,10 +789,30 @@ function InlineBooking() {
 }
 
 const SERVICES = [
-  { label: "Airport Transfers", h: "Airport Transfers", d: "Seamless arrivals and departures from Tullamarine and Avalon. Flight monitored. Driver in position." },
-  { label: "Corporate", h: "Corporate Travel", d: "Reliable ground transport for executives and business guests. Consistent, discreet, professionally managed." },
-  { label: "Private Hire", h: "Private Hire", d: "A dedicated BMW i5 at your disposal. Yarra Valley, Mornington Peninsula and beyond." },
-  { label: "Events", h: "Events & Occasions", d: "Premium transport for weddings, corporate functions, and private occasions." }
+  {
+    label: "Airport Transfers",
+    h: "Airport Transfers",
+    d: "Your flight lands, we're already there. Tullamarine and Avalon transfers with real-time flight tracking and a fixed fare — no surprises, no waiting.",
+    features: ["Flight tracked in real-time", "Fixed fare, no surprises", "Driver in position on arrival"]
+  },
+  {
+    label: "Corporate",
+    h: "Corporate Travel",
+    d: "First impressions start before the meeting. Punctual, discreet ground transport for executives, clients and business guests across Melbourne.",
+    features: ["Discreet & punctual, guaranteed", "Direct booking, no platforms", "Consistent standard, every time"]
+  },
+  {
+    label: "Private Hire",
+    h: "Private Hire",
+    d: "From the Great Ocean Road to the Yarra Valley wineries — day trips, wine tastings and Victoria's best destinations, handled in comfort.",
+    features: ["Your route, your schedule", "Full day availability", "Fixed fare confirmed upfront"]
+  },
+  {
+    label: "Events",
+    h: "Events & Occasions",
+    d: "Weddings, dinners, shopping trips or a day out — we handle the driving so you can focus on the moment. Luggage, parcels, bags — all taken care of.",
+    features: ["Luggage & parcels handled", "Flexible pickup & drop-off", "Available for full day hire"]
+  }
 ];
 
 function CorporateSection() {
@@ -754,6 +829,7 @@ function CorporateSection() {
     <section id="corporate" className="corporate-section">
       <div className="booking-panel-inner">
         <div>
+          <div className="s-label">Corporate</div>
           <h2 className="booking-panel-headline">Corporate Chauffeur Accounts</h2>
           <p className="booking-panel-sub">Tailored chauffeur services for businesses, executives and ongoing travel requirements.</p>
         </div>
@@ -776,7 +852,7 @@ function Services() {
   const [active, setActive] = useState(0);
   const s = SERVICES[active];
   return (
-    <section className="sec" id="services">
+    <section className="sec" id="services" style={{ background:"#f5f5f5" }}>
       <div className="wrap">
         <div className="s-label">Services</div>
         <h2 className="s-h">Every journey,<br /><em>handled.</em></h2>
@@ -785,8 +861,10 @@ function Services() {
           <div className="svc-content">
             <h3 className="svc-content-h">{s.h}</h3>
             <p className="svc-desc">{s.d}</p>
-            <ul className="svc-feat-list"><li>Fixed fare confirmed at booking</li><li>Direct WhatsApp confirmation</li><li>Premium electric BMW i5</li></ul>
-            <a href="#book" className="btn-o">Get Fare Estimate</a>
+            <ul className="svc-feat-list">
+              {s.features.map((f) => <li key={f}>{f}</li>)}
+            </ul>
+            <a href="#book" className="btn-o" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Fare Estimate</a>
           </div>
         </div>
       </div>
@@ -794,19 +872,40 @@ function Services() {
   );
 }
 
-function Why() {
+function WhyMoments() {
+  const items = [
+    { title: "Fully electric",           desc: "BMW i5 eDrive40 — silent, smooth and zero emissions. A better journey for you and the city." },
+    { title: "Discreet by design",       desc: "No conversation unless you want one. Your privacy, your space, your journey." },
+    { title: "Small, intentional fleet", desc: "A small, curated fleet means every journey meets the same standard — no surprises, no inconsistency." },
+    { title: "Direct booking",           desc: "No apps, no platforms, no surge pricing. You message us directly and we confirm your fare instantly." },
+  ];
+
   return (
-    <section className="sec dark" id="about">
-      <div className="wrap why-layout">
-        <div>
-          <div className="s-label inv">Why VÉRNO</div>
-          <h2 className="s-h inv">A boutique<br /><em>standard.</em></h2>
-          <p className="s-body">Small fleet. Consistent quality. Every detail considered.</p>
-        </div>
-        <div className="why-grid">
-          {["Fully electric","Discreet by design","Small, intentional fleet","Direct booking"].map((t,i) => (
-            <div key={t} className="why-cell"><span className="why-n">0{i+1}</span><div className="why-t">{t}</div><p className="why-d">Premium, private, and consistent chauffeur service across Melbourne.</p></div>
-          ))}
+    <section className="sec dark why-moments-section" id="about">
+      <div className="wrap">
+        <div className="why-moments-layout">
+          {/* Sol — görsel */}
+          <div className="why-moments-img-wrap">
+            <img src={MOMENTS_MAIN} alt="VERNO BMW i5" className="why-moments-img" loading="lazy" />
+            <span className="moments-geo">Melbourne — Private Transfers</span>
+          </div>
+
+          {/* Sağ — metin + grid */}
+          <div className="why-moments-text">
+            <div className="s-label inv">Why VÉRNO</div>
+            <h2 className="s-h inv">A boutique<br /><em>standard.</em></h2>
+            <p className="s-body" style={{ marginBottom:"2.5rem" }}>Small fleet. Consistent quality. Every detail considered.</p>
+
+            <div className="why-grid">
+              {items.map((item, i) => (
+                <div key={item.title} className="why-cell">
+                  <span className="why-n">0{i + 1}</span>
+                  <div className="why-t">{item.title}</div>
+                  <p className="why-d">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -814,18 +913,27 @@ function Why() {
 }
 
 function Areas() {
-  const areas = ["Melbourne CBD","St Kilda & South Yarra","Mornington Peninsula","Yarra Valley","Melbourne Airport","Avalon Airport","Geelong & Surf Coast","Greater Melbourne"];
+  const areas = [
+    { name: "Melbourne CBD",          time: "Premium transfers", desc: "Door-to-door from the heart of the city. Fixed fare, no waiting." },
+    { name: "St Kilda & South Yarra", time: "Premium transfers", desc: "Inner-south transfers with the comfort and discretion you expect." },
+    { name: "Mornington Peninsula",   time: "Premium transfers", desc: "From Frankston to Portsea — scenic transfers along the Peninsula." },
+    { name: "Yarra Valley",           time: "Premium transfers", desc: "Corporate retreats, winery visits and private escapes into the Valley." },
+    { name: "Melbourne Airport",      time: "Premium transfers", desc: "Tullamarine pickups and drop-offs. Flight tracked, driver ready." },
+    { name: "Avalon Airport",         time: "Premium transfers", desc: "Geelong-side transfers handled with the same fixed-fare precision." },
+    { name: "Geelong & Surf Coast",   time: "Premium transfers", desc: "From the city to Torquay and beyond — premium transfers, fixed price." },
+    { name: "Greater Melbourne",      time: "Premium transfers", desc: "Wherever you're headed across Melbourne, we'll get you there in comfort." },
+  ];
   return (
-    <section className="sec" id="areas">
+    <section className="sec" id="areas" style={{ background:"#fff" }}>
       <div className="wrap">
         <div className="s-label">Coverage</div>
         <h2 className="s-h">Across Melbourne<br /><em>and beyond.</em></h2>
         <div className="areas-list">
-          {areas.map((name) => (
-            <div key={name} className="area-item" onClick={() => document.getElementById("book")?.scrollIntoView({ behavior: "smooth" })}>
-              <div className="area-name">{name}</div>
-              <div className="area-time">Premium transfers</div>
-              <p className="area-desc">Private chauffeur service with fixed fare confirmation.</p>
+          {areas.map((area) => (
+            <div key={area.name} className="area-item" onClick={() => document.getElementById("book")?.scrollIntoView({ behavior: "smooth" })}>
+              <div className="area-name">{area.name}</div>
+              <div className="area-time">{area.time}</div>
+              <p className="area-desc">{area.desc}</p>
             </div>
           ))}
         </div>
@@ -854,44 +962,9 @@ function Fleet() {
   );
 }
 
-function Process() {
-  return (
-    <section className="sec night2">
-      <div className="wrap">
-        <div className="s-label inv">How It Works</div>
-        <h2 className="s-h inv">Simple to arrange.<br /><em>Seamless to experience.</em></h2>
-        <div className="proc-track">
-          {["Arrange your transfer","Receive confirmation","Arrive in comfort"].map((n,i) => (
-            <div key={n} className="proc-step"><span className="proc-roman">{["I","II","III"][i]}</span><div className="proc-name">{n}</div><p className="proc-desc">Submit details, receive confirmation, and travel in a premium BMW i5.</p></div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Moments() {
-  return (
-    <section className="moments">
-      <div className="moments-inner">
-        <div className="moments-img-wrap">
-          <img src={MOMENTS_MAIN} alt="VERNO BMW i5" className="moments-img" loading="lazy" />
-          <span className="moments-geo">Melbourne - Private Transfers</span>
-        </div>
-        <div className="moments-text">
-          <p className="moments-eyebrow">Moments</p>
-          <h2 className="moments-title">Refined.<br />Quiet.<br /><em>Consistent.</em></h2>
-          <div className="moments-rule" />
-          <p className="moments-desc">Every journey is designed to feel effortless - from the first message to final arrival.</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Testimonials() {
   return (
-    <section className="sec">
+    <section className="sec" style={{ background:"#f5f5f5" }}>
       <div className="wrap">
         <div className="s-label">Client Experience</div>
         <h2 className="s-h">A service defined by consistency.</h2>
@@ -912,7 +985,7 @@ function Closer() {
         <h2 className="closer-h">Ready when<br /><em>you are.</em></h2>
         <p className="closer-sub">Reserve your transfer directly. Instant confirmation, fixed price.</p>
         <div className="closer-btns">
-          <a href="#book" className="btn-wa">Reserve via WhatsApp</a>
+          <a href="#book" className="btn-wa" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Reserve via WhatsApp</a>
           <a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-outline">Send an Email</a>
         </div>
       </div>
@@ -961,9 +1034,10 @@ body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:a
 .hero-label{font-size:.72rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:#C29A66;margin-bottom:1.8rem;}
 .hero-h1{font-family:var(--serif);line-height:.95;letter-spacing:-.055em;margin-bottom:1.8rem;max-width:720px;}
 .hero-top{display:block;font-style:normal;font-weight:600;font-size:clamp(3.6rem,5vw,5.8rem);color:#fff;}
-.hero-bottom{display:block;font-style:italic;font-weight:400;font-size:clamp(3.45rem,4.8vw,5.55rem);color:rgba(255,255,255,.92);margin-top:.05rem;white-space:nowrap;}
+.hero-bottom{display:block;font-style:italic;font-weight:300;font-size:clamp(3.45rem,4.8vw,5.55rem);color:rgba(255,255,255,.82);margin-top:.05rem;white-space:nowrap;}
 .hero-line{background:#C29A66;width:46px;height:2px;margin-bottom:1.6rem;}
 .hero-sub{max-width:520px;font-size:.95rem;line-height:1.65;font-weight:300;color:rgba(255,255,255,.55);margin-bottom:2.5rem;}
+.hero-tagline{font-size:.72rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;}
 .hero-actions{display:flex;align-items:center;gap:1.6rem;flex-wrap:wrap;}
 .hero-gold{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(180deg,#C49A60,#A8753F);color:#fff;border:1px solid rgba(201,164,109,.65);}
 .hero-outline{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid rgba(201,164,109,.58);color:rgba(255,255,255,.82);background:rgba(255,255,255,.02);}
@@ -1026,7 +1100,19 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .premium-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(168,117,63,.35);} .premium-btn:active{transform:scale(.98);}
 .wa-trust-line{text-align:center;font-size:.76rem;color:#999;margin-top:.9rem;letter-spacing:.02em;}
 .btn-email-secondary{display:block;text-align:center;font-size:.75rem;color:#999;margin-top:.85rem;}
-.corporate-section{padding:7rem 5vw 6rem;background:#fafafa;}
+.corporate-section{padding:7rem 5vw 6rem;background:#fff;}
+.why-moments-section{background:#111;}
+.why-moments-layout{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;}
+.why-moments-img-wrap{position:relative;background:#1a1a1a;overflow:hidden;border-radius:4px;}
+.why-moments-img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;}
+.why-moments-text{display:flex;flex-direction:column;}
+@media(max-width:1024px){
+  .why-moments-layout{grid-template-columns:1fr;gap:3rem;}
+  .why-moments-img{aspect-ratio:16/9;}
+}
+@media(max-width:768px){
+  .why-moments-img{aspect-ratio:4/3;}
+}
 .svc-layout{display:grid;grid-template-columns:210px 1fr;gap:5rem;margin-top:4rem;} .svc-nav{display:flex;flex-direction:column;}
 .svc-nav-item{text-align:left;padding:1rem 0;border-bottom:1px solid #e5e5e5;color:#999;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;}
 .svc-nav-item.active{color:#111;font-weight:600;}
@@ -1232,12 +1318,10 @@ export default function Home() {
     <TrustStrip />
     <InlineBooking />
     <Fleet />
-    <Services />
     <CorporateSection />
-    <Why />
+    <Services />
+    <WhyMoments />
     <Areas />
-    <Moments />
-    <Process />
     <Testimonials />
     <Closer />
     <Footer />
