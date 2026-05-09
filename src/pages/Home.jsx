@@ -431,7 +431,6 @@ function TrustStrip() {
 function FareEstimate({ fareResult, fareLoading, from, to, time, fromSelected, toSelected, returnTrip, returnDate, returnTime }) {
   if (from.trim().length < 4 || to.trim().length < 4) return null;
 
-  // İkisi de Autocomplete'den seçilmemişse uyarı göster
   if (!fromSelected || !toSelected) {
     return (
       <div style={{
@@ -442,7 +441,7 @@ function FareEstimate({ fareResult, fareLoading, from, to, time, fromSelected, t
         display:"flex", alignItems:"center", gap:".6rem",
       }}>
         <span>⚠</span>
-        <span>Please select addresses from the suggestions to see your fare.</span>
+        <span>Please select an address from the dropdown to see your fare.</span>
       </div>
     );
   }
@@ -570,13 +569,14 @@ function InlineBooking() {
   const isAirportPickup = isAirport(from);
 
   useEffect(() => {
+    if (!fromSelected || !toSelected) { setFareResult(null); return; }
     if (from.trim().length < 4 || to.trim().length < 4) { setFareResult(null); return; }
     setFareLoading(true);
     calculateFare(from, to, time).then((result) => {
       setFareResult(result);
       setFareLoading(false);
     });
-  }, [from, to, time]);
+  }, [from, to, time, fromSelected, toSelected]);
 
   const fare = fareResult ? fareResult.fare : null;
 
@@ -634,7 +634,7 @@ function InlineBooking() {
         </div>
 
         <div className="booking-panel-form">
-          <button className="quick-chip" onClick={() => { setTo("Melbourne Airport (Tullamarine)"); setToSelected(true); }}>
+          <button className="quick-chip" onClick={() => { setTo("Melbourne Airport (Tullamarine) VIC, Australia"); setToSelected(true); }}>
             <span className="quick-chip-dot" />Airport transfer? Set Melbourne Airport as destination
           </button>
 
