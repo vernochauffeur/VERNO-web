@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
+const SVC_AIRPORT = "/images/svc-airport.jpg";
+const SVC_CORPORATE = "/images/svc-corporate.jpg";
+const SVC_PRIVATE = "/images/svc-private.jpg";
+const SVC_EVENTS = "/images/svc-events.jpg";
 const FLEET_IMG = "/images/fleet.jpg";
 const WA_NUMBER = "610421238894";
 const VERNO_EMAIL = "book@vernochauffeur.com.au";
@@ -870,24 +874,28 @@ const SERVICES = [
   {
     label: "Airport Transfers",
     h: "Airport Transfers",
+    img: SVC_AIRPORT,
     d: "Your flight lands, we're already there. Tullamarine and Avalon transfers with real-time flight tracking and a fixed fare — no surprises, no waiting.",
     features: ["Flight tracked in real-time", "Fixed fare, no surprises", "Driver in position on arrival"]
   },
   {
     label: "Corporate",
     h: "Corporate Travel",
+    img: SVC_CORPORATE,
     d: "First impressions start before the meeting. Punctual, discreet ground transport for executives, clients and business guests across Melbourne.",
     features: ["Discreet & punctual, guaranteed", "Direct booking, no platforms", "Consistent standard, every time"]
   },
   {
     label: "Private Hire",
     h: "Private Hire",
+    img: SVC_PRIVATE,
     d: "From the Great Ocean Road to the Yarra Valley wineries — day trips, wine tastings and Victoria's best destinations, handled in comfort.",
     features: ["Your route, your schedule", "Full day availability", "Fixed fare confirmed upfront"]
   },
   {
     label: "Events",
     h: "Events & Occasions",
+    img: SVC_EVENTS,
     d: "Weddings, dinners, shopping trips or a day out — we handle the driving so you can focus on the moment. Luggage, parcels, bags — all taken care of.",
     features: ["Luggage & parcels handled", "Flexible pickup & drop-off", "Available for full day hire"]
   }
@@ -940,14 +948,7 @@ function Services() {
           {SERVICES.map((s) => (
             <div key={s.label} className="svc-card">
               <div className="svc-card-img-wrap">
-                <div className="svc-card-img-placeholder">
-                  <span className="svc-card-icon">
-                    {s.label === "Airport Transfers" && <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M21.7 16.2 13.3 12l8.4-4.2c.4-.2.4-.8 0-1l-1.1-.6c-.2-.1-.4-.1-.6 0l-9.4 3.1-4.1-5.2c-.1-.2-.3-.3-.6-.3H3.8c-.5 0-.8.5-.5.9L6.8 11 3.3 19.3c-.2.4.1.9.5.9h2.1c.2 0 .4-.1.6-.3l4.1-5.2 9.4 3.1c.2.1.4.1.6 0l1.1-.6c.4-.2.4-.8 0-1Z"/></svg>}
-                    {s.label === "Corporate" && <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M9 6V5.2C9 3.4 10.4 2 12.2 2h1.6C15.6 2 17 3.4 17 5.2V6h2.2C20.7 6 22 7.3 22 8.8v9.4c0 1.5-1.3 2.8-2.8 2.8H4.8C3.3 21 2 19.7 2 18.2V8.8C2 7.3 3.3 6 4.8 6H9Z"/></svg>}
-                    {s.label === "Private Hire" && <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M6.2 10.2 7.4 6.8C7.8 5.7 8.8 5 10 5h4c1.2 0 2.2.7 2.6 1.8l1.2 3.4 1.3.4c1.1.4 1.9 1.4 1.9 2.6V18c0 .6-.4 1-1 1h-1.1a2.4 2.4 0 0 1-4.6 0H9.7a2.4 2.4 0 0 1-4.6 0H4c-.6 0-1-.4-1-1v-4.8c0-1.2.8-2.2 1.9-2.6l1.3-.4Z"/></svg>}
-                    {s.label === "Events" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="40" height="40"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.7 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5-4.8-4.7 6.6-.9L12 2.5z"/></svg>}
-                  </span>
-                </div>
+                <img src={s.img} alt={s.h} className="svc-card-img" loading="lazy" />
               </div>
               <div className="svc-card-body">
                 <div className="svc-card-label">{s.label}</div>
@@ -1213,8 +1214,8 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .svc-card{width:320px;flex-shrink:0;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s;}
 .svc-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.12);}
 .svc-card-img-wrap{height:200px;background:#111;position:relative;overflow:hidden;}
-.svc-card-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);}
-.svc-card-icon{color:#C29A66;opacity:.6;}
+.svc-card-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s;}
+.svc-card:hover .svc-card-img{transform:scale(1.04);}
 .svc-card-body{padding:1.8rem;display:flex;flex-direction:column;flex:1;}
 .svc-card-label{font-size:.65rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#C29A66;margin-bottom:.6rem;}
 .svc-card-title{font-family:var(--serif);font-size:1.4rem;font-weight:600;color:#111;margin-bottom:.8rem;line-height:1.2;}
