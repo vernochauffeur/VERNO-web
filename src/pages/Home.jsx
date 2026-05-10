@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
+const JOURNEY_IMG_1 = "/images/journey-1.jpg";
+const JOURNEY_IMG_2 = "/images/journey-2.jpg";
+const JOURNEY_IMG_3 = "/images/journey-3.jpg";
+const JOURNEY_IMG_4 = "/images/journey-4.jpg";
 const SVC_AIRPORT = "/images/svc-airport.jpg";
 const SVC_CORPORATE = "/images/svc-corporate.jpg";
 const SVC_PRIVATE = "/images/svc-private.jpg";
@@ -967,6 +971,45 @@ function Services() {
   );
 }
 
+function JourneyMoments() {
+  const [active, setActive] = React.useState(0);
+  const moments = [
+    { num: "01", title: "We're already there.", desc: "Your flight lands. Your chauffeur was waiting before you even walked through arrivals. No calls, no searching — just a name board and a calm presence.", img: JOURNEY_IMG_1, color: "#f5ede0" },
+    { num: "02", title: "Your space. Your silence.", desc: "The cabin is quiet, the temperature is right. Conversation if you want it. Silence if you don't. This is your space for the next hour.", img: JOURNEY_IMG_2, color: "#e8f0f5" },
+    { num: "03", title: "Your bags, handled.", desc: "Heavy luggage, shopping bags, laptop case — loaded without being asked. You walked to the car. Everything else was taken care of.", img: JOURNEY_IMG_3, color: "#f0ede8" },
+    { num: "04", title: "Door closed. Journey done.", desc: "You're home. Or at your hotel. Or at the meeting. The door closes quietly behind you. That's exactly how it should feel.", img: JOURNEY_IMG_4, color: "#e8ede8" },
+  ];
+
+  return (
+    <section className="journey-section" id="journey">
+      <div className="wrap" style={{ paddingBottom:"3rem" }}>
+        <div className="s-label">The Experience</div>
+        <h2 className="s-h">From the moment<br /><em>we arrive.</em></h2>
+      </div>
+      <div className="journey-cards">
+        {moments.map((m, i) => (
+          <div
+            key={m.num}
+            className={`journey-card ${active === i ? "active" : ""}`}
+            style={{ "--card-color": m.color }}
+            onMouseEnter={() => setActive(i)}
+            onClick={() => setActive(active === i ? -1 : i)}
+          >
+            {m.img && <div className="journey-card-bg" style={{ backgroundImage: `url(${m.img})` }} />}
+            <div className="journey-card-overlay" />
+            <div className="journey-card-content">
+              <span className="journey-card-num">{m.num}</span>
+              <h3 className="journey-card-title">{m.title}</h3>
+              <p className="journey-card-desc">{m.desc}</p>
+              <div className="journey-card-rule" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function WhyMoments() {
   const items = [
     { title: "Fully electric",           desc: "BMW i5 eDrive40 — silent, smooth and zero emissions. A better journey for you and the city." },
@@ -1208,6 +1251,32 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 @media(max-width:768px){
   .why-moments-img{aspect-ratio:4/3;}
 }
+.journey-section{background:#faf7f2;padding:5rem 0 0;}
+.journey-cards{display:flex;height:580px;overflow:hidden;}
+.journey-card{position:relative;flex:1;transition:flex .5s cubic-bezier(.4,0,.2,1);overflow:hidden;cursor:pointer;background:var(--card-color, #f5ede0);}
+.journey-card.active{flex:3;}
+.journey-card-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .6s ease;transform:scale(1.08);}
+.journey-card.active .journey-card-bg{transform:scale(1);}
+.journey-card-overlay{position:absolute;inset:0;background:linear-gradient(to top, rgba(20,15,5,.75) 0%, rgba(20,15,5,.2) 60%, rgba(20,15,5,.05) 100%);transition:background .4s;}
+.journey-card:not(.active) .journey-card-overlay{background:linear-gradient(to top, rgba(20,15,5,.5) 0%, rgba(20,15,5,.1) 100%);}
+.journey-card-content{position:absolute;bottom:0;left:0;right:0;padding:2.2rem 2rem;color:#fff;}
+.journey-card:not(.active) .journey-card-content{color:rgba(255,255,255,.9);}
+.journey-card-num{display:block;font-family:var(--serif);font-size:3rem;font-weight:600;color:rgba(194,154,102,.5);line-height:1;margin-bottom:.4rem;transition:color .3s;}
+.journey-card.active .journey-card-num{color:rgba(194,154,102,.9);}
+.journey-card-title{font-family:var(--serif);font-size:1rem;font-weight:600;line-height:1.3;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:font-size .3s;}
+.journey-card.active .journey-card-title{white-space:normal;font-size:1.5rem;margin-bottom:.9rem;}
+.journey-card-desc{font-size:.85rem;line-height:1.7;color:rgba(255,255,255,.8);max-height:0;overflow:hidden;opacity:0;transition:max-height .45s ease, opacity .35s ease .05s;}
+.journey-card.active .journey-card-desc{max-height:150px;opacity:1;}
+.journey-card-rule{width:0;height:2px;background:#C29A66;margin-top:1rem;transition:width .5s ease .15s;opacity:.8;}
+.journey-card.active .journey-card-rule{width:40px;}
+@media(max-width:768px){
+  .journey-cards{flex-direction:column;height:auto;}
+  .journey-card{flex:none;height:100px;transition:height .4s ease;}
+  .journey-card.active{height:320px;}
+  .journey-card-title{white-space:normal;font-size:.95rem;}
+  .journey-card.active .journey-card-title{font-size:1.25rem;}
+  .journey-card-num{font-size:2rem;}
+}
 .svc-scroll-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2.5rem 5vw 3rem;scrollbar-width:none;}
 .svc-scroll-wrap::-webkit-scrollbar{display:none;}
 .svc-scroll-track{display:flex;gap:1.5rem;width:max-content;}
@@ -1432,6 +1501,7 @@ export default function Home() {
     <Fleet />
     <CorporateSection />
     <Services />
+    <JourneyMoments />
     <WhyMoments />
     <Areas />
     <Testimonials />
