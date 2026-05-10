@@ -503,12 +503,21 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
       </div>
       <div className="fare-price">${fareResult.fare}</div>
       {returnTrip && returnDate && returnTime && fareResult && (() => {
-        const baseReturnFare = (diffReturn && returnFareResult && returnFareResult.fare)
-          ? returnFareResult.fare
-          : roundFare(Math.max(calcFare(fareResult.km || 0, null), PRICING.MIN_FARE));
-        const returnFare = isLateNight(returnTime)
-          ? roundFare(baseReturnFare * (1 + PRICING.LATE_SURCHARGE))
-          : baseReturnFare;
+        let returnFare;
+        if (diffReturn && returnFareResult && returnFareResult.fare) {
+          returnFare = returnFareResult.fare;
+        } else {
+          // Aynı rota — gece tarifesini return saatine göre uygula
+          const baseKmCost = (() => {
+            const km = fareResult.km || 0;
+            if (km <= 25) return km * PRICING.RATE_0_25;
+            if (km <= 50) return 25 * PRICING.RATE_0_25 + (km - 25) * PRICING.RATE_25_50;
+            return 25 * PRICING.RATE_0_25 + 25 * PRICING.RATE_25_50 + (km - 50) * PRICING.RATE_50UP;
+          })();
+          let baseFare = Math.max(PRICING.BASE + baseKmCost, PRICING.MIN_FARE);
+          if (isLateNight(returnTime)) baseFare = baseFare * (1 + PRICING.LATE_SURCHARGE);
+          returnFare = roundFare(baseFare);
+        }
         const total = (fareResult.fare || 0) + (returnFare || 0);
         return (
           <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:".8rem" }}>
@@ -1096,14 +1105,14 @@ body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:a
 .nav-links{display:flex;gap:2.4rem;list-style:none;} .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);}
 .nav-btn{border:1px solid rgba(210,176,109,.55);padding:.85rem 1.7rem;} .nav-right{display:flex;align-items:center;gap:.5rem;} .hamburger{display:none;} .hamburger-btn{display:none;}
 .verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:10px;} .verno-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:29px;margin-top:5px;font-family:var(--sans);font-size:8px;letter-spacing:.42em;color:rgba(255,255,255,.36);}
-.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 45%/cover no-repeat;color:#fff;overflow:hidden;}
+.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 70%/cover no-repeat;color:#fff;overflow:hidden;}
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));pointer-events:none;}
 .hero-content{position:relative;z-index:2;min-height:calc(78vh - 105px);max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0, 1.05fr) 390px;gap:6vw;align-items:center;}
 .hero-left{padding-bottom:5vh;}
 .hero-label{font-size:.72rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:#C29A66;margin-bottom:1.8rem;}
 .hero-h1{font-family:var(--serif);line-height:.95;letter-spacing:-.055em;margin-bottom:1.8rem;max-width:720px;}
 .hero-top{display:block;font-style:normal;font-weight:600;font-size:clamp(2.8rem,3.8vw,4.6rem);color:#fff;}
-.hero-bottom{display:block;font-style:italic;font-weight:300;font-size:clamp(2.6rem,3.6vw,4.4rem);color:rgba(255,255,255,.82);margin-top:.05rem;white-space:nowrap;}
+.hero-bottom{display:block;font-style:italic;font-weight:500;font-size:clamp(2.6rem,3.6vw,4.4rem);color:rgba(255,255,255,.92);margin-top:.05rem;white-space:nowrap;}
 .hero-line{background:#C29A66;width:46px;height:2px;margin-bottom:1.6rem;}
 .hero-sub{max-width:520px;font-size:.95rem;line-height:1.65;font-weight:300;color:rgba(255,255,255,.55);margin-bottom:2.5rem;}
 .hero-tagline{font-size:.72rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;}
@@ -1363,7 +1372,7 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 @media(max-width:768px){
   body{overflow-x:hidden;}
   .hero{min-height:auto;padding:100px 5vw 60px;}
-  .hero-top,.hero-bottom{font-size:3rem;white-space:normal;}
+  .hero-top,.hero-bottom{font-size:2rem;white-space:normal;}
   .hero-actions{flex-direction:column;}
   .booking-panel,.sec{padding:5rem 5vw;}
   .trust-strip{width:100%;overflow:hidden;}
