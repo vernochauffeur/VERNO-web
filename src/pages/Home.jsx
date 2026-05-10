@@ -72,25 +72,24 @@ function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
       if (!window.google?.maps?.places || !inputRef.current) { timer = setTimeout(initAutocomplete, 300); return; }
       const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, { componentRestrictions: { country: "au" }, fields: ["formatted_address", "name"] });
       autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        const selected = place.formatted_address || place.name || "";
-        const lower = selected.toLowerCase();
-        if (lower.includes(" vic") || lower.includes(" victoria")) {
+        try {
+          const place = autocomplete.getPlace();
+          const selected = place.formatted_address || place.name || "";
           onChange(selected);
           if (onSelect) onSelect(selected);
-        } else { alert("Please select a location within Victoria."); }
+        } catch(e) { console.error("Autocomplete error:", e); }
       });
     };
     initAutocomplete();
     return () => clearTimeout(timer);
-  }, [onChange, onSelect]);
+  }, []);
   return (
     <div className="fg address-field">
       <label className="fl" htmlFor={id}>{label}</label>
       <input
         id={id} ref={inputRef} className="fi address-input"
         placeholder={placeholder} value={value}
-        onChange={(e) => { onChange(e.target.value); if (onSelect) onSelect(null); }}
+        onChange={(e) => { onChange(e.target.value); }}
         autoComplete="off"
       />
       {value && (
@@ -504,8 +503,8 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
       </div>
       <div className="fare-price">${fareResult.fare}</div>
       {returnTrip && returnDate && returnTime && fareResult && (() => {
-        const returnFare = diffReturn && returnFareResult ? returnFareResult.fare : fareResult.fare;
-        const total = fareResult.fare + returnFare;
+        const returnFare = (diffReturn && returnFareResult && returnFareResult.fare) ? returnFareResult.fare : fareResult.fare;
+        const total = (fareResult.fare || 0) + (returnFare || 0);
         return (
           <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:".8rem" }}>
             <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>Return</div>
