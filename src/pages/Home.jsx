@@ -1053,24 +1053,24 @@ function WhyMoments() {
 
 function Pricing() {
   const airports = [
-    { from: "CBD", to: "Tullamarine Airport", price: "$115" },
-    { from: "St Kilda", to: "Tullamarine Airport", price: "$133" },
-    { from: "South Yarra", to: "Tullamarine Airport", price: "$123" },
-    { from: "Toorak", to: "Tullamarine Airport", price: "$128" },
-    { from: "Brighton", to: "Tullamarine Airport", price: "$138" },
-    { from: "CBD", to: "Avalon Airport", price: "$195" },
+    { from: "CBD", to: "Tullamarine Airport", price: "from $115" },
+    { from: "St Kilda", to: "Tullamarine Airport", price: "from $133" },
+    { from: "South Yarra", to: "Tullamarine Airport", price: "from $123" },
+    { from: "Toorak", to: "Tullamarine Airport", price: "from $128" },
+    { from: "Brighton", to: "Tullamarine Airport", price: "from $138" },
+    { from: "CBD", to: "Avalon Airport", price: "from $195" },
   ];
   const pointToPoint = [
-    { from: "CBD", to: "St Kilda", price: "$90" },
-    { from: "CBD", to: "Brighton", price: "$105" },
-    { from: "CBD", to: "Ringwood", price: "$125" },
-    { from: "CBD", to: "Frankston", price: "$170" },
-    { from: "CBD", to: "Mornington", price: "$215" },
-    { from: "CBD", to: "Geelong", price: "$240" },
+    { from: "CBD", to: "St Kilda", price: "from $90" },
+    { from: "CBD", to: "Brighton", price: "from $105" },
+    { from: "CBD", to: "Ringwood", price: "from $125" },
+    { from: "CBD", to: "Frankston", price: "from $170" },
+    { from: "CBD", to: "Mornington", price: "from $215" },
+    { from: "CBD", to: "Geelong", price: "from $240" },
   ];
 
   return (
-    <section id="pricing" style={{ background:"#fdf9f4", padding:"5rem 5vw" }}>
+    <section id="pricing" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
       <div className="wrap">
         <div className="s-label">Pricing</div>
         <h2 className="s-h" style={{ color:"#111" }}>Simple,<br /><span className="gold-em">fixed pricing.</span></h2>
@@ -1101,7 +1101,7 @@ function Pricing() {
         </div>
 
         <div className="pricing-note">
-          <p>Fares are approximate. Exact fare calculated instantly with our fare calculator.</p>
+          <p>Late-night surcharge applies 12am–5am &middot; Exact fare calculated instantly below.</p>
           <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
             Calculate your exact fare &rarr;
           </a>
@@ -1110,6 +1110,8 @@ function Pricing() {
     </section>
   );
 }
+
+function Areas() {
   const areas = [
     { name: "Melbourne CBD",          time: "Premium transfers", desc: "Door-to-door from the heart of the city. Fixed fare, no waiting." },
     { name: "St Kilda & South Yarra", time: "Premium transfers", desc: "Inner-south transfers with the comfort and discretion you expect." },
@@ -1316,12 +1318,16 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .pricing-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid rgba(0,0,0,.07);}
 .pricing-route{font-size:.9rem;color:#444;}
 .pricing-price{font-family:var(--serif);font-size:1.1rem;font-weight:600;color:#111;}
+.pricing-price span.from{font-family:var(--sans);font-size:.72rem;font-weight:400;color:#999;margin-right:.3rem;font-style:normal;}
 .pricing-note{margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(0,0,0,.08);}
 .pricing-note p{font-size:.82rem;color:#888;margin-bottom:.8rem;}
 .pricing-cta{font-size:.88rem;font-weight:500;color:#C4954A;letter-spacing:.04em;}
 .pricing-cta:hover{color:#9a7040;}
 @media(max-width:768px){.pricing-grid{grid-template-columns:1fr;gap:2rem;}}
+.journey-section{background:#0f0d0a;padding:4rem 0 0;}
 .journey-section .wrap{padding-bottom:2rem;}
+.journey-section .s-label{color:var(--gold);}
+.journey-section .s-h{color:#fff;}
 .journey-cards{display:flex;height:600px;}
 .journey-card{position:relative;flex:1;transition:flex .5s cubic-bezier(.4,0,.2,1);overflow:hidden;cursor:pointer;}
 .journey-card.active{flex:2.5;}
@@ -1567,11 +1573,11 @@ export default function Home() {
     <Nav />
     <Hero />
     <TrustStrip />
-    <Pricing />
     <InlineBooking />
+    <Services />
     <JourneyMoments />
     <CorporateSection />
-    <Services />
+    <Pricing />
     <Areas />
     {/* <Testimonials /> */}
     <Closer />
