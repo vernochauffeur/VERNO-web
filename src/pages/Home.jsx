@@ -940,7 +940,7 @@ function CorporateSection() {
 
 function Services() {
   return (
-    <section className="sec" id="services" style={{ background:"#f5f5f5", overflow:"hidden" }}>
+    <section className="sec" id="services" style={{ background:"#f5ead4", overflow:"hidden" }}>
       <div className="wrap">
         <div className="s-label">Services</div>
         <h2 className="s-h">Every journey,<br /><em>handled.</em></h2>
@@ -1062,7 +1062,7 @@ function Areas() {
     { name: "Greater Melbourne",      time: "Premium transfers", desc: "Wherever you're headed across Melbourne, we'll get you there in comfort." },
   ];
   return (
-    <section className="sec" id="areas" style={{ background:"#fff" }}>
+    <section className="sec" id="areas" style={{ background:"#fdf9f4" }}>
       <div className="wrap">
         <div className="s-label">Coverage</div>
         <h2 className="s-h">Across Melbourne<br /><em>and beyond.</em></h2>
@@ -1158,8 +1158,8 @@ function Footer() {
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth}
-:root{--gold:#B98B55;--gold2:#C49A5A;--black:#111;--white:#fff;--wa:#128C7E;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',Arial,sans-serif}
-body{font-family:var(--sans);background:#0a0a0a;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
+:root{--gold:#C4954A;--gold2:#D4A55A;--black:#0f0d0a;--white:#fdf9f4;--wa:#128C7E;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',Arial,sans-serif}
+body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:82px;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;background:transparent;border-bottom:1px solid transparent;}
 .nav.solid{background:rgba(12,12,12,.86);backdrop-filter:blur(16px);border-color:rgba(255,255,255,.08);}
 .nav-links{display:flex;gap:2.4rem;list-style:none;} .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);}
@@ -1200,12 +1200,12 @@ body{font-family:var(--sans);background:#0a0a0a;color:#111;-webkit-font-smoothin
 .btn-wa{display:inline-flex;align-items:center;justify-content:center;gap:.6rem;padding:1rem 1.8rem;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--wa);color:#fff;}
 .btn-outline{display:inline-flex;align-items:center;justify-content:center;gap:.6rem;padding:1rem 1.8rem;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.7);}
 .btn-o{display:inline-flex;align-items:center;gap:.6rem;padding:1rem 1.8rem;font-size:.8rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border:1px solid #e5e5e5;color:#555;}
-.sec{padding:9rem 5vw} .sec.dark{background:#111} .night2{background:#0a0a0a} .wrap{max-width:1200px;margin:auto}
+.sec{padding:6rem 5vw} .sec.dark{background:#1a1510} .night2{background:#0f0d0a} .wrap{max-width:1200px;margin:auto}
 .s-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.2em;color:var(--gold);margin-bottom:1.2rem;}
 .inv{color:var(--gold)} .s-h{font-family:var(--serif);font-size:clamp(2rem,4vw,3.4rem);font-weight:400;line-height:1.1;margin-bottom:2rem;} .s-h.inv{color:#fff;}
 .s-h em,.booking-panel-headline em,.fleet-text-title em,.closer-h em{color:var(--gold);font-style:normal;}
 .s-body{color:rgba(255,255,255,.5);line-height:1.75;}
-.booking-panel{padding:7rem 5vw 6rem;background:#fff;}
+.booking-panel{padding:7rem 5vw 6rem;background:#fdf9f4;}
 .booking-panel-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:360px 620px;gap:6rem;align-items:center;justify-content:center;}
 .booking-panel-headline{font-family:var(--serif);font-size:clamp(2.2rem,3vw,3rem);font-weight:400;line-height:1.05;margin-bottom:1.6rem;}
 .booking-panel-sub{max-width:330px;font-size:.95rem;line-height:1.75;color:#777;font-weight:300;}
@@ -1238,7 +1238,7 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .premium-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(168,117,63,.35);} .premium-btn:active{transform:scale(.98);}
 .wa-trust-line{text-align:center;font-size:.76rem;color:#999;margin-top:.9rem;letter-spacing:.02em;}
 .btn-email-secondary{display:block;text-align:center;font-size:.75rem;color:#999;margin-top:.85rem;}
-.corporate-section{padding:7rem 5vw 6rem;background:#fff;}
+.corporate-section{padding:5rem 5vw;background:#fdf9f4;}
 .why-moments-section{background:#111;}
 .why-moments-layout{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;}
 .why-moments-img-wrap{position:relative;background:#1a1a1a;overflow:hidden;border-radius:4px;}
@@ -1251,8 +1251,8 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 @media(max-width:768px){
   .why-moments-img{aspect-ratio:4/3;}
 }
-.journey-section{background:#faf7f2;padding:5rem 0 0;}
-.journey-section .wrap{padding-bottom:3rem;}
+.journey-section{background:#f5ead4;padding:4rem 0 0;}
+.journey-section .wrap{padding-bottom:2rem;}
 .journey-cards{display:flex;height:600px;}
 .journey-card{position:relative;flex:1;transition:flex .5s cubic-bezier(.4,0,.2,1);overflow:hidden;cursor:pointer;}
 .journey-card.active{flex:2.5;}
@@ -1326,7 +1326,7 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .moments-eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;color:var(--gold);margin-bottom:1rem;}
 .moments-title{font-family:var(--serif);color:#fff;font-size:clamp(2rem,3vw,3rem);font-weight:400;line-height:1.2;}
 .moments-title em{color:rgba(255,255,255,.45);} .moments-rule{width:2.5rem;height:2px;background:var(--gold);margin:1.5rem 0;} .moments-desc{color:rgba(255,255,255,.45);line-height:1.75;}
-.closer{background:#111;color:#fff;padding:10rem 5vw;text-align:center;} .closer-inner{max-width:640px;margin:auto;}
+.closer{background:#1a1510;color:#fff;padding:6rem 5vw;text-align:center;} .closer-inner{max-width:640px;margin:auto;}
 .closer-h{font-family:var(--serif);font-size:clamp(2rem,4vw,3.4rem);font-weight:400;line-height:1.1;}
 .closer-sub{color:rgba(255,255,255,.35);} .closer-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:3rem;}
 footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
@@ -1499,13 +1499,11 @@ export default function Home() {
     <Hero />
     <TrustStrip />
     <InlineBooking />
-    <Fleet />
+    <JourneyMoments />
     <CorporateSection />
     <Services />
-    <JourneyMoments />
-    <WhyMoments />
     <Areas />
-    <Testimonials />
+    {/* <Testimonials /> */}
     <Closer />
     <Footer />
     <a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
