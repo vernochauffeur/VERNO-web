@@ -503,7 +503,12 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
       </div>
       <div className="fare-price">${fareResult.fare}</div>
       {returnTrip && returnDate && returnTime && fareResult && (() => {
-        const returnFare = (diffReturn && returnFareResult && returnFareResult.fare) ? returnFareResult.fare : fareResult.fare;
+        const baseReturnFare = (diffReturn && returnFareResult && returnFareResult.fare)
+          ? returnFareResult.fare
+          : roundFare(Math.max(calcFare(fareResult.km || 0, null), PRICING.MIN_FARE));
+        const returnFare = isLateNight(returnTime)
+          ? roundFare(baseReturnFare * (1 + PRICING.LATE_SURCHARGE))
+          : baseReturnFare;
         const total = (fareResult.fare || 0) + (returnFare || 0);
         return (
           <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:".8rem" }}>
@@ -809,35 +814,32 @@ function InlineBooking() {
                 <span style={{ fontSize:".78rem", color:"#666", userSelect:"none" }}>Different return address</span>
               </div>
 
-              {/* Farklı adres alanları */}
-              {diffReturn && (
-                <div style={{ marginTop:"1rem", display:"flex", flexDirection:"column", gap:".75rem" }}>
-                  <div className="fg">
-                    <label className="fl">Return Pickup</label>
-                    <AddressField id="returnFrom" label="" placeholder="Enter return pickup address" value={returnFrom}
-                      onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); }}
-                      onSelect={(v) => { setReturnFrom(v); setReturnFromSelected(true); }}
-                    />
-                  </div>
-                  <div className="fg">
-                    <label className="fl">Return Destination</label>
-                    <AddressField id="returnTo" label="" placeholder="Enter return destination" value={returnTo}
-                      onChange={(v) => { setReturnTo(v); setReturnToSelected(false); }}
-                      onSelect={(v) => { setReturnTo(v); setReturnToSelected(true); }}
-                    />
-                  </div>
-                  {/* Return pickup airport ise uçuş numarası */}
-                  {isAirport(returnFrom) && (
-                    <div className="fg">
-                      <label className="fl">Return Flight Number</label>
-                      <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
-                        onChange={(e) => setReturnFlightNumber(e.target.value)}
-                        style={{ background:"#fff" }}
-                      />
-                    </div>
-                  )}
+              {/* Farklı adres alanları - her zaman render et, display ile göster/gizle */}
+              <div style={{ marginTop:"1rem", display:"flex", flexDirection:"column", gap:".75rem", display: diffReturn ? "flex" : "none" }}>
+                <div className="fg">
+                  <label className="fl">Return Pickup</label>
+                  <AddressField id="returnFrom" label="" placeholder="Enter return pickup address" value={returnFrom}
+                    onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); }}
+                    onSelect={(v) => { setReturnFrom(v); setReturnFromSelected(true); }}
+                  />
                 </div>
-              )}
+                <div className="fg">
+                  <label className="fl">Return Destination</label>
+                  <AddressField id="returnTo" label="" placeholder="Enter return destination" value={returnTo}
+                    onChange={(v) => { setReturnTo(v); setReturnToSelected(false); }}
+                    onSelect={(v) => { setReturnTo(v); setReturnToSelected(true); }}
+                  />
+                </div>
+                {isAirport(returnFrom) && (
+                  <div className="fg">
+                    <label className="fl">Return Flight Number</label>
+                    <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
+                      onChange={(e) => setReturnFlightNumber(e.target.value)}
+                      style={{ background:"#fff" }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1094,7 +1096,7 @@ body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:a
 .nav-links{display:flex;gap:2.4rem;list-style:none;} .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);}
 .nav-btn{border:1px solid rgba(210,176,109,.55);padding:.85rem 1.7rem;} .nav-right{display:flex;align-items:center;gap:.5rem;} .hamburger{display:none;} .hamburger-btn{display:none;}
 .verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:10px;} .verno-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:29px;margin-top:5px;font-family:var(--sans);font-size:8px;letter-spacing:.42em;color:rgba(255,255,255,.36);}
-.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.15), transparent 28%),linear-gradient(90deg, rgba(5,5,5,.82) 0%, rgba(8,8,8,.72) 38%, rgba(8,8,8,.28) 66%, rgba(8,8,8,.38) 100%),linear-gradient(180deg, rgba(5,5,5,.35) 0%, rgba(5,5,5,.75) 100%),url("/images/hero-bg.jpg") center 60%/cover no-repeat;color:#fff;overflow:hidden;}
+.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 45%/cover no-repeat;color:#fff;overflow:hidden;}
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));pointer-events:none;}
 .hero-content{position:relative;z-index:2;min-height:calc(78vh - 105px);max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0, 1.05fr) 390px;gap:6vw;align-items:center;}
 .hero-left{padding-bottom:5vh;}
