@@ -503,7 +503,7 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
         {label}{returnTrip && returnDate && returnTime ? " — Outbound" : ""}
       </div>
       <div className="fare-price">${fareResult.fare}</div>
-      {returnTrip && returnDate && returnTime && (() => {
+      {returnTrip && returnDate && returnTime && fareResult && (() => {
         const returnFare = diffReturn && returnFareResult ? returnFareResult.fare : fareResult.fare;
         const total = fareResult.fare + returnFare;
         return (
@@ -777,9 +777,15 @@ function InlineBooking() {
                     <option value="">Select time</option>
                     {!returnDate
                       ? <option disabled>Please select date first</option>
-                      : getSlots(returnDate).length === 0
-                        ? <option disabled>No available times</option>
-                        : getSlots(returnDate).map((s) => <option key={s} value={s}>{s}</option>)
+                      : (() => {
+                          const slots = getSlots(returnDate);
+                          const filtered = returnDate === date && time
+                            ? slots.filter(s => s > time)
+                            : slots;
+                          return filtered.length === 0
+                            ? <option disabled>No available times</option>
+                            : filtered.map((s) => <option key={s} value={s}>{s}</option>);
+                        })()
                     }
                   </select>
                   {errors.returnTime && <span style={errStyle}>{errors.returnTime}</span>}
