@@ -927,23 +927,39 @@ function CorporateSection() {
 }
 
 function Services() {
-  const [active, setActive] = useState(0);
-  const s = SERVICES[active];
   return (
-    <section className="sec" id="services" style={{ background:"#f5f5f5" }}>
+    <section className="sec" id="services" style={{ background:"#f5f5f5", overflow:"hidden" }}>
       <div className="wrap">
         <div className="s-label">Services</div>
         <h2 className="s-h">Every journey,<br /><em>handled.</em></h2>
-        <div className="svc-layout">
-          <nav className="svc-nav">{SERVICES.map((x, i) => <button key={x.label} className={`svc-nav-item${active===i?" active":""}`} onClick={() => setActive(i)}>{x.label}</button>)}</nav>
-          <div className="svc-content">
-            <h3 className="svc-content-h">{s.h}</h3>
-            <p className="svc-desc">{s.d}</p>
-            <ul className="svc-feat-list">
-              {s.features.map((f) => <li key={f}>{f}</li>)}
-            </ul>
-            <a href="#book" className="btn-o" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Fare Estimate</a>
-          </div>
+      </div>
+
+      {/* Yatay kayan kartlar */}
+      <div className="svc-scroll-wrap">
+        <div className="svc-scroll-track">
+          {SERVICES.map((s) => (
+            <div key={s.label} className="svc-card">
+              <div className="svc-card-img-wrap">
+                <div className="svc-card-img-placeholder">
+                  <span className="svc-card-icon">
+                    {s.label === "Airport Transfers" && <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M21.7 16.2 13.3 12l8.4-4.2c.4-.2.4-.8 0-1l-1.1-.6c-.2-.1-.4-.1-.6 0l-9.4 3.1-4.1-5.2c-.1-.2-.3-.3-.6-.3H3.8c-.5 0-.8.5-.5.9L6.8 11 3.3 19.3c-.2.4.1.9.5.9h2.1c.2 0 .4-.1.6-.3l4.1-5.2 9.4 3.1c.2.1.4.1.6 0l1.1-.6c.4-.2.4-.8 0-1Z"/></svg>}
+                    {s.label === "Corporate" && <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M9 6V5.2C9 3.4 10.4 2 12.2 2h1.6C15.6 2 17 3.4 17 5.2V6h2.2C20.7 6 22 7.3 22 8.8v9.4c0 1.5-1.3 2.8-2.8 2.8H4.8C3.3 21 2 19.7 2 18.2V8.8C2 7.3 3.3 6 4.8 6H9Z"/></svg>}
+                    {s.label === "Private Hire" && <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M6.2 10.2 7.4 6.8C7.8 5.7 8.8 5 10 5h4c1.2 0 2.2.7 2.6 1.8l1.2 3.4 1.3.4c1.1.4 1.9 1.4 1.9 2.6V18c0 .6-.4 1-1 1h-1.1a2.4 2.4 0 0 1-4.6 0H9.7a2.4 2.4 0 0 1-4.6 0H4c-.6 0-1-.4-1-1v-4.8c0-1.2.8-2.2 1.9-2.6l1.3-.4Z"/></svg>}
+                    {s.label === "Events" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="40" height="40"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.7 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5-4.8-4.7 6.6-.9L12 2.5z"/></svg>}
+                  </span>
+                </div>
+              </div>
+              <div className="svc-card-body">
+                <div className="svc-card-label">{s.label}</div>
+                <h3 className="svc-card-title">{s.h}</h3>
+                <p className="svc-card-desc">{s.d}</p>
+                <ul className="svc-card-features">
+                  {s.features.map((f) => <li key={f}>{f}</li>)}
+                </ul>
+                <a href="#book" className="svc-card-btn" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Fare Estimate →</a>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1099,13 +1115,13 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth}
 :root{--gold:#B98B55;--gold2:#C49A5A;--black:#111;--white:#fff;--wa:#128C7E;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',Arial,sans-serif}
-body{font-family:var(--sans);background:#fff;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
+body{font-family:var(--sans);background:#0a0a0a;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:82px;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;background:transparent;border-bottom:1px solid transparent;}
 .nav.solid{background:rgba(12,12,12,.86);backdrop-filter:blur(16px);border-color:rgba(255,255,255,.08);}
 .nav-links{display:flex;gap:2.4rem;list-style:none;} .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);}
 .nav-btn{border:1px solid rgba(210,176,109,.55);padding:.85rem 1.7rem;} .nav-right{display:flex;align-items:center;gap:.5rem;} .hamburger{display:none;} .hamburger-btn{display:none;}
 .verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:10px;} .verno-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:29px;margin-top:5px;font-family:var(--sans);font-size:8px;letter-spacing:.42em;color:rgba(255,255,255,.36);}
-.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 70%/cover no-repeat;color:#fff;overflow:hidden;}
+.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 80%/cover no-repeat;color:#fff;overflow:hidden;}
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));pointer-events:none;}
 .hero-content{position:relative;z-index:2;min-height:calc(78vh - 105px);max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0, 1.05fr) 390px;gap:6vw;align-items:center;}
 .hero-left{padding-bottom:5vh;}
@@ -1191,7 +1207,24 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 @media(max-width:768px){
   .why-moments-img{aspect-ratio:4/3;}
 }
-.svc-layout{display:grid;grid-template-columns:210px 1fr;gap:5rem;margin-top:4rem;} .svc-nav{display:flex;flex-direction:column;}
+.svc-scroll-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2.5rem 5vw 3rem;scrollbar-width:none;}
+.svc-scroll-wrap::-webkit-scrollbar{display:none;}
+.svc-scroll-track{display:flex;gap:1.5rem;width:max-content;}
+.svc-card{width:320px;flex-shrink:0;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.07);display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s;}
+.svc-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.12);}
+.svc-card-img-wrap{height:200px;background:#111;position:relative;overflow:hidden;}
+.svc-card-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);}
+.svc-card-icon{color:#C29A66;opacity:.6;}
+.svc-card-body{padding:1.8rem;display:flex;flex-direction:column;flex:1;}
+.svc-card-label{font-size:.65rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#C29A66;margin-bottom:.6rem;}
+.svc-card-title{font-family:var(--serif);font-size:1.4rem;font-weight:600;color:#111;margin-bottom:.8rem;line-height:1.2;}
+.svc-card-desc{font-size:.88rem;line-height:1.65;color:#555;margin-bottom:1.2rem;flex:1;}
+.svc-card-features{list-style:none;padding:0;margin:0 0 1.5rem;display:flex;flex-direction:column;gap:.4rem;}
+.svc-card-features li{font-size:.78rem;color:#777;padding-left:1rem;position:relative;}
+.svc-card-features li::before{content:"—";position:absolute;left:0;color:#C29A66;}
+.svc-card-btn{display:inline-block;font-size:.8rem;font-weight:500;letter-spacing:.06em;color:#C29A66;text-decoration:none;border-top:1px solid #f0ece6;padding-top:1rem;transition:color .2s;}
+.svc-card-btn:hover{color:#9a7a50;}
+@media(max-width:768px){.svc-card{width:280px;}.svc-card-img-wrap{height:160px;}}
 .svc-nav-item{text-align:left;padding:1rem 0;border-bottom:1px solid #e5e5e5;color:#999;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;}
 .svc-nav-item.active{color:#111;font-weight:600;}
 .svc-content-h{font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.6rem);font-weight:400;line-height:1.15;margin-bottom:1rem;}
