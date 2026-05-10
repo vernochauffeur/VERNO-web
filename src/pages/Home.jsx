@@ -5,22 +5,30 @@ const FLEET_IMG = "/images/fleet.jpg";
 const WA_NUMBER = "610421238894";
 const VERNO_EMAIL = "book@vernochauffeur.com.au";
 
-const PRICING = { BASE: 65, PER_KM: 2.50, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5 };
+const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5 };
 
 function isLateNight(t) { if (!t) return false; const h = parseInt(t.split(":")[0]); return h >= PRICING.LATE_START && h < PRICING.LATE_END; }
 
 function roundFare(fare) { return Math.ceil(fare / 5) * 5; }
 
 function calcFare(km, bookingTime) {
-  let fare = PRICING.BASE + km * PRICING.PER_KM;
+  let kmCost = 0;
+  if (km <= 25) {
+    kmCost = km * PRICING.RATE_0_25;
+  } else if (km <= 50) {
+    kmCost = 25 * PRICING.RATE_0_25 + (km - 25) * PRICING.RATE_25_50;
+  } else {
+    kmCost = 25 * PRICING.RATE_0_25 + 25 * PRICING.RATE_25_50 + (km - 50) * PRICING.RATE_50UP;
+  }
+  let fare = PRICING.BASE + kmCost;
   fare = Math.max(fare, PRICING.MIN_FARE);
   if (isLateNight(bookingTime)) fare = fare * (1 + PRICING.LATE_SURCHARGE);
   return roundFare(fare);
 }
 
 
-function normalizeAddress(text) { return text.toLowerCase().replace(/\bvic\b|\bnsw\b|\bqld\b|\bsa\b|\bwa\b|\btas\b|\bact\b|\bnt\b/g, " ").replace(/\b3\d{3}\b/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
-function isAirport(text) { const t = normalizeAddress(text); return t.includes("airport") || t.includes("tullamarine") || t.includes("terminal") || t.includes("avalon") || t.includes("avv") || t.includes(" mel "); }
+function normalizeAddress(text) { if (!text) return ""; return text.toLowerCase().replace(/\bvic\b|\bnsw\b|\bqld\b|\bsa\b|\bwa\b|\btas\b|\bact\b|\bnt\b/g, " ").replace(/\b3\d{3}\b/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
+function isAirport(text) { if (!text) return false; const t = normalizeAddress(text); return t.includes("airport") || t.includes("tullamarine") || t.includes("terminal") || t.includes("avalon") || t.includes("avv") || t.includes(" mel "); }
 
 async function getDistanceKm(from, to) {
   return new Promise((resolve) => {
@@ -428,7 +436,7 @@ function TrustStrip() {
   );
 }
 
-function FareEstimate({ fareResult, fareLoading, from, to, time, fromSelected, toSelected, returnTrip, returnDate, returnTime }) {
+function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, from, to, time, fromSelected, toSelected, returnTrip, returnDate, returnTime }) {
   if (from.trim().length < 4 || to.trim().length < 4) return null;
 
   if (!fromSelected || !toSelected) {
@@ -492,25 +500,29 @@ function FareEstimate({ fareResult, fareLoading, from, to, time, fromSelected, t
         </div>
       )}
       <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>
-        {label}{returnTrip && returnDate && returnTime ? " — Outbound only" : ""}
+        {label}{returnTrip && returnDate && returnTime ? " — Outbound" : ""}
       </div>
       <div className="fare-price">${fareResult.fare}</div>
-      <div className="fare-guarantee">{guarantee}</div>
-      {returnTrip && returnDate && returnTime && (
-        <div style={{
-          marginTop:".8rem",
-          padding:".65rem .9rem",
-          background:"rgba(255,255,255,.07)",
-          borderRadius:8,
-          fontSize:".75rem",
-          color:"rgba(255,255,255,.55)",
-          display:"flex", alignItems:"center", gap:".5rem",
-          borderTop:"1px solid rgba(255,255,255,.08)",
-        }}>
-          <span>↩</span>
-          <span>Return fare not included — final price confirmed via WhatsApp.</span>
-        </div>
-      )}
+      {returnTrip && returnDate && returnTime && (() => {
+        const returnFare = diffReturn && returnFareResult ? returnFareResult.fare : fareResult.fare;
+        const total = fareResult.fare + returnFare;
+        return (
+          <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:".8rem" }}>
+            <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>Return</div>
+            <div className="fare-price">${returnFare}</div>
+            <div style={{
+              marginTop:".6rem", padding:".65rem .9rem",
+              background:"rgba(185,139,85,.12)", borderRadius:8,
+              fontSize:".8rem", color:"#C29A66",
+              display:"flex", alignItems:"center", gap:".5rem",
+            }}>
+              <span>↩</span>
+              <span>Total: ${total} · Return fare included</span>
+            </div>
+          </div>
+        );
+      })()}
+      <div className="fare-guarantee">Fares are estimates. Final price confirmed on booking via WhatsApp.</div>
       <div className="fare-trust">
         <span>No hidden costs</span>
         <span>No surge pricing</span>
@@ -543,6 +555,9 @@ function buildWhatsAppLinkReturn({ from, to, date, time, pax, bags, fare, flight
     `DATE       : ${returnDate || ""}`,
     `TIME       : ${returnTime || ""}`,
     "",
+    ...(fare ? [`Fare estimate: $${fare}`] : []),
+    ...(fare ? [`Total (both ways): $${fare * 2}`] : []),
+    "",
     "Please confirm availability.",
   ];
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
@@ -561,11 +576,17 @@ function InlineBooking() {
   const [returnTrip, setReturnTrip] = useState(false);
   const [returnDate, setReturnDate] = useState("");
   const [returnTime, setReturnTime] = useState("");
+  const [diffReturn, setDiffReturn] = useState(false);
+  const [returnFrom, setReturnFrom] = useState("");
+  const [returnTo, setReturnTo] = useState("");
+  const [returnFromSelected, setReturnFromSelected] = useState(false);
+  const [returnToSelected, setReturnToSelected] = useState(false);
+  const [returnFlightNumber, setReturnFlightNumber] = useState("");
   const [errors, setErrors] = useState({});
   const [fareResult, setFareResult] = useState(null);
   const [fareLoading, setFareLoading] = useState(false);
+  const [returnFareResult, setReturnFareResult] = useState(null);
 
-  // Sadece FROM'da airport varsa uçuş numarası sor
   const isAirportPickup = isAirport(from);
 
   useEffect(() => {
@@ -577,6 +598,15 @@ function InlineBooking() {
       setFareLoading(false);
     });
   }, [from, to, time, fromSelected, toSelected]);
+
+  // Return farklı adres ise hesapla
+  useEffect(() => {
+    if (!diffReturn || !returnFromSelected || !returnToSelected) { setReturnFareResult(null); return; }
+    if (returnFrom.trim().length < 4 || returnTo.trim().length < 4) { setReturnFareResult(null); return; }
+    calculateFare(returnFrom, returnTo, returnTime).then((result) => {
+      setReturnFareResult(result);
+    });
+  }, [returnFrom, returnTo, returnTime, returnFromSelected, returnToSelected, diffReturn]);
 
   const fare = fareResult ? fareResult.fare : null;
 
@@ -700,7 +730,7 @@ function InlineBooking() {
           </div>
 
           {/* Return trip toggle */}
-          <div style={{ margin:"1rem 0", display:"flex", alignItems:"center", gap:".75rem", cursor:"pointer" }} onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); }}>
+          <div style={{ margin:"1rem 0", display:"flex", alignItems:"center", gap:".75rem", cursor:"pointer" }} onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFrom(""); setReturnTo(""); }}>
             <div style={{
               width: 42, height: 24, borderRadius: 12,
               background: returnTrip ? "#B98B55" : "#e0e0e0",
@@ -755,10 +785,59 @@ function InlineBooking() {
                   {errors.returnTime && <span style={errStyle}>{errors.returnTime}</span>}
                 </div>
               </div>
+
+              {/* Farklı adres toggle */}
+              <div
+                style={{ marginTop:"1rem", display:"flex", alignItems:"center", gap:".6rem", cursor:"pointer" }}
+                onClick={() => { setDiffReturn(!diffReturn); setReturnFrom(""); setReturnTo(""); setReturnFromSelected(false); setReturnToSelected(false); }}
+              >
+                <div style={{
+                  width:36, height:20, borderRadius:10,
+                  background: diffReturn ? "#B98B55" : "#ccc",
+                  position:"relative", transition:"background .2s", flexShrink:0,
+                }}>
+                  <div style={{
+                    position:"absolute", top:2, left: diffReturn ? 18 : 2,
+                    width:16, height:16, borderRadius:"50%",
+                    background:"#fff", transition:"left .2s",
+                  }}/>
+                </div>
+                <span style={{ fontSize:".78rem", color:"#666", userSelect:"none" }}>Different return address</span>
+              </div>
+
+              {/* Farklı adres alanları */}
+              {diffReturn && (
+                <div style={{ marginTop:"1rem", display:"flex", flexDirection:"column", gap:".75rem" }}>
+                  <div className="fg">
+                    <label className="fl">Return Pickup</label>
+                    <AddressField id="returnFrom" label="" placeholder="Enter return pickup address" value={returnFrom}
+                      onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); }}
+                      onSelect={(v) => { setReturnFrom(v); setReturnFromSelected(true); }}
+                    />
+                  </div>
+                  <div className="fg">
+                    <label className="fl">Return Destination</label>
+                    <AddressField id="returnTo" label="" placeholder="Enter return destination" value={returnTo}
+                      onChange={(v) => { setReturnTo(v); setReturnToSelected(false); }}
+                      onSelect={(v) => { setReturnTo(v); setReturnToSelected(true); }}
+                    />
+                  </div>
+                  {/* Return pickup airport ise uçuş numarası */}
+                  {isAirport(returnFrom) && (
+                    <div className="fg">
+                      <label className="fl">Return Flight Number</label>
+                      <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
+                        onChange={(e) => setReturnFlightNumber(e.target.value)}
+                        style={{ background:"#fff" }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          <FareEstimate fareResult={fareResult} fareLoading={fareLoading} from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
+          <FareEstimate fareResult={fareResult} fareLoading={fareLoading} returnFareResult={returnFareResult} diffReturn={diffReturn} from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
 
           <button className="btn-whatsapp premium-btn" onClick={handleWA}>
             <WAIcon s={18} /> Get Instant Quote on WhatsApp
