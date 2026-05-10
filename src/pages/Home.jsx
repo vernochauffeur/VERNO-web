@@ -757,8 +757,7 @@ function InlineBooking() {
                     onChange={(e) => {
                       const selected = e.target.value;
                       if (date && selected < date) {
-                        alert("Return date cannot be before the outbound date.");
-                        setReturnDate("");
+                        setReturnDate(date);
                         setReturnTime("");
                         return;
                       }
