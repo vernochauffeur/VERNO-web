@@ -202,10 +202,11 @@ function Nav() {
 
   const navLinks = [
     { href: "#services",  label: "Services",  id: "services" },
-    { href: "#fleet",     label: "Fleet",     id: "fleet" },
+    { href: "#journey",   label: "Experience", id: "journey" },
+    { href: "#pricing",   label: "Pricing",   id: "pricing" },
+    { href: "#corporate", label: "Corporate", id: "corporate" },
     { href: "#areas",     label: "Coverage",  id: "areas" },
     { href: "#about",     label: "About",     id: "about" },
-    { href: "#corporate", label: "Corporate", id: "corporate" },
   ];
 
   const scrollTo = (id) => {
@@ -680,7 +681,7 @@ function InlineBooking() {
     <div className="booking-panel" id="book">
       <div className="booking-panel-inner">
         <div>
-          <h2 className="booking-panel-headline">Your fare,<br /><em>instantly.</em></h2>
+          <h2 className="booking-panel-headline">Your fare,<br /><span className="gold-em">instantly.</span></h2>
           <p className="booking-panel-sub">Enter your journey details to see your fare. Then reserve directly via WhatsApp.</p>
         </div>
 
@@ -943,7 +944,7 @@ function Services() {
     <section className="sec" id="services" style={{ background:"#f5ead4", overflow:"hidden" }}>
       <div className="wrap">
         <div className="s-label">Services</div>
-        <h2 className="s-h">Every journey,<br /><em>handled.</em></h2>
+        <h2 className="s-h">Every journey,<br /><span className="gold-em">handled.</span></h2>
       </div>
 
       {/* Yatay kayan kartlar */}
@@ -961,7 +962,7 @@ function Services() {
                 <ul className="svc-card-features">
                   {s.features.map((f) => <li key={f}>{f}</li>)}
                 </ul>
-                <a href="#book" className="svc-card-btn" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Fare Estimate →</a>
+                <a href="#book" className="svc-card-btn" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Fare Estimate &rarr;</a>
               </div>
             </div>
           ))}
@@ -984,7 +985,7 @@ function JourneyMoments() {
     <section className="journey-section" id="journey">
       <div className="wrap" style={{ paddingBottom:"3rem" }}>
         <div className="s-label">The Experience</div>
-        <h2 className="s-h">From the moment<br /><em>we arrive.</em></h2>
+        <h2 className="s-h">From the moment<br /><span className="gold-em">we arrive.</span></h2>
       </div>
       <div className="journey-cards">
         {moments.map((m, i) => (
@@ -1031,7 +1032,7 @@ function WhyMoments() {
           {/* Sağ — metin + grid */}
           <div className="why-moments-text">
             <div className="s-label inv">Why VÉRNO</div>
-            <h2 className="s-h inv">A boutique<br /><em>standard.</em></h2>
+            <h2 className="s-h inv">A boutique<br /><span className="gold-em">standard.</span></h2>
             <p className="s-body" style={{ marginBottom:"2.5rem" }}>Small fleet. Consistent quality. Every detail considered.</p>
 
             <div className="why-grid">
@@ -1050,7 +1051,65 @@ function WhyMoments() {
   );
 }
 
-function Areas() {
+function Pricing() {
+  const airports = [
+    { from: "CBD", to: "Tullamarine Airport", price: "$115" },
+    { from: "St Kilda", to: "Tullamarine Airport", price: "$133" },
+    { from: "South Yarra", to: "Tullamarine Airport", price: "$123" },
+    { from: "Toorak", to: "Tullamarine Airport", price: "$128" },
+    { from: "Brighton", to: "Tullamarine Airport", price: "$138" },
+    { from: "CBD", to: "Avalon Airport", price: "$195" },
+  ];
+  const pointToPoint = [
+    { from: "CBD", to: "St Kilda", price: "$90" },
+    { from: "CBD", to: "Brighton", price: "$105" },
+    { from: "CBD", to: "Ringwood", price: "$125" },
+    { from: "CBD", to: "Frankston", price: "$170" },
+    { from: "CBD", to: "Mornington", price: "$215" },
+    { from: "CBD", to: "Geelong", price: "$240" },
+  ];
+
+  return (
+    <section id="pricing" style={{ background:"#fdf9f4", padding:"5rem 5vw" }}>
+      <div className="wrap">
+        <div className="s-label">Pricing</div>
+        <h2 className="s-h" style={{ color:"#111" }}>Simple,<br /><span className="gold-em">fixed pricing.</span></h2>
+        <p style={{ fontSize:".95rem", color:"#666", marginBottom:"3rem", maxWidth:500 }}>Every fare confirmed before you travel. No surge, no hidden fees.</p>
+
+        <div className="pricing-grid">
+          {/* Airport Transfers */}
+          <div className="pricing-table">
+            <div className="pricing-table-label">Airport Transfers</div>
+            {airports.map((r) => (
+              <div key={r.from + r.to} className="pricing-row">
+                <span className="pricing-route">{r.from} &rarr; {r.to}</span>
+                <span className="pricing-price">{r.price}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Point to Point */}
+          <div className="pricing-table">
+            <div className="pricing-table-label">Point to Point</div>
+            {pointToPoint.map((r) => (
+              <div key={r.from + r.to} className="pricing-row">
+                <span className="pricing-route">{r.from} &rarr; {r.to}</span>
+                <span className="pricing-price">{r.price}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pricing-note">
+          <p>Fares are approximate. Exact fare calculated instantly with our fare calculator.</p>
+          <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
+            Calculate your exact fare &rarr;
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
   const areas = [
     { name: "Melbourne CBD",          time: "Premium transfers", desc: "Door-to-door from the heart of the city. Fixed fare, no waiting." },
     { name: "St Kilda & South Yarra", time: "Premium transfers", desc: "Inner-south transfers with the comfort and discretion you expect." },
@@ -1065,7 +1124,7 @@ function Areas() {
     <section className="sec" id="areas" style={{ background:"#fdf9f4" }}>
       <div className="wrap">
         <div className="s-label">Coverage</div>
-        <h2 className="s-h">Across Melbourne<br /><em>and beyond.</em></h2>
+        <h2 className="s-h">Across Melbourne<br /><span className="gold-em">and beyond.</span></h2>
         <div className="areas-list">
           {areas.map((area) => (
             <div key={area.name} className="area-item" onClick={() => document.getElementById("book")?.scrollIntoView({ behavior: "smooth" })}>
@@ -1089,7 +1148,7 @@ function Fleet() {
           <div className="fleet-img-wrap"><img src={FLEET_IMG} alt="VERNO BMW i5 fleet" className="fleet-img" loading="lazy" /></div>
           <div className="fleet-text">
             <p className="fleet-text-eyebrow">All-Electric Fleet</p>
-            <h2 className="fleet-text-title">BMW i5<br /><em>eDrive40</em></h2>
+            <h2 className="fleet-text-title">BMW i5<br /><span className="gold-em">eDrive40</span></h2>
             <p className="fleet-text-sub">Zero emissions. Executive comfort. Built for Melbourne.</p>
             <p className="fleet-text-body">VÉRNO operates premium electric vehicles for comfort, consistency, and a seamless journey.</p>
             <div className="fleet-ev-badge">100% Electric - BMW i5</div>
@@ -1120,7 +1179,7 @@ function Closer() {
     <section className="closer" id="contact">
       <div className="closer-inner">
         <p className="s-label inv closer-label">Melbourne, Victoria</p>
-        <h2 className="closer-h">Ready when<br /><em>you are.</em></h2>
+        <h2 className="closer-h">Ready when<br /><span className="gold-em">you are.</span></h2>
         <p className="closer-sub">Reserve your transfer directly. Instant confirmation, fixed price.</p>
         <div className="closer-btns">
           <a href="#book" className="btn-wa" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Reserve via WhatsApp</a>
@@ -1203,7 +1262,7 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .sec{padding:6rem 5vw} .sec.dark{background:#1a1510} .night2{background:#0f0d0a} .wrap{max-width:1200px;margin:auto}
 .s-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.2em;color:var(--gold);margin-bottom:1.2rem;}
 .inv{color:var(--gold)} .s-h{font-family:var(--serif);font-size:clamp(2rem,4vw,3.4rem);font-weight:400;line-height:1.1;margin-bottom:2rem;} .s-h.inv{color:#fff;}
-.s-h em,.booking-panel-headline em,.fleet-text-title em,.closer-h em{color:var(--gold);font-style:normal;}
+.s-h-em,.booking-panel-headline-em,.fleet-text-title-em,.closer-h-em,.gold-em{color:var(--gold);font-style:italic;}
 .s-body{color:rgba(255,255,255,.5);line-height:1.75;}
 .booking-panel{padding:7rem 5vw 6rem;background:#fdf9f4;}
 .booking-panel-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:360px 620px;gap:6rem;align-items:center;justify-content:center;}
@@ -1251,7 +1310,17 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 @media(max-width:768px){
   .why-moments-img{aspect-ratio:4/3;}
 }
-.journey-section{background:#f5ead4;padding:4rem 0 0;}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-bottom:2.5rem;}
+.pricing-table{display:flex;flex-direction:column;gap:0;}
+.pricing-table-label{font-size:.7rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#C4954A;margin-bottom:1rem;}
+.pricing-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid rgba(0,0,0,.07);}
+.pricing-route{font-size:.9rem;color:#444;}
+.pricing-price{font-family:var(--serif);font-size:1.1rem;font-weight:600;color:#111;}
+.pricing-note{margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(0,0,0,.08);}
+.pricing-note p{font-size:.82rem;color:#888;margin-bottom:.8rem;}
+.pricing-cta{font-size:.88rem;font-weight:500;color:#C4954A;letter-spacing:.04em;}
+.pricing-cta:hover{color:#9a7040;}
+@media(max-width:768px){.pricing-grid{grid-template-columns:1fr;gap:2rem;}}
 .journey-section .wrap{padding-bottom:2rem;}
 .journey-cards{display:flex;height:600px;}
 .journey-card{position:relative;flex:1;transition:flex .5s cubic-bezier(.4,0,.2,1);overflow:hidden;cursor:pointer;}
@@ -1498,6 +1567,7 @@ export default function Home() {
     <Nav />
     <Hero />
     <TrustStrip />
+    <Pricing />
     <InlineBooking />
     <JourneyMoments />
     <CorporateSection />
