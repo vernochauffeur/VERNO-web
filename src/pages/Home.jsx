@@ -654,6 +654,49 @@ function InlineBooking() {
     window.open(link, "_blank", "noopener");
   };
 
+  const handleSMS = () => {
+    if (!validate()) return;
+    const lines = returnTrip
+      ? [
+          "VÉRNO — Transfer Request",
+          "",
+          "OUTBOUND",
+          `PICKUP     : ${from}`,
+          `DROP-OFF   : ${to}`,
+          `DATE       : ${date}`,
+          `TIME       : ${time}`,
+          `PASSENGERS : ${pax}`,
+          `LUGGAGE    : ${bags}`,
+          ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
+          ...(fare ? [`Fare estimate: $${fare}`] : []),
+          "",
+          "RETURN",
+          `PICKUP     : ${to}`,
+          `DROP-OFF   : ${from}`,
+          `DATE       : ${returnDate}`,
+          `TIME       : ${returnTime}`,
+          ...(fare ? [`Fare estimate: $${fare}`, `Total (both ways): $${fare * 2}`] : []),
+          "",
+          "Please confirm availability.",
+        ]
+      : [
+          "VÉRNO — Transfer Request",
+          "",
+          `PICKUP     : ${from}`,
+          `DROP-OFF   : ${to}`,
+          `DATE       : ${date}`,
+          `TIME       : ${time}`,
+          `PASSENGERS : ${pax}`,
+          `LUGGAGE    : ${bags}`,
+          ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
+          ...(fare ? [`Fare estimate: $${fare}`] : []),
+          "",
+          "Please confirm availability.",
+        ];
+    const msg = encodeURIComponent(lines.join("\n"));
+    window.open(`sms:+61421238894&body=${msg}`, "_blank");
+  };
+
   const handleDateChange = (e) => {
     const s = e.target.value;
     const t = getTodayLocal();
@@ -682,7 +725,18 @@ function InlineBooking() {
       <div className="booking-panel-inner">
         <div>
           <h2 className="booking-panel-headline">Your fare,<br /><span className="gold-em">instantly.</span></h2>
-          <p className="booking-panel-sub">Enter your journey details to see your fare. Then reserve directly via WhatsApp.</p>
+          <p className="booking-panel-sub">Enter your pickup and destination to see your fixed fare — no commitment required.</p>
+          <div style={{ marginTop:"1.2rem", display:"flex", flexDirection:"column", gap:".5rem" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#C4954A" }}>
+              <span>✓</span><span>Fare calculated instantly as you type</span>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#888" }}>
+              <span>✓</span><span>Fixed price — no surprises</span>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#888" }}>
+              <span>✓</span><span>Direct booking via WhatsApp</span>
+            </div>
+          </div>
         </div>
 
         <div className="booking-panel-form">
@@ -691,14 +745,14 @@ function InlineBooking() {
           </button>
 
           {/* FROM */}
-          <AddressField id="from" label="Pickup" placeholder="Enter pickup address, suburb or hotel" value={from}
+          <AddressField id="from" label="Pickup" placeholder="Suburb, hotel or airport — fare shown instantly" value={from}
             onChange={(v) => { setFrom(v); setFromSelected(false); setErrors((p) => ({ ...p, from: null })); }}
             onSelect={(v) => setFromSelected(!!v)}
           />
           {errors.from && <span style={errStyle}>{errors.from}</span>}
 
           {/* TO */}
-          <AddressField id="to" label="Destination" placeholder="Enter destination address or airport" value={to}
+          <AddressField id="to" label="Destination" placeholder="Suburb, hotel or airport — fare shown instantly" value={to}
             onChange={(v) => { setTo(v); setToSelected(false); setErrors((p) => ({ ...p, to: null })); }}
             onSelect={(v) => setToSelected(!!v)}
           />
@@ -863,12 +917,21 @@ function InlineBooking() {
 
           <FareEstimate fareResult={fareResult} fareLoading={fareLoading} returnFareResult={returnFareResult} diffReturn={diffReturn} from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
 
-          <button className="btn-whatsapp premium-btn" onClick={handleWA}>
-            <WAIcon s={18} /> Get Instant Quote on WhatsApp
+          <button className="btn-whatsapp premium-btn" style={{ width:"100%" }} onClick={handleWA}>
+            <WAIcon s={18} /> Confirm via WhatsApp
           </button>
-
-          <p className="wa-trust-line">Instant response · No commitment · Fixed pricing</p>
-          <a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-email-secondary">Prefer email? {VERNO_EMAIL}</a>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"1.5rem", marginTop:"1rem" }}>
+            <button className="btn-text-link" onClick={handleSMS}>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+              Book via SMS
+            </button>
+            <span style={{ color:"#e0e0e0" }}>|</span>
+            <a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-text-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Email us
+            </a>
+          </div>
+          <p className="wa-trust-line" style={{ marginTop:"1.2rem" }}>Instant response · No commitment · Fixed pricing</p>
         </div>
       </div>
     </div>
@@ -1297,7 +1360,8 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .btn-whatsapp:hover{filter:brightness(1.06);}
 .premium-btn{width:100%;padding:16px;border-radius:14px;border:1px solid rgba(212,169,111,.7);background:linear-gradient(180deg,#D4A96F,#A8753F);color:#fff;font-size:14px;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .25s ease;}
 .premium-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(168,117,63,.35);} .premium-btn:active{transform:scale(.98);}
-.wa-trust-line{text-align:center;font-size:.76rem;color:#999;margin-top:.9rem;letter-spacing:.02em;}
+.btn-text-link{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:500;color:#666;background:none;border:none;cursor:pointer;padding:0;letter-spacing:.04em;text-decoration:none;transition:color .2s;}
+.btn-text-link:hover{color:#C4954A;}text-align:center;font-size:.76rem;color:#999;margin-top:.9rem;letter-spacing:.02em;}
 .btn-email-secondary{display:block;text-align:center;font-size:.75rem;color:#999;margin-top:.85rem;}
 .corporate-section{padding:5rem 5vw;background:#fdf9f4;}
 .why-moments-section{background:#111;}
