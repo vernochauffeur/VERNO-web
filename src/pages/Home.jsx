@@ -403,8 +403,7 @@ function Hero() {
           <p className="hero-tagline">Airport. Boardroom. Beyond.</p>
           <p className="hero-sub">As Melbourne as it gets.</p>
           <div className="hero-actions">
-            <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-wa hero-gold"><WAIcon s={18} /> Get Instant Quote</a>
-            <a href="#book" className="btn-outline hero-outline" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Instant Fare</a>
+            <a href="#book" className="btn-hero-green" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Instant Fare</a>
             <a href="#corporate" className="btn-outline hero-outline" onClick={(e) => { e.preventDefault(); document.getElementById("corporate")?.scrollIntoView({ behavior:"smooth" }); }}>Corporate Enquiries</a>
           </div>
           <div className="hero-trust">
@@ -1343,7 +1342,9 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .nav.solid{background:rgba(12,12,12,.86);backdrop-filter:blur(16px);border-color:rgba(255,255,255,.08);}
 .nav-links{display:flex;gap:2.4rem;list-style:none;} .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);}
 .nav-btn{border:1px solid rgba(210,176,109,.55);padding:.85rem 1.7rem;} .nav-right{display:flex;align-items:center;gap:.5rem;} .hamburger{display:none;} .hamburger-btn{display:none;}
-.verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:10px;} .verno-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:29px;margin-top:5px;font-family:var(--sans);font-size:8px;letter-spacing:.42em;color:rgba(255,255,255,.36);}
+.btn-hero-green{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;background:#128C7E;color:#fff;border:1px solid #128C7E;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:2px;}
+.btn-hero-green:hover{background:#0d6b60;border-color:#0d6b60;transform:translateY(-2px);box-shadow:0 8px 24px rgba(18,140,126,.3);}
+.verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);}
 .hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 80%/cover no-repeat;color:#fff;overflow:hidden;}
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));pointer-events:none;}
 .hero-content{position:relative;z-index:2;min-height:calc(78vh - 105px);max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0, 1.05fr) 390px;gap:6vw;align-items:center;}
@@ -1695,7 +1696,7 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
   .f2,.areas-list,.proc-track,.why-grid,.ft-grid{grid-template-columns:1fr;}
   .ft-bottom{flex-direction:column;}
   .closer-btns{flex-direction:column;}
-  .btn-wa,.btn-outline{width:100%;justify-content:center;}
+  .btn-wa,.btn-outline,.btn-hero-green{width:100%;justify-content:center;}
   .wa-float{right:1rem;bottom:1rem;}
 }
 `;
