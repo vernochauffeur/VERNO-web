@@ -207,7 +207,6 @@ function Nav() {
     { href: "#pricing",   label: "Pricing",   id: "pricing" },
     { href: "#corporate", label: "Corporate", id: "corporate" },
     { href: "#areas",     label: "Coverage",  id: "areas" },
-    { href: "#about",     label: "About",     id: "about" },
   ];
 
   const scrollTo = (id) => {
@@ -988,7 +987,7 @@ function Services() {
           {SERVICES.map((s) => (
             <div key={s.label} className="svc-card">
               <div className="svc-card-img-wrap">
-                <img src={s.img} alt={s.h} className="svc-card-img" loading="lazy" />
+                <img src={s.img} alt={`${s.h} Melbourne — VÉRNO Chauffeur BMW i5`} className="svc-card-img" loading="lazy" />
               </div>
               <div className="svc-card-body">
                 <div className="svc-card-label">{s.label}</div>
@@ -1031,7 +1030,7 @@ function JourneyMoments() {
             onPointerEnter={() => setActive(i)}
             onPointerDown={() => setActive(i)}
           >
-            {m.img && <div className="journey-card-bg" style={{ backgroundImage: `url(${m.img})` }} />}
+            {m.img && <div className="journey-card-bg" style={{ backgroundImage: `url(${m.img})` }} role="img" aria-label={`${m.title} - VÉRNO Chauffeur Melbourne`} />}
             <div className="journey-card-overlay" />
             <div className="journey-card-content">
               <span className="journey-card-num">{m.num}</span>
@@ -1060,7 +1059,7 @@ function WhyMoments() {
         <div className="why-moments-layout">
           {/* Sol — görsel */}
           <div className="why-moments-img-wrap">
-            <img src={MOMENTS_MAIN} alt="VERNO BMW i5" className="why-moments-img" loading="lazy" />
+            <img src={MOMENTS_MAIN} alt="VÉRNO BMW i5 chauffeur service Melbourne" className="why-moments-img" loading="lazy" />
             <span className="moments-geo">Melbourne — Private Transfers</span>
           </div>
 
@@ -1068,7 +1067,10 @@ function WhyMoments() {
           <div className="why-moments-text">
             <div className="s-label inv">Why VÉRNO</div>
             <h2 className="s-h inv">A boutique<br /><span className="gold-em">standard.</span></h2>
-            <p className="s-body" style={{ marginBottom:"2.5rem" }}>Small fleet. Consistent quality. Every detail considered.</p>
+            <p className="s-body" style={{ marginBottom:"1.2rem" }}>Small fleet. Consistent quality. Every detail considered.</p>
+            <p className="s-body" style={{ marginBottom:"2.5rem", fontSize:".85rem", opacity:.7 }}>
+              Melbourne's premium private chauffeur service operating a modern BMW i5 fleet across CBD, St Kilda, South Yarra, Toorak, Brighton, Hawthorn and surrounding suburbs. Specialising in Tullamarine and Avalon airport transfers, corporate travel for business districts including Docklands and Southbank, and private day hire to Mornington Peninsula, Yarra Valley and the Great Ocean Road. ABN registered, fully licensed CPV operator.
+            </p>
 
             <div className="why-grid">
               {items.map((item, i) => (
@@ -1206,6 +1208,25 @@ function Testimonials() {
           <p style={{ color: "#555", lineHeight: "1.7" }}>Every journey is handled with precision, discretion and care.</p>
           <p style={{ color: "#999", fontSize: "13px", marginTop: "12px" }}>Verified client feedback will be shared here as VÉRNO continues to grow.</p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function AboutSEO() {
+  return (
+    <section id="about" style={{ background:"#fdf9f4", padding:"4rem 5vw 3rem", textAlign:"center" }}>
+      <div className="wrap" style={{ maxWidth:"760px" }}>
+        <div className="s-label" style={{ color:"#C4954A", marginBottom:"1rem" }}>About VÉRNO</div>
+        <h2 style={{ fontFamily:"var(--serif)", fontSize:"1.8rem", fontWeight:600, color:"#111", marginBottom:"1.5rem", lineHeight:1.3 }}>
+          Melbourne's <span style={{ color:"#C4954A", fontStyle:"italic" }}>private chauffeur</span> service.
+        </h2>
+        <p style={{ fontSize:".92rem", lineHeight:1.8, color:"#555", marginBottom:"1rem" }}>
+          VÉRNO operates a modern BMW i5 electric fleet across Melbourne — providing premium private chauffeur transfers from CBD, St Kilda, South Yarra, Toorak, Brighton, Hawthorn and surrounding suburbs. We specialise in fixed-fare Tullamarine and Avalon airport transfers, corporate ground transport for executives and business guests, and private day hire to the Mornington Peninsula, Yarra Valley wineries and the Great Ocean Road.
+        </p>
+        <p style={{ fontSize:".85rem", lineHeight:1.8, color:"#777" }}>
+          ABN registered · Licensed CPV operator · Direct booking · No surge pricing
+        </p>
       </div>
     </section>
   );
@@ -1622,6 +1643,7 @@ export default function Home() {
     <Pricing />
     <Areas />
     {/* <Testimonials /> */}
+    <AboutSEO />
     <Closer />
     <Footer />
     <a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
