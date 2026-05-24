@@ -13,7 +13,7 @@ const FLEET_IMG = "/images/fleet.jpg";
 const WA_NUMBER = "610421238894";
 const VERNO_EMAIL = "book@vernochauffeur.com.au";
 
-const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5 };
+const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.10 };
 
 function isLateNight(t) { if (!t) return false; const h = parseInt(t.split(":")[0]); return h >= PRICING.LATE_START && h < PRICING.LATE_END; }
 
@@ -64,11 +64,12 @@ async function getDistanceKm(from, to) {
 
 async function calculateFare(from, to, bookingTime) {
   const km = await getDistanceKm(from, to);
-  if (km === null) return { fare: null, label: "Indicative", km: null };
-  const fare = calcFare(km, bookingTime);
+  if (km === null) return { fare: null, originalFare: null, label: "Indicative", km: null };
+  const originalFare = calcFare(km, bookingTime);
+  const fare = roundFare(originalFare * (1 - PRICING.DISCOUNT));
   const hasAirport = isAirport(from) || isAirport(to);
   const label = hasAirport ? "Fixed Price" : "Estimated Fare";
-  return { fare, label, km: Math.round(km) };
+  return { fare, originalFare, label, km: Math.round(km) };
 }
 
 
@@ -511,10 +512,17 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
         {label}{returnTrip && returnDate && returnTime ? " — Outbound" : ""}
       </div>
       <div className="fare-price">${fareResult.fare}</div>
+      {fareResult.originalFare && fareResult.originalFare > fareResult.fare && (
+        <div className="fare-original">
+          <span className="fare-original-strike">${fareResult.originalFare}</span>
+          <span className="fare-discount-badge">10% OFF</span>
+        </div>
+      )}
       {returnTrip && returnDate && returnTime && fareResult && (() => {
-        let returnFare;
+        let returnFare, returnOriginal;
         if (diffReturn && returnFareResult && returnFareResult.fare) {
           returnFare = returnFareResult.fare;
+          returnOriginal = returnFareResult.originalFare;
         } else {
           // Aynı rota — gece tarifesini return saatine göre uygula
           const baseKmCost = (() => {
@@ -525,21 +533,28 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
           })();
           let baseFare = Math.max(PRICING.BASE + baseKmCost, PRICING.MIN_FARE);
           if (isLateNight(returnTime)) baseFare = baseFare * (1 + PRICING.LATE_SURCHARGE);
-          returnFare = roundFare(baseFare);
+          returnOriginal = roundFare(baseFare);
+          returnFare = roundFare(returnOriginal * (1 - PRICING.DISCOUNT));
         }
         const total = (fareResult.fare || 0) + (returnFare || 0);
+        const totalOriginal = (fareResult.originalFare || 0) + (returnOriginal || 0);
         return (
-          <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:".8rem" }}>
+          <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(0,0,0,.1)", paddingTop:".8rem" }}>
             <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>Return</div>
             <div className="fare-price">${returnFare}</div>
+            {returnOriginal && returnOriginal > returnFare && (
+              <div className="fare-original">
+                <span className="fare-original-strike">${returnOriginal}</span>
+              </div>
+            )}
             <div style={{
               marginTop:".6rem", padding:".65rem .9rem",
-              background:"rgba(185,139,85,.12)", borderRadius:8,
-              fontSize:".8rem", color:"#C29A66",
+              background:"rgba(185,139,85,.15)", borderRadius:8,
+              fontSize:".8rem", color:"#9a7040",
               display:"flex", alignItems:"center", gap:".5rem",
             }}>
               <span>↩</span>
-              <span>Total: ${total} · Return fare included</span>
+              <span>Total: ${total}{totalOriginal > total && <span style={{ textDecoration:"line-through", marginLeft:".4rem", color:"#C4954A", opacity:.7 }}>${totalOriginal}</span>} · Return fare included</span>
             </div>
           </div>
         );
@@ -608,6 +623,8 @@ function InlineBooking() {
   const [fareResult, setFareResult] = useState(null);
   const [fareLoading, setFareLoading] = useState(false);
   const [returnFareResult, setReturnFareResult] = useState(null);
+
+  const [step, setStep] = useState(1);
 
   const isAirportPickup = isAirport(from);
 
@@ -744,179 +761,134 @@ function InlineBooking() {
             <span className="quick-chip-dot" />Airport transfer? Set Melbourne Airport as destination
           </button>
 
-          {/* FROM */}
+          {/* ADRESLER */}
           <AddressField id="from" label="Pickup" placeholder="Suburb, hotel or airport — fare shown instantly" value={from}
             onChange={(v) => { setFrom(v); setFromSelected(false); setErrors((p) => ({ ...p, from: null })); }}
             onSelect={(v) => setFromSelected(!!v)}
           />
           {errors.from && <span style={errStyle}>{errors.from}</span>}
 
-          {/* TO */}
           <AddressField id="to" label="Destination" placeholder="Suburb, hotel or airport — fare shown instantly" value={to}
             onChange={(v) => { setTo(v); setToSelected(false); setErrors((p) => ({ ...p, to: null })); }}
             onSelect={(v) => setToSelected(!!v)}
           />
           {errors.to && <span style={errStyle}>{errors.to}</span>}
 
-          {/* Uçuş numarası — sadece FROM'da airport varsa */}
-          {isAirportPickup && (
-            <div className="fg">
-              <label className="fl">Flight Number</label>
-              <input className="fi" placeholder="e.g. EK408" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value.toUpperCase())} />
-              <p style={{ fontSize: "12px", color: "#999", marginTop: "6px" }}>We monitor your flight to ensure perfect pickup timing.</p>
-            </div>
-          )}
+          {/* DETAYLAR */}
+          <div>
 
-          {/* Tarih & Saat */}
-          <div className="f2">
-            <div className="fg">
-              <label className="fl">Date</label>
-              <input className="fi" type="date" value={date} min={getTodayLocal()} onChange={handleDateChange} />
-              {errors.date && <span style={errStyle}>{errors.date}</span>}
-            </div>
-            <div className="fg">
-              <label className="fl">Time</label>
-              <select className="fi" value={time} onChange={(e) => { setTime(e.target.value); setErrors((p) => ({ ...p, time: null })); }}>
-                <option value="">Select time</option>
-                {!date
-                  ? <option disabled>Please select date first</option>
-                  : getSlots(date).length === 0
-                    ? <option disabled>No available times</option>
-                    : getSlots(date).map((s) => <option key={s} value={s}>{s}</option>)
-                }
-              </select>
-              {errors.time && <span style={errStyle}>{errors.time}</span>}
-            </div>
-          </div>
-
-          {/* Yolcu & Bagaj */}
-          <div className="f2">
-            <div className="fg">
-              <label className="fl">Passengers</label>
-              <select className="fi" value={pax} onChange={(e) => setPax(e.target.value)}>
-                {[1,2,3,4].map((n) => <option key={n}>{n}</option>)}
-              </select>
-            </div>
-            <div className="fg">
-              <label className="fl">Luggage</label>
-              <select className="fi" value={bags} onChange={(e) => setBags(e.target.value)}>
-                {[0,1,2,3,4].map((n) => <option key={n}>{n}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Return trip toggle */}
-          <div style={{ margin:"1rem 0", display:"flex", alignItems:"center", gap:".75rem", cursor:"pointer" }} onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFrom(""); setReturnTo(""); }}>
-            <div style={{
-              width: 42, height: 24, borderRadius: 12,
-              background: returnTrip ? "#B98B55" : "#e0e0e0",
-              position: "relative", transition: "background .2s", flexShrink: 0,
-            }}>
-              <div style={{
-                position:"absolute", top:3, left: returnTrip ? 21 : 3,
-                width:18, height:18, borderRadius:"50%",
-                background:"#fff", transition:"left .2s",
-                boxShadow:"0 1px 4px rgba(0,0,0,.2)",
-              }}/>
-            </div>
-            <span style={{ fontSize:".82rem", color:"#555", userSelect:"none" }}>Add return trip</span>
-          </div>
-
-          {/* Return tarih & saat */}
-          {returnTrip && (
-            <div style={{ background:"#f7f3ed", padding:"1.2rem", borderRadius:"12px", marginBottom:"1rem", border:"1px solid rgba(185,139,85,.2)" }}>
-              <p style={{ fontSize:".68rem", textTransform:"uppercase", letterSpacing:".12em", color:"#B98B55", marginBottom:"1rem" }}>Return Journey</p>
-              <div className="f2">
-                <div className="fg">
-                  <label className="fl">Return Date</label>
-                  <input className="fi" type="date" value={returnDate}
-                    min={date || getTodayLocal()}
-                    onChange={(e) => {
-                      const selected = e.target.value;
-                      if (date && selected < date) {
-                        setReturnDate(date);
-                        setReturnTime("");
-                        return;
-                      }
-                      setReturnDate(selected);
-                      setReturnTime("");
-                      setErrors((p) => ({ ...p, returnDate: null }));
-                    }}
-                    style={{ background:"#fff" }}
-                  />
-                  {errors.returnDate && <span style={errStyle}>{errors.returnDate}</span>}
-                </div>
-                <div className="fg">
-                  <label className="fl">Return Time</label>
-                  <select className="fi" value={returnTime} onChange={(e) => { setReturnTime(e.target.value); setErrors((p) => ({ ...p, returnTime: null })); }} style={{ background:"#fff" }}>
-                    <option value="">Select time</option>
-                    {!returnDate
-                      ? <option disabled>Please select date first</option>
-                      : (() => {
-                          const slots = getSlots(returnDate);
-                          const filtered = returnDate === date && time
-                            ? slots.filter(s => s > time)
-                            : slots;
-                          return filtered.length === 0
-                            ? <option disabled>No available times</option>
-                            : filtered.map((s) => <option key={s} value={s}>{s}</option>);
-                        })()
-                    }
-                  </select>
-                  {errors.returnTime && <span style={errStyle}>{errors.returnTime}</span>}
-                </div>
+            {/* Uçuş numarası */}
+            {isAirportPickup && (
+              <div className="fg" style={{ marginBottom:"1rem" }}>
+                <label className="fl">Flight Number</label>
+                <input className="fi" placeholder="e.g. EK408" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value.toUpperCase())} />
+                <p style={{ fontSize:"12px", color:"#999", marginTop:"6px" }}>We monitor your flight to ensure perfect pickup timing.</p>
               </div>
+            )}
 
-              {/* Farklı adres toggle */}
-              <div
-                style={{ marginTop:"1rem", display:"flex", alignItems:"center", gap:".6rem", cursor:"pointer" }}
-                onClick={() => { setDiffReturn(!diffReturn); setReturnFrom(""); setReturnTo(""); setReturnFromSelected(false); setReturnToSelected(false); }}
-              >
-                <div style={{
-                  width:36, height:20, borderRadius:10,
-                  background: diffReturn ? "#B98B55" : "#ccc",
-                  position:"relative", transition:"background .2s", flexShrink:0,
-                }}>
-                  <div style={{
-                    position:"absolute", top:2, left: diffReturn ? 18 : 2,
-                    width:16, height:16, borderRadius:"50%",
-                    background:"#fff", transition:"left .2s",
-                  }}/>
-                </div>
-                <span style={{ fontSize:".78rem", color:"#666", userSelect:"none" }}>Different return address</span>
+            {/* Tarih & Saat */}
+            <div className="f2" style={{ marginBottom:"1rem" }}>
+              <div className="fg">
+                <label className="fl">Date</label>
+                <input className="fi" type="date" value={date} min={getTodayLocal()} onChange={handleDateChange} />
+                {errors.date && <span style={errStyle}>{errors.date}</span>}
               </div>
+              <div className="fg">
+                <label className="fl">Time</label>
+                <select className="fi" value={time} onChange={(e) => { setTime(e.target.value); setErrors((p) => ({ ...p, time: null })); }}>
+                  <option value="">Select time</option>
+                  {!date ? <option disabled>Please select date first</option>
+                    : getSlots(date).length === 0 ? <option disabled>No available times</option>
+                    : getSlots(date).map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {errors.time && <span style={errStyle}>{errors.time}</span>}
+              </div>
+            </div>
 
-              {/* Farklı adres alanları - her zaman render et, display ile göster/gizle */}
-              <div style={{ marginTop:"1rem", display:"flex", flexDirection:"column", gap:".75rem", display: diffReturn ? "flex" : "none" }}>
-                <div className="fg">
-                  <label className="fl">Return Pickup</label>
-                  <AddressField id="returnFrom" label="" placeholder="Enter return pickup address" value={returnFrom}
-                    onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); }}
-                    onSelect={(v) => { setReturnFrom(v); setReturnFromSelected(true); }}
-                  />
-                </div>
-                <div className="fg">
-                  <label className="fl">Return Destination</label>
-                  <AddressField id="returnTo" label="" placeholder="Enter return destination" value={returnTo}
-                    onChange={(v) => { setReturnTo(v); setReturnToSelected(false); }}
-                    onSelect={(v) => { setReturnTo(v); setReturnToSelected(true); }}
-                  />
-                </div>
-                {isAirport(returnFrom) && (
+            {/* Yolcu & Bagaj */}
+            <div className="f2" style={{ marginBottom:"1rem" }}>
+              <div className="fg">
+                <label className="fl">Passengers</label>
+                <select className="fi" value={pax} onChange={(e) => setPax(e.target.value)}>
+                  {[1,2,3,4,5,6,7].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+              <div className="fg">
+                <label className="fl">Luggage</label>
+                <select className="fi" value={bags} onChange={(e) => setBags(e.target.value)}>
+                  {[0,1,2,3,4,5,6,7].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Return trip toggle */}
+            <div style={{ margin:"1rem 0", display:"flex", alignItems:"center", gap:".75rem", cursor:"pointer" }}
+              onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFrom(""); setReturnTo(""); }}>
+              <div style={{ width:42, height:24, borderRadius:12, background:returnTrip?"#B98B55":"#e0e0e0", position:"relative", transition:"background .2s", flexShrink:0 }}>
+                <div style={{ position:"absolute", top:3, left:returnTrip?21:3, width:18, height:18, borderRadius:"50%", background:"#fff", transition:"left .2s", boxShadow:"0 1px 4px rgba(0,0,0,.2)" }}/>
+              </div>
+              <span style={{ fontSize:".82rem", color:"#555", userSelect:"none" }}>Add return trip</span>
+            </div>
+
+            {/* Return detaylar */}
+            {returnTrip && (
+              <div style={{ background:"#f7f3ed", padding:"1.2rem", borderRadius:"12px", marginBottom:"1rem", border:"1px solid rgba(185,139,85,.2)" }}>
+                <p style={{ fontSize:".68rem", textTransform:"uppercase", letterSpacing:".12em", color:"#B98B55", marginBottom:"1rem" }}>Return Journey</p>
+                <div className="f2" style={{ marginBottom:"1rem" }}>
                   <div className="fg">
-                    <label className="fl">Return Flight Number</label>
-                    <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
-                      onChange={(e) => setReturnFlightNumber(e.target.value)}
-                      style={{ background:"#fff" }}
-                    />
+                    <label className="fl">Return Date</label>
+                    <input className="fi" type="date" value={returnDate} min={date || getTodayLocal()}
+                      onChange={(e) => { const s = e.target.value; if (date && s < date) { setReturnDate(date); setReturnTime(""); return; } setReturnDate(s); setReturnTime(""); }}
+                      style={{ background:"#fff" }} />
+                    {errors.returnDate && <span style={errStyle}>{errors.returnDate}</span>}
                   </div>
-                )}
+                  <div className="fg">
+                    <label className="fl">Return Time</label>
+                    <select className="fi" value={returnTime} onChange={(e) => { setReturnTime(e.target.value); setErrors((p) => ({ ...p, returnTime: null })); }} style={{ background:"#fff" }}>
+                      <option value="">Select time</option>
+                      {!returnDate ? <option disabled>Please select date first</option>
+                        : (() => { const slots = getSlots(returnDate); const filtered = returnDate === date && time ? slots.filter(s => s > time) : slots;
+                          return filtered.length === 0 ? <option disabled>No available times</option> : filtered.map((s) => <option key={s} value={s}>{s}</option>); })()}
+                    </select>
+                    {errors.returnTime && <span style={errStyle}>{errors.returnTime}</span>}
+                  </div>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:".6rem", cursor:"pointer", marginBottom:"1rem" }}
+                  onClick={() => { setDiffReturn(!diffReturn); setReturnFrom(""); setReturnTo(""); setReturnFromSelected(false); setReturnToSelected(false); }}>
+                  <div style={{ width:36, height:20, borderRadius:10, background:diffReturn?"#B98B55":"#ccc", position:"relative", transition:"background .2s", flexShrink:0 }}>
+                    <div style={{ position:"absolute", top:2, left:diffReturn?18:2, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"left .2s" }}/>
+                  </div>
+                  <span style={{ fontSize:".78rem", color:"#666", userSelect:"none" }}>Different return address</span>
+                </div>
+                <div style={{ display: diffReturn ? "flex" : "none", flexDirection:"column", gap:".75rem" }}>
+                  <div className="fg">
+                    <label className="fl">Return Pickup</label>
+                    <AddressField id="returnFrom" label="" placeholder="Enter return pickup address" value={returnFrom}
+                      onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); }}
+                      onSelect={(v) => { setReturnFrom(v); setReturnFromSelected(true); }} />
+                  </div>
+                  <div className="fg">
+                    <label className="fl">Return Destination</label>
+                    <AddressField id="returnTo" label="" placeholder="Enter return destination" value={returnTo}
+                      onChange={(v) => { setReturnTo(v); setReturnToSelected(false); }}
+                      onSelect={(v) => { setReturnTo(v); setReturnToSelected(true); }} />
+                  </div>
+                  {isAirport(returnFrom) && (
+                    <div className="fg">
+                      <label className="fl">Return Flight Number</label>
+                      <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
+                        onChange={(e) => setReturnFlightNumber(e.target.value)} style={{ background:"#fff" }} />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
+          {/* Fiyat */}
           <FareEstimate fareResult={fareResult} fareLoading={fareLoading} returnFareResult={returnFareResult} diffReturn={diffReturn} from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
 
+          {/* Butonlar */}
           <button className="btn-whatsapp premium-btn" style={{ width:"100%" }} onClick={handleWA}>
             <WAIcon s={18} /> Confirm via WhatsApp
           </button>
@@ -1351,15 +1323,21 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .clear-address-btn:hover{background:rgba(0,0,0,.14);color:#111;}
 .quick-chip{width:auto;display:inline-flex;align-items:center;justify-content:center;background:#f7f3ed;border:1px solid rgba(185,139,85,.28);color:#B98B55;padding:.65rem 1rem;margin-bottom:1.6rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;border-radius:0;cursor:pointer;}
 .quick-chip-dot{display:inline-block;width:5px;height:5px;background:var(--wa);border-radius:50%;margin-right:.5rem;}
-.fare-estimate{margin-top:1.5rem;background:#111;color:#fff;padding:2rem;border-radius:14px;}
-.fare-label{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.7rem;}
-.fare-price{font-family:var(--serif);font-size:4rem;line-height:1;}
-.fare-guarantee{color:rgba(255,255,255,.35);font-size:.75rem;margin-top:.4rem;}
-.fare-trust{display:flex;gap:1rem;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08);padding-top:1rem;margin-top:1rem;color:rgba(255,255,255,.35);font-size:.7rem;}
+.fare-estimate{margin-top:1.5rem;background:#f5ead4;color:#111;padding:2rem;border-radius:14px;}
+.fare-label{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,0,0,.5);margin-bottom:.7rem;}
+.fare-price{font-family:var(--sans);font-size:3.6rem;font-weight:600;line-height:1;color:#111;letter-spacing:-.02em;}
+.fare-original{margin-top:.5rem;display:flex;align-items:center;gap:.7rem;}
+.fare-original-strike{font-family:var(--serif);font-size:1.4rem;color:#C4954A;text-decoration:line-through;opacity:.75;}
+.fare-discount-badge{font-size:.65rem;font-weight:700;letter-spacing:.1em;background:#C4954A;color:#fff;padding:.25rem .55rem;border-radius:3px;}
+.fare-guarantee{color:rgba(0,0,0,.5);font-size:.75rem;margin-top:.4rem;}
+.fare-trust{display:flex;gap:1rem;flex-wrap:wrap;border-top:1px solid rgba(0,0,0,.1);padding-top:1rem;margin-top:1rem;color:rgba(0,0,0,.5);font-size:.7rem;}
 .btn-whatsapp{width:100%;height:58px;display:flex;align-items:center;justify-content:center;gap:.65rem;background:linear-gradient(180deg,#D4A96F,#A8753F);color:#111;border:1px solid rgba(212,169,111,.65);border-radius:14px;font-size:.86rem;font-weight:700;letter-spacing:.03em;margin-top:1.8rem;cursor:pointer;}
 .btn-whatsapp:hover{filter:brightness(1.06);}
 .premium-btn{width:100%;padding:16px;border-radius:14px;border:1px solid rgba(212,169,111,.7);background:linear-gradient(180deg,#D4A96F,#A8753F);color:#fff;font-size:14px;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .25s ease;}
 .premium-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(168,117,63,.35);} .premium-btn:active{transform:scale(.98);}
+.btn-reserve-fare{width:100%;padding:1rem;background:#1a1510;color:#fff;border:none;cursor:pointer;font-size:.85rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;margin-top:.5rem;transition:background .2s;}
+.btn-reserve-fare:hover{background:#2a2318;}
+.step2-details{display:flex;flex-direction:column;gap:1rem;margin-bottom:1rem;padding-top:1rem;border-top:1px solid rgba(0,0,0,.08);}
 .btn-text-link{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:500;color:#666;background:none;border:none;cursor:pointer;padding:0;letter-spacing:.04em;text-decoration:none;transition:color .2s;}
 .btn-text-link:hover{color:#C4954A;}text-align:center;font-size:.76rem;color:#999;margin-top:.9rem;letter-spacing:.02em;}
 .btn-email-secondary{display:block;text-align:center;font-size:.75rem;color:#999;margin-top:.85rem;}
