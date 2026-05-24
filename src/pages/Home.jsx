@@ -205,6 +205,7 @@ function Nav() {
     { href: "#services",  label: "Services",  id: "services" },
     { href: "#journey",   label: "Experience", id: "journey" },
     { href: "#pricing",   label: "Pricing",   id: "pricing" },
+    { href: "#faq",       label: "FAQ",       id: "faq" },
     { href: "#corporate", label: "Corporate", id: "corporate" },
     { href: "#areas",     label: "Coverage",  id: "areas" },
   ];
@@ -1213,6 +1214,67 @@ function Testimonials() {
   );
 }
 
+function FAQ() {
+  const [open, setOpen] = useState(null);
+  const faqs = [
+    {
+      q: "How much does a chauffeur cost in Melbourne?",
+      a: "Fares start from $90 for short transfers within inner Melbourne. CBD to Tullamarine Airport is from $115, St Kilda to Airport from $133. Pricing is fixed and calculated by distance — enter your pickup and destination above to see your exact fare instantly."
+    },
+    {
+      q: "Do you provide airport transfers from Tullamarine and Avalon?",
+      a: "Yes. We specialise in Melbourne airport transfers — both Tullamarine (MEL) and Avalon (AVV). Your flight is tracked in real-time, so we adjust pickup if your flight is delayed or arrives early. No extra charge for waiting if your flight is late."
+    },
+    {
+      q: "What if my flight is delayed?",
+      a: "No problem — we monitor your flight automatically using the flight number you provide. If your flight is delayed, we adjust your pickup accordingly with no additional charge. If your flight arrives early, we'll be there waiting."
+    },
+    {
+      q: "How far in advance should I book?",
+      a: "We recommend booking at least 12 hours in advance to guarantee availability. For peak times (early mornings, weekends, major events) earlier booking is best. For last-minute requests, message us on WhatsApp — we'll do our best to accommodate."
+    },
+    {
+      q: "Do you charge a waiting fee?",
+      a: "No. We don't charge waiting fees for reasonable pickup delays, including flight delays. Our pricing is fixed and transparent — what you see is what you pay."
+    },
+    {
+      q: "What vehicles do you operate?",
+      a: "Our fleet consists of modern BMW i5 electric sedans — premium, quiet, and zero-emission. Each vehicle seats up to 4 passengers comfortably with generous luggage capacity. All vehicles are kept immaculate and fully equipped for executive travel."
+    },
+    {
+      q: "Do you serve corporate clients?",
+      a: "Yes. We offer dedicated corporate chauffeur services for executives, business guests and clients across Melbourne. Account billing, recurring transfers and priority booking available. Contact us via the Corporate Enquiries section for tailored arrangements."
+    },
+    {
+      q: "Can I book a return trip?",
+      a: "Yes. When booking, toggle 'Add return trip' to schedule both directions in one booking. You can specify a different return address if needed, and the return fare is automatically calculated and included in your quote."
+    },
+  ];
+
+  return (
+    <section id="faq" style={{ background:"#fdf9f4", padding:"5rem 5vw" }}>
+      <div className="wrap" style={{ maxWidth:"800px" }}>
+        <div className="s-label" style={{ color:"#C4954A" }}>FAQ</div>
+        <h2 className="s-h" style={{ color:"#111", marginBottom:"2.5rem" }}>Frequently asked<br /><span className="gold-em">questions.</span></h2>
+
+        <div className="faq-list">
+          {faqs.map((item, i) => (
+            <div key={i} className={`faq-item ${open === i ? "open" : ""}`}>
+              <button className="faq-question" onClick={() => setOpen(open === i ? null : i)}>
+                <span>{item.q}</span>
+                <span className="faq-icon">{open === i ? "−" : "+"}</span>
+              </button>
+              <div className="faq-answer">
+                <p>{item.a}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function AboutSEO() {
   return (
     <section id="about" style={{ background:"#fdf9f4", padding:"4rem 5vw 3rem", textAlign:"center" }}>
@@ -1386,6 +1448,15 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .pricing-note p{font-size:.82rem;color:#888;margin-bottom:.8rem;}
 .pricing-cta{font-size:.88rem;font-weight:500;color:#C4954A;letter-spacing:.04em;}
 .pricing-cta:hover{color:#9a7040;}
+.faq-list{display:flex;flex-direction:column;gap:0;}
+.faq-item{border-bottom:1px solid rgba(0,0,0,.1);}
+.faq-question{width:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.3rem 0;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--serif);font-size:1.05rem;font-weight:500;color:#111;transition:color .2s;}
+.faq-question:hover{color:#C4954A;}
+.faq-icon{font-size:1.5rem;color:#C4954A;font-weight:300;line-height:1;flex-shrink:0;}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.faq-item.open .faq-answer{max-height:300px;}
+.faq-answer p{padding:0 0 1.3rem;font-size:.9rem;line-height:1.75;color:#555;}
+@media(max-width:768px){.faq-question{font-size:.95rem;}.faq-answer p{font-size:.85rem;}}
 @media(max-width:768px){.pricing-grid{grid-template-columns:1fr;gap:2rem;}}
 .journey-section{background:#0f0d0a;padding:4rem 0 0;}
 .journey-section .wrap{padding-bottom:2rem;}
@@ -1641,6 +1712,7 @@ export default function Home() {
     <JourneyMoments />
     <CorporateSection />
     <Pricing />
+    <FAQ />
     <Areas />
     {/* <Testimonials /> */}
     <AboutSEO />
