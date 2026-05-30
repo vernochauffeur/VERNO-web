@@ -34,9 +34,31 @@ function calcFare(km, bookingTime) {
   return roundFare(fare);
 }
 
-
 function normalizeAddress(text) { if (!text) return ""; return text.toLowerCase().replace(/\bvic\b|\bnsw\b|\bqld\b|\bsa\b|\bwa\b|\btas\b|\bact\b|\bnt\b/g, " ").replace(/\b3\d{3}\b/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
+
 function isAirport(text) { if (!text) return false; const t = normalizeAddress(text); return t.includes("airport") || t.includes("tullamarine") || t.includes("terminal") || t.includes("avalon") || t.includes("avv") || t.includes(" mel "); }
+
+function normalizeAirportAddress(text) {
+  if (!text) return text;
+  const t = text.toLowerCase();
+  if (
+    t.includes("tullamarine") ||
+    t.includes("melbourne airport") ||
+    t.includes("qantas") ||
+    t.includes("jetstar") ||
+    t.includes("virgin australia") ||
+    t.includes("rex ") ||
+    t.includes("departure drive") ||
+    t.includes("arrival drive") ||
+    (t.includes("terminal") && (t.includes("melbourne") || t.includes("mel")))
+  ) {
+    return "Melbourne Airport (Tullamarine) VIC 3045, Australia";
+  }
+  if (t.includes("avalon") || t.includes("avv")) {
+    return "Avalon Airport VIC 3212, Australia";
+  }
+  return text;
+}
 
 async function getDistanceKm(from, to) {
   return new Promise((resolve) => {
@@ -63,7 +85,9 @@ async function getDistanceKm(from, to) {
 }
 
 async function calculateFare(from, to, bookingTime) {
-  const km = await getDistanceKm(from, to);
+  const normFrom = normalizeAirportAddress(from);
+  const normTo = normalizeAirportAddress(to);
+  const km = await getDistanceKm(normFrom, normTo);
   if (km === null) return { fare: null, originalFare: null, label: "Indicative", km: null };
   const originalFare = calcFare(km, bookingTime);
   const fare = roundFare(originalFare * (1 - PRICING.DISCOUNT));
@@ -193,7 +217,6 @@ function Nav() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  // Menü açıkken scroll'u kilitle
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -222,7 +245,6 @@ function Nav() {
       <nav className={`nav${solid ? " solid" : ""}`}>
         <a href="#" className="nav-logo-wrap"><VernoMark /></a>
 
-        {/* Masaüstü linkler */}
         <ul className="nav-links">
           {navLinks.map((l) => (
             <li key={l.href}>
@@ -259,7 +281,6 @@ function Nav() {
         </div>
       </nav>
 
-      {/* Koyu overlay */}
       <div
         onClick={close}
         style={{
@@ -270,7 +291,6 @@ function Nav() {
         }}
       />
 
-      {/* Slide-in panel */}
       <div style={{
         position: "fixed", top: 0, right: 0, bottom: 0,
         width: "min(360px, 88vw)",
@@ -283,7 +303,6 @@ function Nav() {
         transition: "transform .38s cubic-bezier(.22,.61,.36,1)",
         overflowY: "auto",
       }}>
-        {/* Üst — logo + kapat */}
         <div style={{
           display:"flex", alignItems:"center", justifyContent:"space-between",
           padding: "2rem 2.2rem 1.5rem",
@@ -305,10 +324,7 @@ function Nav() {
           >×</button>
         </div>
 
-        {/* Linkler + Butonlar — scroll edilebilir */}
         <div style={{ overflowY:"auto", flex:1, padding:"1.5rem 2.2rem 2rem" }}>
-
-          {/* Linkler */}
           <nav style={{ display:"flex", flexDirection:"column", marginBottom:"2rem" }}>
             {navLinks.map((l) => (
               <a
@@ -333,9 +349,7 @@ function Nav() {
             ))}
           </nav>
 
-          {/* Alt butonlar */}
           <div style={{ display:"flex", flexDirection:"column", gap:".8rem" }}>
-
             <a
               href="#book"
               onClick={(e) => { e.preventDefault(); scrollTo("book"); }}
@@ -380,7 +394,6 @@ function Nav() {
                 borderTop:"1px solid rgba(255,255,255,.07)",
               }}
             >{VERNO_EMAIL}</a>
-
           </div>
         </div>
       </div>
@@ -480,7 +493,6 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
   const isLate = isLateNight(time);
   const hasAirport = fareResult.label === "Fixed Price";
 
-  // Fiyat tipi
   let label, guarantee, labelColor;
   if (hasAirport) {
     label = "Fixed Price";
@@ -523,7 +535,6 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
           returnFare = returnFareResult.fare;
           returnOriginal = returnFareResult.originalFare;
         } else {
-          // Aynı rota — gece tarifesini return saatine göre uygula
           const baseKmCost = (() => {
             const km = fareResult.km || 0;
             if (km <= 25) return km * PRICING.RATE_0_25;
@@ -623,8 +634,6 @@ function InlineBooking() {
   const [fareLoading, setFareLoading] = useState(false);
   const [returnFareResult, setReturnFareResult] = useState(null);
 
-  const [step, setStep] = useState(1);
-
   const isAirportPickup = isAirport(from);
 
   useEffect(() => {
@@ -637,7 +646,6 @@ function InlineBooking() {
     });
   }, [from, to, time, fromSelected, toSelected]);
 
-  // Return farklı adres ise hesapla
   useEffect(() => {
     if (!diffReturn || !returnFromSelected || !returnToSelected) { setReturnFareResult(null); return; }
     if (returnFrom.trim().length < 4 || returnTo.trim().length < 4) { setReturnFareResult(null); return; }
@@ -760,7 +768,6 @@ function InlineBooking() {
             <span className="quick-chip-dot" />Airport transfer? Set Melbourne Airport as destination
           </button>
 
-          {/* ADRESLER */}
           <AddressField id="from" label="Pickup" placeholder="Suburb, hotel or airport — fare shown instantly" value={from}
             onChange={(v) => { setFrom(v); setFromSelected(false); setErrors((p) => ({ ...p, from: null })); }}
             onSelect={(v) => setFromSelected(!!v)}
@@ -773,10 +780,7 @@ function InlineBooking() {
           />
           {errors.to && <span style={errStyle}>{errors.to}</span>}
 
-          {/* DETAYLAR */}
           <div>
-
-            {/* Uçuş numarası */}
             {isAirportPickup && (
               <div className="fg" style={{ marginBottom:"1rem" }}>
                 <label className="fl">Flight Number</label>
@@ -785,7 +789,6 @@ function InlineBooking() {
               </div>
             )}
 
-            {/* Tarih & Saat */}
             <div className="f2" style={{ marginBottom:"1rem" }}>
               <div className="fg">
                 <label className="fl">Date</label>
@@ -804,7 +807,6 @@ function InlineBooking() {
               </div>
             </div>
 
-            {/* Yolcu & Bagaj */}
             <div className="f2" style={{ marginBottom:"1rem" }}>
               <div className="fg">
                 <label className="fl">Passengers</label>
@@ -820,7 +822,6 @@ function InlineBooking() {
               </div>
             </div>
 
-            {/* Return trip toggle */}
             <div style={{ margin:"1rem 0", display:"flex", alignItems:"center", gap:".75rem", cursor:"pointer" }}
               onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFrom(""); setReturnTo(""); }}>
               <div style={{ width:42, height:24, borderRadius:12, background:returnTrip?"#B98B55":"#e0e0e0", position:"relative", transition:"background .2s", flexShrink:0 }}>
@@ -829,7 +830,6 @@ function InlineBooking() {
               <span style={{ fontSize:".82rem", color:"#555", userSelect:"none" }}>Add return trip</span>
             </div>
 
-            {/* Return detaylar */}
             {returnTrip && (
               <div style={{ background:"#f7f3ed", padding:"1.2rem", borderRadius:"12px", marginBottom:"1rem", border:"1px solid rgba(185,139,85,.2)" }}>
                 <p style={{ fontSize:".68rem", textTransform:"uppercase", letterSpacing:".12em", color:"#B98B55", marginBottom:"1rem" }}>Return Journey</p>
@@ -884,10 +884,8 @@ function InlineBooking() {
             )}
           </div>
 
-          {/* Fiyat */}
           <FareEstimate fareResult={fareResult} fareLoading={fareLoading} returnFareResult={returnFareResult} diffReturn={diffReturn} from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
 
-          {/* Butonlar */}
           <button className="btn-whatsapp premium-btn" style={{ width:"100%" }} onClick={handleWA}>
             <WAIcon s={18} /> Confirm via WhatsApp
           </button>
@@ -981,7 +979,6 @@ function Services() {
         <h2 className="s-h">Every journey,<br /><span className="gold-em">handled.</span></h2>
       </div>
 
-      {/* Yatay kayan kartlar */}
       <div className="svc-scroll-wrap">
         <div className="svc-scroll-track">
           {SERVICES.map((s) => (
@@ -1057,13 +1054,10 @@ function WhyMoments() {
     <section className="sec dark why-moments-section" id="about">
       <div className="wrap">
         <div className="why-moments-layout">
-          {/* Sol — görsel */}
           <div className="why-moments-img-wrap">
             <img src={MOMENTS_MAIN} alt="VÉRNO BMW i5 chauffeur service Melbourne" className="why-moments-img" loading="lazy" />
             <span className="moments-geo">Melbourne — Private Transfers</span>
           </div>
-
-          {/* Sağ — metin + grid */}
           <div className="why-moments-text">
             <div className="s-label inv">Why VÉRNO</div>
             <h2 className="s-h inv">A boutique<br /><span className="gold-em">standard.</span></h2>
@@ -1071,7 +1065,6 @@ function WhyMoments() {
             <p className="s-body" style={{ marginBottom:"2.5rem", fontSize:".85rem", opacity:.7 }}>
               Melbourne's premium private chauffeur service operating a modern BMW i5 fleet across CBD, St Kilda, South Yarra, Toorak, Brighton, Hawthorn and surrounding suburbs. Specialising in Tullamarine and Avalon airport transfers, corporate travel for business districts including Docklands and Southbank, and private day hire to Mornington Peninsula, Yarra Valley and the Great Ocean Road. ABN registered, fully licensed CPV operator.
             </p>
-
             <div className="why-grid">
               {items.map((item, i) => (
                 <div key={item.title} className="why-cell">
@@ -1114,7 +1107,6 @@ function Pricing() {
         <p style={{ fontSize:".95rem", color:"#666", marginBottom:"3rem", maxWidth:500 }}>Every fare confirmed before you travel. No surge, no hidden fees.</p>
 
         <div className="pricing-grid">
-          {/* Airport Transfers */}
           <div className="pricing-table">
             <div className="pricing-table-label">Airport Transfers</div>
             {airports.map((r) => (
@@ -1124,8 +1116,6 @@ function Pricing() {
               </div>
             ))}
           </div>
-
-          {/* Point to Point */}
           <div className="pricing-table">
             <div className="pricing-table-label">Point to Point</div>
             {pointToPoint.map((r) => (
@@ -1198,21 +1188,6 @@ function Fleet() {
   );
 }
 
-function Testimonials() {
-  return (
-    <section className="sec" style={{ background:"#f5f5f5" }}>
-      <div className="wrap">
-        <div className="s-label">Client Experience</div>
-        <h2 className="s-h">A service defined by consistency.</h2>
-        <div style={{ maxWidth: "520px", marginTop: "20px" }}>
-          <p style={{ color: "#555", lineHeight: "1.7" }}>Every journey is handled with precision, discretion and care.</p>
-          <p style={{ color: "#999", fontSize: "13px", marginTop: "12px" }}>Verified client feedback will be shared here as VÉRNO continues to grow.</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function FAQ() {
   const [open, setOpen] = useState(null);
   const faqs = [
@@ -1255,7 +1230,6 @@ function FAQ() {
       <div className="wrap" style={{ maxWidth:"800px" }}>
         <div className="s-label" style={{ color:"#C4954A" }}>FAQ</div>
         <h2 className="s-h" style={{ color:"#111", marginBottom:"2.5rem" }}>Frequently asked<br /><span className="gold-em">questions.</span></h2>
-
         <div className="faq-list">
           {faqs.map((item, i) => (
             <div key={i} className={`faq-item ${open === i ? "open" : ""}`}>
@@ -1344,7 +1318,7 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .nav-btn{border:1px solid rgba(210,176,109,.55);padding:.85rem 1.7rem;} .nav-right{display:flex;align-items:center;gap:.5rem;} .hamburger{display:none;} .hamburger-btn{display:none;}
 .btn-hero-green{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;background:#128C7E;color:#fff;border:1px solid #128C7E;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:2px;}
 .btn-hero-green:hover{background:#0d6b60;border-color:#0d6b60;transform:translateY(-2px);box-shadow:0 8px 24px rgba(18,140,126,.3);}
-.verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);}
+.verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);}
 .hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 80%/cover no-repeat;color:#fff;overflow:hidden;}
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));pointer-events:none;}
 .hero-content{position:relative;z-index:2;min-height:calc(78vh - 105px);max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0, 1.05fr) 390px;gap:6vw;align-items:center;}
@@ -1394,13 +1368,7 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .fi{width:100%;height:56px;padding:0 18px;background:#fafafa;border:1px solid #e6e6e6;border-radius:12px;outline:none;font-size:.9rem;color:#111;}
 .fi:focus{background:#fff;border-color:#B98B55;box-shadow:0 0 0 3px rgba(185,139,85,.12);}
 textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
-.fi[type="date"]{
-  height:56px;
-  padding:0 18px;
-  -webkit-appearance:none;
-  appearance:none;
-  line-height:normal;
-}
+.fi[type="date"]{height:56px;padding:0 18px;-webkit-appearance:none;appearance:none;line-height:normal;}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:1.15rem;align-items:end;}
 .address-field{position:relative;} .address-input{padding-right:42px;}
 .clear-address-btn{position:absolute;right:12px;top:34px;width:24px;height:24px;border:0;border-radius:50%;background:rgba(0,0,0,.08);color:#777;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -1421,9 +1389,8 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .premium-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(168,117,63,.35);} .premium-btn:active{transform:scale(.98);}
 .btn-reserve-fare{width:100%;padding:1rem;background:#1a1510;color:#fff;border:none;cursor:pointer;font-size:.85rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;margin-top:.5rem;transition:background .2s;}
 .btn-reserve-fare:hover{background:#2a2318;}
-.step2-details{display:flex;flex-direction:column;gap:1rem;margin-bottom:1rem;padding-top:1rem;border-top:1px solid rgba(0,0,0,.08);}
 .btn-text-link{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:500;color:#666;background:none;border:none;cursor:pointer;padding:0;letter-spacing:.04em;text-decoration:none;transition:color .2s;}
-.btn-text-link:hover{color:#C4954A;}text-align:center;font-size:.76rem;color:#999;margin-top:.9rem;letter-spacing:.02em;}
+.btn-text-link:hover{color:#C4954A;}
 .btn-email-secondary{display:block;text-align:center;font-size:.75rem;color:#999;margin-top:.85rem;}
 .corporate-section{padding:5rem 5vw;background:#fdf9f4;}
 .why-moments-section{background:#111;}
@@ -1444,7 +1411,6 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .pricing-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid rgba(0,0,0,.07);}
 .pricing-route{font-size:.9rem;color:#444;}
 .pricing-price{font-family:var(--serif);font-size:1.1rem;font-weight:600;color:#111;}
-.pricing-price span.from{font-family:var(--sans);font-size:.72rem;font-weight:400;color:#999;margin-right:.3rem;font-style:normal;}
 .pricing-note{margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(0,0,0,.08);}
 .pricing-note p{font-size:.82rem;color:#888;margin-bottom:.8rem;}
 .pricing-cta{font-size:.88rem;font-weight:500;color:#C4954A;letter-spacing:.04em;}
@@ -1506,11 +1472,6 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .svc-card-btn{display:inline-block;font-size:.8rem;font-weight:500;letter-spacing:.06em;color:#C29A66;text-decoration:none;border-top:1px solid #f0ece6;padding-top:1rem;transition:color .2s;}
 .svc-card-btn:hover{color:#9a7a50;}
 @media(max-width:768px){.svc-card{width:280px;}.svc-card-img-wrap{height:160px;}}
-.svc-nav-item{text-align:left;padding:1rem 0;border-bottom:1px solid #e5e5e5;color:#999;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;}
-.svc-nav-item.active{color:#111;font-weight:600;}
-.svc-content-h{font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.6rem);font-weight:400;line-height:1.15;margin-bottom:1rem;}
-.svc-desc{font-size:.9rem;line-height:1.75;color:#666;font-weight:300;}
-.svc-feat-list{list-style:none;display:grid;gap:.7rem;margin:1.5rem 0;color:#555;}
 .why-layout{display:grid;grid-template-columns:320px 1fr;gap:6rem;}
 .why-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgba(255,255,255,.1);}
 .why-cell{padding:2rem;border-bottom:1px solid rgba(255,255,255,.1);}
@@ -1525,17 +1486,7 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .fleet-text-title{font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.6rem);font-weight:400;line-height:1.15;color:#fff;margin-bottom:1rem;}
 .fleet-text-sub{color:rgba(255,255,255,.45);line-height:1.75;margin-bottom:.6rem;} .fleet-text-body{color:rgba(255,255,255,.45);line-height:1.75;font-size:.9rem;}
 .fleet-ev-badge{display:inline-flex;color:var(--gold);border:1px solid rgba(158,138,106,.35);padding:.4rem .8rem;margin-top:1rem;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;}
-.proc-track{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(255,255,255,.08);margin-top:3rem;}
-.proc-step{padding:2rem;border-right:1px solid rgba(255,255,255,.08);} .proc-step:last-child{border-right:none;}
-.proc-roman{font-size:2rem;color:var(--gold);opacity:.4;} .proc-name{font-family:var(--serif);color:#fff;margin:1rem 0;} .proc-desc{color:rgba(255,255,255,.4);font-size:.85rem;line-height:1.7;}
-.moments{background:#111;padding:8rem 5vw;}
-.moments-inner{max-width:1200px;margin:auto;display:grid;grid-template-columns:1.35fr 1fr;gap:7rem;align-items:center;}
-.moments-img-wrap{position:relative;background:#1a1a1a;min-height:340px;overflow:hidden;}
-.moments-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;}
 .moments-geo{position:absolute;left:1rem;bottom:1rem;color:rgba(255,255,255,.6);font-size:.7rem;background:rgba(0,0,0,.4);padding:.35rem .7rem;}
-.moments-eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;color:var(--gold);margin-bottom:1rem;}
-.moments-title{font-family:var(--serif);color:#fff;font-size:clamp(2rem,3vw,3rem);font-weight:400;line-height:1.2;}
-.moments-title em{color:rgba(255,255,255,.45);} .moments-rule{width:2.5rem;height:2px;background:var(--gold);margin:1.5rem 0;} .moments-desc{color:rgba(255,255,255,.45);line-height:1.75;}
 .closer{background:#1a1510;color:#fff;padding:6rem 5vw;text-align:center;} .closer-inner{max-width:640px;margin:auto;}
 .closer-h{font-family:var(--serif);font-size:clamp(2rem,4vw,3.4rem);font-weight:400;line-height:1.1;}
 .closer-sub{color:rgba(255,255,255,.35);} .closer-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:3rem;}
@@ -1547,127 +1498,20 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 .ft-links{list-style:none;display:grid;gap:.5rem;}
 .ft-bottom{max-width:1200px;margin:4rem auto 0;border-top:1px solid rgba(255,255,255,.08);padding-top:2rem;display:flex;justify-content:space-between;}
 .wa-float{position:fixed;right:2rem;bottom:2rem;background:var(--wa);color:#fff;padding:.8rem 1.3rem;z-index:999;display:flex;gap:.6rem;align-items:center;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
-
-/* ============================================================
-   HAMBURGER & MOBİL DRAWER
-   ============================================================ */
-.hamburger{
-  display:none;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  gap:5px;
-  width:40px;height:40px;
-  background:transparent;
-  border:1px solid rgba(255,255,255,.22);
-  cursor:pointer;
-  margin-left:1rem;
-  padding:0;
-}
-.hamburger span{
-  display:block;
-  width:20px;height:1.5px;
-  background:rgba(255,255,255,.85);
-  transition:all .25s ease;
-}
-
-/* Overlay */
-.mob-overlay{
-  display:none;
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.55);
-  z-index:998;
-  opacity:0;
-  transition:opacity .35s ease;
-}
-.mob-overlay.open{
-  opacity:1;
-}
-
-/* Drawer */
-.mob-drawer{
-  position:fixed;
-  top:0;right:0;bottom:0;
-  width:min(360px, 88vw);
-  background:#0c0c0c;
-  z-index:999;
-  display:flex;
-  flex-direction:column;
-  padding:2rem 2.2rem;
-  transform:translateX(100%);
-  transition:transform .38s cubic-bezier(.22,.61,.36,1);
-  border-left:1px solid rgba(194,154,102,.18);
-}
-.mob-drawer.open{
-  transform:translateX(0);
-}
-
-/* Drawer üst */
-.mob-drawer-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:3rem;
-}
-.mob-close{
-  width:38px;height:38px;
-  background:rgba(255,255,255,.07);
-  border:1px solid rgba(255,255,255,.12);
-  color:rgba(255,255,255,.7);
-  font-size:22px;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-}
-
-/* Drawer linkler */
-.mob-nav{
-  display:flex;
-  flex-direction:column;
-  gap:0;
-  flex:1;
-}
-.mob-nav-link{
-  font-family:var(--serif);
-  font-size:2rem;
-  font-weight:400;
-  color:rgba(255,255,255,.82);
-  padding:.7rem 0;
-  border-bottom:1px solid rgba(255,255,255,.07);
-  letter-spacing:-.02em;
-  transition:color .2s;
-}
-.mob-nav-link:hover{
-  color:var(--gold);
-}
-
-/* Drawer alt */
-.mob-drawer-bottom{
-  margin-top:2.5rem;
-  display:flex;
-  flex-direction:column;
-  gap:1rem;
-}
-.mob-wa-btn{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:.6rem;
-  padding:1rem;
-  background:linear-gradient(180deg,#C49A60,#A8753F);
-  color:#fff;
-  font-size:.82rem;
-  font-weight:600;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  border:1px solid rgba(201,164,109,.5);
-}
-.mob-email-link{
-  text-align:center;
-  font-size:.72rem;
-  color:rgba(255,255,255,.35);
-  letter-spacing:.04em;
-}
-
+.hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:40px;height:40px;background:transparent;border:1px solid rgba(255,255,255,.22);cursor:pointer;margin-left:1rem;padding:0;}
+.hamburger span{display:block;width:20px;height:1.5px;background:rgba(255,255,255,.85);transition:all .25s ease;}
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:998;opacity:0;transition:opacity .35s ease;}
+.mob-overlay.open{opacity:1;}
+.mob-drawer{position:fixed;top:0;right:0;bottom:0;width:min(360px, 88vw);background:#0c0c0c;z-index:999;display:flex;flex-direction:column;padding:2rem 2.2rem;transform:translateX(100%);transition:transform .38s cubic-bezier(.22,.61,.36,1);border-left:1px solid rgba(194,154,102,.18);}
+.mob-drawer.open{transform:translateX(0);}
+.mob-drawer-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3rem;}
+.mob-close{width:38px;height:38px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mob-nav{display:flex;flex-direction:column;gap:0;flex:1;}
+.mob-nav-link{font-family:var(--serif);font-size:2rem;font-weight:400;color:rgba(255,255,255,.82);padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.07);letter-spacing:-.02em;transition:color .2s;}
+.mob-nav-link:hover{color:var(--gold);}
+.mob-drawer-bottom{margin-top:2.5rem;display:flex;flex-direction:column;gap:1rem;}
+.mob-wa-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;padding:1rem;background:linear-gradient(180deg,#C49A60,#A8753F);color:#fff;font-size:.82rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(201,164,109,.5);}
+.mob-email-link{text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);letter-spacing:.04em;}
 @media(max-width:1024px){
   .booking-panel-inner,.why-layout,.fleet-layout,.moments-inner{grid-template-columns:1fr;gap:3rem;}
   .hero-content{grid-template-columns:1fr;min-height:auto;}
@@ -1715,7 +1559,6 @@ export default function Home() {
     <Pricing />
     <FAQ />
     <Areas />
-    {/* <Testimonials /> */}
     <AboutSEO />
     <Closer />
     <Footer />
