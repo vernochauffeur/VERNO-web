@@ -10,7 +10,7 @@ const SVC_CORPORATE = "/images/svc-corporate.jpg";
 const SVC_PRIVATE = "/images/svc-private.jpg";
 const SVC_EVENTS = "/images/svc-events.jpg";
 const FLEET_IMG = "/images/fleet.jpg";
-const WA_NUMBER = "610421238894";
+const WA_NUMBER = "61421238894";
 const VERNO_EMAIL = "book@vernochauffeur.com.au";
 
 const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.10 };
