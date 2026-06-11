@@ -12,6 +12,8 @@ const SVC_EVENTS = "/images/svc-events.jpg";
 const FLEET_IMG = "/images/fleet.jpg";
 const WA_NUMBER = "61421238894";
 const VERNO_EMAIL = "book@vernochauffeur.com.au";
+const VERNO_PHONE = "+61421238894";
+const VERNO_PHONE_DISPLAY = "0421 238 894";
 
 const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.15 };
 
@@ -156,6 +158,7 @@ function buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber
 
 function WAIcon({ s = 20 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>; }
 function MsgIcon({ s = 14 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>; }
+function PhoneIcon({ s = 16 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 22 16.92z"/></svg>; }
 function IconPlaneHero() {
   return (
     <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true" fill="currentColor">
@@ -254,6 +257,10 @@ function Nav() {
         </ul>
 
         <div className="nav-right">
+          <a href={`tel:${VERNO_PHONE}`} className="nav-phone" aria-label="Call Verno Chauffeur">
+            <PhoneIcon s={15} />
+            <span className="nav-phone-num">{VERNO_PHONE_DISPLAY}</span>
+          </a>
           <a href="#book" className="nav-btn" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Reserve a Transfer</a>
           <button
             onClick={() => setMenuOpen(true)}
@@ -350,6 +357,21 @@ function Nav() {
           </nav>
 
           <div style={{ display:"flex", flexDirection:"column", gap:".8rem" }}>
+            <a
+              href={`tel:${VERNO_PHONE}`}
+              onClick={close}
+              style={{
+                display:"flex", alignItems:"center", justifyContent:"center", gap:".6rem",
+                padding:"1rem",
+                background:"rgba(255,255,255,.06)",
+                border:"1px solid rgba(201,164,109,.4)",
+                color:"#D2B06D",
+                fontSize:".82rem", fontWeight:600,
+                letterSpacing:".06em", textTransform:"uppercase",
+                textDecoration:"none",
+              }}
+            ><PhoneIcon s={16} /> Call {VERNO_PHONE_DISPLAY}</a>
+
             <a
               href="#book"
               onClick={(e) => { e.preventDefault(); scrollTo("book"); }}
@@ -905,6 +927,11 @@ function InlineBooking() {
               Book via SMS
             </button>
             <span style={{ color:"#e0e0e0" }}>|</span>
+            <a href={`tel:${VERNO_PHONE}`} className="btn-text-link">
+              <PhoneIcon s={15} />
+              Call us
+            </a>
+            <span style={{ color:"#e0e0e0" }}>|</span>
             <a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-text-link">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               Email us
@@ -1304,7 +1331,7 @@ function Footer() {
         </div>
         <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="#services">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
         <div><p className="ft-col-h">Coverage</p><ul className="ft-links"><li><a href="#areas">Melbourne CBD</a></li><li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
-        <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
+        <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
       <div className="ft-bottom">
         <p>© 2025 VÉRNO Private Chauffeur - Melbourne</p>
@@ -1326,6 +1353,8 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .nav.solid{background:rgba(12,12,12,.86);backdrop-filter:blur(16px);border-color:rgba(255,255,255,.08);}
 .nav-links{display:flex;gap:2.4rem;list-style:none;} .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);}
 .nav-btn{border:1px solid rgba(210,176,109,.55);padding:.85rem 1.7rem;} .nav-right{display:flex;align-items:center;gap:.5rem;} .hamburger{display:none;} .hamburger-btn{display:none;}
+.nav-phone{display:inline-flex;align-items:center;gap:.5rem;color:#D2B06D;font-size:.78rem;font-weight:600;letter-spacing:.06em;padding:.85rem 1.1rem;border:1px solid rgba(210,176,109,.35);margin-right:.6rem;}
+.nav-phone:hover{border-color:rgba(210,176,109,.7);}
 .btn-hero-green{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;background:#128C7E;color:#fff;border:1px solid #128C7E;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:2px;}
 .btn-hero-green:hover{background:#0d6b60;border-color:#0d6b60;transform:translateY(-2px);box-shadow:0 8px 24px rgba(18,140,126,.3);}
 .verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);}
@@ -1534,6 +1563,8 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
   .trust-strip-inner{grid-template-columns:1fr;gap:2rem;}
   .trust-feature{border-right:none;padding:0;}
   .nav-links,.nav-btn{display:none;}
+  .nav-phone{margin-right:.2rem;padding:.7rem .9rem;}
+  .nav-phone-num{display:none;}
   .hamburger-btn{display:flex !important;}
   .mob-overlay{display:block;}
 }
