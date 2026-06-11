@@ -438,8 +438,9 @@ function Hero() {
           <div
             className="hero-fare-teaser"
             onClick={() => {
+              const el = document.getElementById("from");
+              if (el) el.focus({ preventScroll: true });
               document.getElementById("book")?.scrollIntoView({ behavior: "smooth" });
-              setTimeout(() => document.getElementById("from")?.focus({ preventScroll: true }), 650);
             }}
           >
             <div className="fare-teaser-box"><span className="ft-dot" />Pickup address</div>
@@ -1629,8 +1630,9 @@ function StickyBar() {
         className="sb-cta"
         onClick={(e) => {
           e.preventDefault();
+          const el = document.getElementById("from");
+          if (el) el.focus({ preventScroll: true });
           document.getElementById("book")?.scrollIntoView({ behavior: "smooth" });
-          setTimeout(() => document.getElementById("from")?.focus({ preventScroll: true }), 650);
         }}
       >See your fixed fare &rarr;</a>
       <a href={wa} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
