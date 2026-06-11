@@ -672,6 +672,11 @@ function InlineBooking() {
 
   const handleWA = () => {
     if (!validate()) return;
+    if (window.gtag) {
+      window.gtag('event', 'conversion', {
+        'send_to': 'AW-18141523015/sdWqCPHY0bwcEMfYxspD'
+      });
+    }
     const link = returnTrip
       ? buildWhatsAppLinkReturn({ from, to, date, time, pax, bags, fare, flightNumber, returnDate, returnTime })
       : buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber });
@@ -680,6 +685,11 @@ function InlineBooking() {
 
   const handleSMS = () => {
     if (!validate()) return;
+    if (window.gtag) {
+      window.gtag('event', 'conversion', {
+        'send_to': 'AW-18141523015/sdWqCPHY0bwcEMfYxspD'
+      });
+    }
     const lines = returnTrip
       ? [
           "VÉRNO — Transfer Request",
