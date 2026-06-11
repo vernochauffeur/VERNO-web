@@ -435,6 +435,17 @@ function Hero() {
             <span className="hero-bottom">private chauffeur.</span>
           </h1>
           <div className="hero-line" />
+          <div
+            className="hero-fare-teaser"
+            onClick={() => {
+              document.getElementById("book")?.scrollIntoView({ behavior: "smooth" });
+              setTimeout(() => document.getElementById("from")?.focus({ preventScroll: true }), 650);
+            }}
+          >
+            <div className="fare-teaser-box"><span className="ft-dot" />Pickup address</div>
+            <div className="fare-teaser-box"><span className="ft-sq" />Where to?</div>
+            <p className="fare-teaser-note">Instant fixed fare &middot; 15% off &middot; no signup needed</p>
+          </div>
           <p className="hero-tagline">Airport. Boardroom. Beyond.</p>
           <p className="hero-sub">As Melbourne as it gets.</p>
           <div className="hero-actions">
@@ -796,6 +807,10 @@ function InlineBooking() {
         </div>
 
         <div className="booking-panel-form">
+          <div className="form-stars" aria-label="Rated 5.0 on Google">
+            <span className="form-stars-icons">★★★★★</span>
+            <span className="form-stars-text">5.0 on Google Reviews</span>
+          </div>
           <button className="quick-chip" onClick={() => { setTo("Melbourne Airport (Tullamarine) VIC, Australia"); setToSelected(true); }}>
             <span className="quick-chip-dot" />Airport transfer? Set Melbourne Airport as destination
           </button>
@@ -1551,6 +1566,18 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 .mob-drawer-bottom{margin-top:2.5rem;display:flex;flex-direction:column;gap:1rem;}
 .mob-wa-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;padding:1rem;background:linear-gradient(180deg,#C49A60,#A8753F);color:#fff;font-size:.82rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(201,164,109,.5);}
 .mob-email-link{text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);letter-spacing:.04em;}
+.hero-fare-teaser{display:none;cursor:pointer;flex-direction:column;gap:.6rem;margin-bottom:1.6rem;}
+.fare-teaser-box{display:flex;align-items:center;gap:.75rem;background:rgba(255,255,255,.97);border-radius:12px;padding:1.05rem 1.15rem;color:#666;font-size:16px;box-shadow:0 10px 32px rgba(0,0,0,.38);}
+.ft-dot{width:9px;height:9px;border-radius:50%;background:#128C7E;flex-shrink:0;}
+.ft-sq{width:9px;height:9px;background:#C4954A;flex-shrink:0;}
+.fare-teaser-note{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#C29A66;margin-top:.1rem;}
+.form-stars{display:flex;align-items:center;gap:.55rem;margin-bottom:1.1rem;}
+.form-stars-icons{color:#C4954A;font-size:.95rem;letter-spacing:2px;}
+.form-stars-text{color:#777;font-size:.76rem;letter-spacing:.02em;}
+.sticky-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:997;background:rgba(12,12,12,.97);backdrop-filter:blur(12px);border-top:1px solid rgba(201,164,109,.3);padding:.6rem .8rem calc(.6rem + env(safe-area-inset-bottom));gap:.6rem;align-items:center;}
+.sb-cta{flex:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#D4A96F,#A8753F);color:#fff;font-size:.86rem;font-weight:600;letter-spacing:.04em;padding:.95rem;border-radius:10px;}
+.sb-icon{width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,164,109,.4);border-radius:10px;color:#D2B06D;}
+.sb-wa{background:#128C7E;border-color:#128C7E;color:#fff;}
 @media(max-width:1024px){
   .booking-panel-inner,.why-layout,.fleet-layout,.moments-inner{grid-template-columns:1fr;gap:3rem;}
   .hero-content{grid-template-columns:1fr;min-height:auto;}
@@ -1569,7 +1596,13 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
   .mob-overlay{display:block;}
 }
 @media(max-width:768px){
-  body{overflow-x:hidden;}
+  body{overflow-x:hidden;padding-bottom:76px;}
+  .hero-fare-teaser{display:flex;}
+  .sticky-bar{display:flex;}
+  .hero-service-panel{display:none;}
+  .trust-strip{display:none;}
+  .wa-float{display:none;}
+  .fi{font-size:16px;}
   .hero{min-height:auto;padding:100px 5vw 60px;}
   .hero-top,.hero-bottom{font-size:2rem;white-space:normal;}
   .hero-actions{flex-direction:column;}
@@ -1585,6 +1618,25 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
   .wa-float{right:1rem;bottom:1rem;}
 }
 `;
+
+function StickyBar() {
+  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
+  return (
+    <div className="sticky-bar">
+      <a href={`tel:${VERNO_PHONE}`} className="sb-icon" aria-label="Call Verno Chauffeur"><PhoneIcon s={19} /></a>
+      <a
+        href="#book"
+        className="sb-cta"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("book")?.scrollIntoView({ behavior: "smooth" });
+          setTimeout(() => document.getElementById("from")?.focus({ preventScroll: true }), 650);
+        }}
+      >See your fixed fare &rarr;</a>
+      <a href={wa} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
+    </div>
+  );
+}
 
 export default function Home() {
   const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
@@ -1604,5 +1656,6 @@ export default function Home() {
     <Closer />
     <Footer />
     <a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
+    <StickyBar />
   </>;
 }
