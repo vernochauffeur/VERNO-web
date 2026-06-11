@@ -13,7 +13,7 @@ const FLEET_IMG = "/images/fleet.jpg";
 const WA_NUMBER = "61421238894";
 const VERNO_EMAIL = "book@vernochauffeur.com.au";
 
-const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.10 };
+const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.15 };
 
 function isLateNight(t) { if (!t) return false; const h = parseInt(t.split(":")[0]); return h >= PRICING.LATE_START && h < PRICING.LATE_END; }
 
@@ -526,7 +526,7 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
       {fareResult.originalFare && fareResult.originalFare > fareResult.fare && (
         <div className="fare-original">
           <span className="fare-original-strike">${fareResult.originalFare}</span>
-          <span className="fare-discount-badge">10% OFF</span>
+          <span className="fare-discount-badge">15% OFF</span>
         </div>
       )}
       {returnTrip && returnDate && returnTime && fareResult && (() => {
