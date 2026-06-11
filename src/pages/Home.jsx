@@ -15,6 +15,15 @@ const VERNO_EMAIL = "book@vernochauffeur.com.au";
 const VERNO_PHONE = "+61421238894";
 const VERNO_PHONE_DISPLAY = "0421 238 894";
 
+function goToBookingForm() {
+  const el = document.getElementById("from");
+  if (!el) { document.getElementById("book")?.scrollIntoView({ behavior: "smooth" }); return; }
+  el.focus({ preventScroll: true });
+  setTimeout(() => {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 400);
+}
+
 const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.15 };
 
 function isLateNight(t) { if (!t) return false; const h = parseInt(t.split(":")[0]); return h >= PRICING.LATE_START && h < PRICING.LATE_END; }
@@ -437,11 +446,7 @@ function Hero() {
           <div className="hero-line" />
           <div
             className="hero-fare-teaser"
-            onClick={() => {
-              const el = document.getElementById("from");
-              if (el) el.focus({ preventScroll: true });
-              document.getElementById("book")?.scrollIntoView({ behavior: "smooth" });
-            }}
+            onClick={goToBookingForm}
           >
             <div className="fare-teaser-box"><span className="ft-dot" />Pickup address</div>
             <div className="fare-teaser-box"><span className="ft-sq" />Where to?</div>
@@ -1628,12 +1633,7 @@ function StickyBar() {
       <a
         href="#book"
         className="sb-cta"
-        onClick={(e) => {
-          e.preventDefault();
-          const el = document.getElementById("from");
-          if (el) el.focus({ preventScroll: true });
-          document.getElementById("book")?.scrollIntoView({ behavior: "smooth" });
-        }}
+        onClick={(e) => { e.preventDefault(); goToBookingForm(); }}
       >See your fixed fare &rarr;</a>
       <a href={wa} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
     </div>
