@@ -256,11 +256,13 @@ export function resolveLocation(address, location = null) {
 
 // EDIT HERE to add or remove venues. A leg whose pickup or destination is within
 // `radiusKm` of a venue's Google Places coordinates pays PRICING.MAJOR_VENUE_FEE
-// once. Radii are kept tight so neighbouring places are not charged
-// (e.g. Margaret Court Arena, AAMI Park, Southern Cross, Caulfield station).
+// once. Radii are kept tight so neighbouring places are not charged (e.g. AAMI
+// Park, Southern Cross, Caulfield station) and so the Melbourne Park arenas
+// (Rod Laver / Margaret Court, 100 m apart) never overlap each other.
 export const MAJOR_VENUES = [
   { name: "John Cain Arena", location: { lat: -37.82277, lng: 144.98197 }, radiusKm: 0.15 },
   { name: "Rod Laver Arena", location: { lat: -37.82162, lng: 144.97856 }, radiusKm: 0.08 },
+  { name: "Margaret Court Arena", location: { lat: -37.82113, lng: 144.97764 }, radiusKm: 0.06 },
   { name: "MCG", location: { lat: -37.81997, lng: 144.98345 }, radiusKm: 0.25 },
   { name: "Marvel Stadium", location: { lat: -37.81650, lng: 144.94760 }, radiusKm: 0.2 },
   { name: "Flemington Racecourse", location: { lat: -37.79097, lng: 144.91189 }, radiusKm: 0.6 },
