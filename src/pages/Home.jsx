@@ -1,4 +1,16 @@
 import { useState, useEffect, useRef } from "react";
+import {
+  quoteFare, totalFare, assessJourney, normalizeAirportAddress, formatPrice,
+  LATE_NIGHT_WINDOW, LATE_NIGHT_SURCHARGE_LABEL, WAITING_POLICY, SPECIAL_QUOTE_NOTE,
+  REGIONAL_QUOTE_LABEL, REGIONAL_QUOTE_NOTE, EVENT_FARE_LABEL, EVENT_FARE_NOTE, MAJOR_VENUE_FEE_NOTE,
+  AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES,
+} from "../lib/pricing.js";
+import { getDrivingDistanceKm } from "../lib/distance.js";
+import {
+  VERNO_EMAIL, VERNO_PHONE, VERNO_PHONE_DISPLAY, MAX_PASSENGERS,
+  buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
+} from "../lib/booking.js";
+import { FAQS } from "../content/faq.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -10,10 +22,7 @@ const SVC_CORPORATE = "/images/svc-corporate.jpg";
 const SVC_PRIVATE = "/images/svc-private.jpg";
 const SVC_EVENTS = "/images/svc-events.jpg";
 const FLEET_IMG = "/images/fleet.jpg";
-const WA_NUMBER = "61421238894";
-const VERNO_EMAIL = "book@vernochauffeur.com.au";
-const VERNO_PHONE = "+61421238894";
-const VERNO_PHONE_DISPLAY = "0421 238 894";
+const GENERIC_WA_URL = buildWhatsAppUrl(buildBlankBookingMessage());
 
 function goToBookingForm() {
   const el = document.getElementById("from");
@@ -24,103 +33,70 @@ function goToBookingForm() {
   }, 400);
 }
 
-const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.15 };
-
-function isLateNight(t) { if (!t) return false; const h = parseInt(t.split(":")[0]); return h >= PRICING.LATE_START && h < PRICING.LATE_END; }
-
-function roundFare(fare) { return Math.ceil(fare / 5) * 5; }
-
-function calcFare(km, bookingTime) {
-  let kmCost = 0;
-  if (km <= 25) {
-    kmCost = km * PRICING.RATE_0_25;
-  } else if (km <= 50) {
-    kmCost = 25 * PRICING.RATE_0_25 + (km - 25) * PRICING.RATE_25_50;
-  } else {
-    kmCost = 25 * PRICING.RATE_0_25 + 25 * PRICING.RATE_25_50 + (km - 50) * PRICING.RATE_50UP;
-  }
-  let fare = PRICING.BASE + kmCost;
-  fare = Math.max(fare, PRICING.MIN_FARE);
-  if (isLateNight(bookingTime)) fare = fare * (1 + PRICING.LATE_SURCHARGE);
-  return roundFare(fare);
-}
-
-function normalizeAddress(text) { if (!text) return ""; return text.toLowerCase().replace(/\bvic\b|\bnsw\b|\bqld\b|\bsa\b|\bwa\b|\btas\b|\bact\b|\bnt\b/g, " ").replace(/\b3\d{3}\b/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
-
-function isAirport(text) { if (!text) return false; const t = normalizeAddress(text); return t.includes("airport") || t.includes("tullamarine") || t.includes("terminal") || t.includes("avalon") || t.includes("avv") || t.includes(" mel "); }
-
-function normalizeAirportAddress(text) {
-  if (!text) return text;
-  const t = text.toLowerCase();
-  if (
-    t.includes("tullamarine") ||
-    t.includes("melbourne airport") ||
-    t.includes("qantas") ||
-    t.includes("jetstar") ||
-    t.includes("virgin australia") ||
-    t.includes("rex ") ||
-    t.includes("departure drive") ||
-    t.includes("arrival drive") ||
-    (t.includes("terminal") && (t.includes("melbourne") || t.includes("mel")))
-  ) {
-    return "Melbourne Airport (Tullamarine) VIC 3045, Australia";
-  }
-  if (t.includes("avalon") || t.includes("avv")) {
-    return "Avalon Airport VIC 3212, Australia";
-  }
-  return text;
-}
-
-async function getDistanceKm(from, to) {
-  return new Promise((resolve) => {
-    const service = new window.google.maps.DistanceMatrixService();
-    service.getDistanceMatrix({
-      origins: [from],
-      destinations: [to],
-      travelMode: window.google.maps.TravelMode.DRIVING,
-      unitSystem: window.google.maps.UnitSystem.METRIC,
-    }, (response, status) => {
-      if (status === "OK") {
-        const element = response.rows[0].elements[0];
-        if (element.status === "OK") {
-          const km = element.distance.value / 1000;
-          resolve(km);
-        } else {
-          resolve(null);
-        }
-      } else {
-        resolve(null);
-      }
+// Driving distance for one route. Only the latest request can update state, so a
+// slow Distance Matrix response for an old address never overwrites a newer one.
+function useRouteDistance(origin, destination, enabled) {
+  const active = enabled && !!origin && !!destination;
+  const routeKey = active ? `${origin}\u0000${destination}` : "";
+  const [state, setState] = useState({ routeKey: "", status: "idle", km: null });
+  useEffect(() => {
+    if (!routeKey) { setState({ routeKey: "", status: "idle", km: null }); return; }
+    let current = true;
+    setState({ routeKey, status: "loading", km: null });
+    getDrivingDistanceKm(origin, destination).then((km) => {
+      if (current) setState(km === null ? { routeKey, status: "error", km: null } : { routeKey, status: "ready", km });
     });
-  });
+    return () => { current = false; };
+  }, [routeKey]);
+  // Never return a result that belongs to a different route (e.g. the render before the effect runs).
+  if (!routeKey) return { status: "idle", km: null };
+  return state.routeKey === routeKey ? state : { status: "loading", km: null };
 }
 
-async function calculateFare(from, to, bookingTime) {
-  const normFrom = normalizeAirportAddress(from);
-  const normTo = normalizeAirportAddress(to);
-  const km = await getDistanceKm(normFrom, normTo);
-  if (km === null) return { fare: null, originalFare: null, label: "Indicative", km: null };
-  const originalFare = calcFare(km, bookingTime);
-  const fare = roundFare(originalFare * (1 - PRICING.DISCOUNT));
-  const hasAirport = isAirport(from) || isAirport(to);
-  const label = hasAirport ? "Fixed Price" : "Estimated Fare";
-  return { fare, originalFare, label, km: Math.round(km) };
+// Prices one journey leg with the shared engine. Pickup time only affects the
+// late-night surcharge, so changing it re-prices without a new distance request.
+//
+// status: idle | unlocated (no coordinates to check the service area) |
+//         regional (quote required — no automatic fare) | loading | error | ready
+function useLegQuote({ from, to, fromLocation, toLocation, time, date, enabled }) {
+  const journey = assessJourney({ from, to, fromLocation, toLocation, date });
+  const priceable = enabled && journey.located && !journey.regional;
+  const origin = priceable ? normalizeAirportAddress(from, fromLocation) : "";
+  const destination = priceable ? normalizeAirportAddress(to, toLocation) : "";
+  const distance = useRouteDistance(origin, destination, priceable);
+
+  let status = distance.status;
+  if (enabled && !journey.located) status = "unlocated";
+  else if (enabled && journey.regional) status = "regional";
+  const quote = status === "ready"
+    ? quoteFare({ km: distance.km, time, isAirportTransfer: journey.isAirportTransfer, atMajorVenue: !!journey.majorVenue })
+    : null;
+
+  return {
+    status,
+    quote,
+    regional: status === "regional",
+    event: enabled && journey.located ? journey.event : null,
+    majorVenue: enabled && journey.located ? journey.majorVenue : null,
+    pickupIsAirport: !!journey.fromAirport,
+  };
 }
 
-
-function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
+function AddressField({ label, placeholder, value, onChange, onSelect, id, marker }) {
   const inputRef = useRef(null);
   useEffect(() => {
     let timer;
     const initAutocomplete = () => {
       if (!window.google?.maps?.places || !inputRef.current) { timer = setTimeout(initAutocomplete, 300); return; }
-      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, { componentRestrictions: { country: "au" }, fields: ["formatted_address", "name"] });
+      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, { componentRestrictions: { country: "au" }, fields: ["formatted_address", "name", "geometry"] });
       autocomplete.addListener("place_changed", () => {
         try {
           const place = autocomplete.getPlace();
           const selected = place.formatted_address || place.name || "";
+          const loc = place.geometry?.location;
+          const location = loc ? { lat: loc.lat(), lng: loc.lng() } : null;
           onChange(selected);
-          if (onSelect) onSelect(selected);
+          if (onSelect) onSelect(selected || null, location);
         } catch(e) { console.error("Autocomplete error:", e); }
       });
     };
@@ -129,80 +105,29 @@ function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
   }, []);
   return (
     <div className="fg address-field">
-      <label className="fl" htmlFor={id}>{label}</label>
-      <input
-        id={id} ref={inputRef} className="fi address-input"
-        placeholder={placeholder} value={value}
-        onChange={(e) => { onChange(e.target.value); }}
-        autoComplete="off"
-      />
-      {value && (
-        <button type="button" className="clear-address-btn"
-          onClick={() => { onChange(""); if (onSelect) onSelect(null); }}
-          aria-label={`Clear ${label}`}
-        >×</button>
-      )}
+      {label && <label className="fl" htmlFor={id}>{label}</label>}
+      <div className="address-control">
+        {marker && <span className={`route-marker route-marker--${marker}`} aria-hidden="true" />}
+        <input
+          id={id} ref={inputRef} className={`fi address-input${marker ? " has-marker" : ""}`}
+          placeholder={placeholder} value={value}
+          onChange={(e) => { onChange(e.target.value); }}
+          autoComplete="off"
+        />
+        {value && (
+          <button type="button" className="clear-address-btn"
+            onClick={() => { onChange(""); if (onSelect) onSelect(null); }}
+            aria-label={`Clear ${label || "address"}`}
+          >×</button>
+        )}
+      </div>
     </div>
   );
-}
-
-function buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber }) {
-  const lines = [
-    "VÉRNO — Transfer Request",
-    "",
-    `PICKUP     : ${from || ""}`,
-    `DROP-OFF   : ${to || ""}`,
-    `DATE       : ${date || ""}`,
-    `TIME       : ${time || ""}`,
-    `PASSENGERS : ${pax || ""}`,
-    `LUGGAGE    : ${bags || ""}`,
-    ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-    "",
-    ...(fare ? [`Fare estimate: $${fare}`] : []),
-    "",
-    "Please confirm availability.",
-  ];
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 function WAIcon({ s = 20 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>; }
 function MsgIcon({ s = 14 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>; }
 function PhoneIcon({ s = 16 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 22 16.92z"/></svg>; }
-function IconPlaneHero() {
-  return (
-    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true" fill="currentColor">
-      <path d="M54 10c-1.5-1.5-3.8-1.8-5.6-.7L36 16.8l-20-6.8L10 16l16 10-8 8-8-2-4 4 10 6 6 10 4-4-2-8 8-8 10 16 6-6-6.8-20L53 9.6c.2.1.4.2.6.4.3.3.5.6.6 1l.7-.7c-.2-.8-.5-1.5-1-2.3Z"/>
-    </svg>
-  );
-}
-
-function IconBriefcaseHero() {
-  return (
-    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="8" y="22" width="48" height="34" rx="4"/>
-      <path d="M22 22v-4a10 10 0 0 1 20 0v4"/>
-      <path d="M8 38h48"/>
-      <path d="M26 38v6h12v-6"/>
-    </svg>
-  );
-}
-
-function IconCarHero() {
-  return (
-    <svg viewBox="0 0 64 64" className="lux-icon" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 38h44v10H10z" rx="2"/>
-      <path d="M14 38l6-14h24l6 14"/>
-      <circle cx="20" cy="48" r="4"/>
-      <circle cx="44" cy="48" r="4"/>
-      <path d="M10 44h4M50 44h4"/>
-      <path d="M20 28h24"/>
-    </svg>
-  );
-}
-function IconPrice() { return <svg viewBox="0 0 24 24" className="trust-small-icon"><path d="M20.5 13.5l-7 7a2.2 2.2 0 0 1-3.1 0l-7-7V4h9.5l7.6 7.6a1.4 1.4 0 0 1 0 1.9Z"/><circle cx="8" cy="8" r="1.4"/></svg>; }
-function IconShield() { return <svg viewBox="0 0 24 24" className="trust-small-icon"><path d="M12 21s7-3.8 7-10V5.5L12 3 5 5.5V11c0 6.2 7 10 7 10Z"/><path d="M9 12l2 2 4-5"/></svg>; }
-function IconChatSmall() { return <svg viewBox="0 0 24 24" className="trust-small-icon"><path d="M4 5h16v11H8l-4 4V5Z"/></svg>; }
-function IconDiamond() { return <svg viewBox="0 0 24 24" className="trust-small-icon"><path d="M6 4h12l4 7-10 10L2 11l4-7Z"/><path d="M2 11h20"/><path d="M8 4l4 17 4-17"/></svg>; }
 function IconClock() { return <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>; }
 function IconPerson() { return <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><circle cx="12" cy="7" r="4"/><path d="M4 21c1.7-4 4.2-6 8-6s6.3 2 8 6"/></svg>; }
 function IconStar() { return <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.7 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5-4.8-4.7 6.6-.9L12 2.5z"/></svg>; }
@@ -225,40 +150,49 @@ function Nav() {
 
   useEffect(() => {
     const fn = () => setSolid(window.scrollY > 60);
-    window.addEventListener("scroll", fn);
+    fn();
+    window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false); };
+    if (menuOpen) window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", onKey); };
   }, [menuOpen]);
 
   const close = () => setMenuOpen(false);
 
-  const navLinks = [
+  const primaryLinks = [
     { href: "#services",  label: "Services",  id: "services" },
-    { href: "#journey",   label: "Experience", id: "journey" },
+    { href: "#corporate", label: "Corporate", id: "corporate" },
     { href: "#pricing",   label: "Pricing",   id: "pricing" },
     { href: "#faq",       label: "FAQ",       id: "faq" },
-    { href: "#corporate", label: "Corporate", id: "corporate" },
-    { href: "#areas",     label: "Coverage",  id: "areas" },
+  ];
+  const menuLinks = [
+    { href: "#services",  label: "Services",   id: "services" },
+    { href: "#journey",   label: "Experience", id: "journey" },
+    { href: "#corporate", label: "Corporate",  id: "corporate" },
+    { href: "#pricing",   label: "Pricing",    id: "pricing" },
+    { href: "#faq",       label: "FAQ",        id: "faq" },
+    { href: "#areas",     label: "Coverage",   id: "areas" },
   ];
 
   const scrollTo = (id) => {
     close();
     setTimeout(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    }, 350);
+    }, menuOpen ? 350 : 0);
   };
 
   return (
     <>
-      <nav className={`nav${solid ? " solid" : ""}`}>
-        <a href="#" className="nav-logo-wrap"><VernoMark /></a>
+      <nav className={`nav${solid ? " solid" : ""}`} aria-label="Main">
+        <a href="#" className="nav-logo-wrap" aria-label="VÉRNO — back to top"><VernoMark /></a>
 
         <ul className="nav-links">
-          {navLinks.map((l) => (
+          {primaryLinks.map((l) => (
             <li key={l.href}>
               <a href={l.href} onClick={(e) => { e.preventDefault(); scrollTo(l.id); }}>{l.label}</a>
             </li>
@@ -266,166 +200,32 @@ function Nav() {
         </ul>
 
         <div className="nav-right">
-          <a href={`tel:${VERNO_PHONE}`} className="nav-phone" aria-label="Call Verno Chauffeur">
-            <PhoneIcon s={15} />
+          <a href={`tel:${VERNO_PHONE}`} className="nav-phone" aria-label="Call VÉRNO">
+            <PhoneIcon s={16} />
             <span className="nav-phone-num">{VERNO_PHONE_DISPLAY}</span>
           </a>
-          <a href="#book" className="nav-btn" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Reserve a Transfer</a>
-          <button
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            className="hamburger-btn"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "5px",
-              width: "42px",
-              height: "42px",
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,.25)",
-              cursor: "pointer",
-              padding: 0,
-              marginLeft: "1rem",
-            }}
-          >
-            <span style={{ display:"block", width:20, height:1.5, background:"rgba(255,255,255,.85)" }} />
-            <span style={{ display:"block", width:20, height:1.5, background:"rgba(255,255,255,.85)" }} />
-            <span style={{ display:"block", width:20, height:1.5, background:"rgba(255,255,255,.85)" }} />
+          <a href="#book" className="nav-cta" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get a fare</a>
+          <button type="button" className="nav-menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen}>
+            <span /><span />
           </button>
         </div>
       </nav>
 
-      <div
-        onClick={close}
-        style={{
-          display: menuOpen ? "block" : "none",
-          position: "fixed", inset: 0,
-          background: "rgba(0,0,0,.6)",
-          zIndex: 998,
-        }}
-      />
-
-      <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0,
-        width: "min(360px, 88vw)",
-        background: "#0c0c0c",
-        zIndex: 999,
-        display: "flex",
-        flexDirection: "column",
-        borderLeft: "1px solid rgba(194,154,102,.2)",
-        transform: menuOpen ? "translateX(0)" : "translateX(100%)",
-        transition: "transform .38s cubic-bezier(.22,.61,.36,1)",
-        overflowY: "auto",
-      }}>
-        <div style={{
-          display:"flex", alignItems:"center", justifyContent:"space-between",
-          padding: "2rem 2.2rem 1.5rem",
-          borderBottom: "1px solid rgba(255,255,255,.07)",
-          flexShrink: 0,
-        }}>
+      <div className={`nav-menu${menuOpen ? " open" : ""}`} role="dialog" aria-modal="true" aria-label="Menu">
+        <div className="nav-menu-top">
           <VernoMark />
-          <button
-            onClick={close}
-            aria-label="Close menu"
-            style={{
-              width:38, height:38,
-              background:"rgba(255,255,255,.07)",
-              border:"1px solid rgba(255,255,255,.12)",
-              color:"rgba(255,255,255,.8)",
-              fontSize:22, cursor:"pointer",
-              display:"flex", alignItems:"center", justifyContent:"center",
-            }}
-          >×</button>
+          <button type="button" className="nav-menu-close" onClick={close} aria-label="Close menu">×</button>
         </div>
-
-        <div style={{ overflowY:"auto", flex:1, padding:"1.5rem 2.2rem 2rem" }}>
-          <nav style={{ display:"flex", flexDirection:"column", marginBottom:"2rem" }}>
-            {navLinks.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={(e) => { e.preventDefault(); scrollTo(l.id); }}
-                style={{
-                  fontFamily:"'Playfair Display', Georgia, serif",
-                  fontSize:"1.7rem",
-                  fontWeight:400,
-                  color:"rgba(255,255,255,.78)",
-                  padding:".75rem 0 .75rem .4rem",
-                  borderBottom:"1px solid rgba(255,255,255,.06)",
-                  letterSpacing:"-.01em",
-                  textDecoration:"none",
-                  display:"block",
-                  transition:"color .2s, padding-left .2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.color="#C29A66"; e.currentTarget.style.paddingLeft=".9rem"; }}
-                onMouseLeave={e => { e.currentTarget.style.color="rgba(255,255,255,.78)"; e.currentTarget.style.paddingLeft=".4rem"; }}
-              >{l.label}</a>
-            ))}
-          </nav>
-
-          <div style={{ display:"flex", flexDirection:"column", gap:".8rem" }}>
-            <a
-              href={`tel:${VERNO_PHONE}`}
-              onClick={close}
-              style={{
-                display:"flex", alignItems:"center", justifyContent:"center", gap:".6rem",
-                padding:"1rem",
-                background:"rgba(255,255,255,.06)",
-                border:"1px solid rgba(201,164,109,.4)",
-                color:"#D2B06D",
-                fontSize:".82rem", fontWeight:600,
-                letterSpacing:".06em", textTransform:"uppercase",
-                textDecoration:"none",
-              }}
-            ><PhoneIcon s={16} /> Call {VERNO_PHONE_DISPLAY}</a>
-
-            <a
-              href="#book"
-              onClick={(e) => { e.preventDefault(); scrollTo("book"); }}
-              style={{
-                display:"flex", alignItems:"center", justifyContent:"center",
-                padding:"1rem",
-                background:"linear-gradient(180deg,#C49A60,#A8753F)",
-                color:"#fff",
-                fontSize:".82rem", fontWeight:600,
-                letterSpacing:".06em", textTransform:"uppercase",
-                border:"1px solid rgba(201,164,109,.5)",
-                textDecoration:"none",
-              }}
-            >Get Instant Fare</a>
-
-            <a
-              href={buildWhatsAppLink({ from: "", to: "", fare: null })}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={close}
-              style={{
-                display:"flex", alignItems:"center", justifyContent:"center", gap:".6rem",
-                padding:"1rem",
-                background:"#128C7E",
-                color:"#fff",
-                fontSize:".82rem", fontWeight:600,
-                letterSpacing:".06em", textTransform:"uppercase",
-                textDecoration:"none",
-              }}
-            ><WAIcon s={18} /> Reserve via WhatsApp</a>
-
-            <a
-              href={`mailto:${VERNO_EMAIL}`}
-              onClick={close}
-              style={{
-                display:"block",
-                textAlign:"center",
-                fontSize:".72rem",
-                color:"rgba(255,255,255,.38)",
-                textDecoration:"none",
-                paddingTop:".8rem",
-                borderTop:"1px solid rgba(255,255,255,.07)",
-              }}
-            >{VERNO_EMAIL}</a>
-          </div>
+        <nav className="nav-menu-links" aria-label="Menu links">
+          {menuLinks.map((l) => (
+            <a key={l.href} href={l.href} className="nav-menu-link" onClick={(e) => { e.preventDefault(); scrollTo(l.id); }}>{l.label}</a>
+          ))}
+        </nav>
+        <div className="nav-menu-actions">
+          <a href="#book" className="btn btn-inverse" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get your fare</a>
+          <a href={`tel:${VERNO_PHONE}`} className="nav-menu-contact" onClick={close}><PhoneIcon s={16} /> {VERNO_PHONE_DISPLAY}</a>
+          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="nav-menu-contact" onClick={close}><WAIcon s={16} /> WhatsApp</a>
+          <a href={`mailto:${VERNO_EMAIL}`} className="nav-menu-contact" onClick={close}><MsgIcon s={16} /> {VERNO_EMAIL}</a>
         </div>
       </div>
     </>
@@ -433,52 +233,25 @@ function Nav() {
 }
 
 function Hero() {
-  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
   return (
     <section className="hero">
-      <div className="hero-content">
-        <div className="hero-left">
-          <p className="hero-label">Private Chauffeur — Melbourne</p>
-          <h1 className="hero-h1">
-            <span className="hero-top">Melbourne's finest</span>
-            <span className="hero-bottom">private chauffeur.</span>
-          </h1>
-          <div className="hero-line" />
-          <div
-            className="hero-fare-teaser"
-            onClick={goToBookingForm}
-          >
-            <div className="fare-teaser-box"><span className="ft-dot" />Pickup address</div>
-            <div className="fare-teaser-box"><span className="ft-sq" />Where to?</div>
-            <p className="fare-teaser-note">Instant fixed fare &middot; 15% off &middot; no signup needed</p>
-          </div>
-          <p className="hero-tagline">Airport. Boardroom. Beyond.</p>
-          <p className="hero-sub">As Melbourne as it gets.</p>
-          <div className="hero-actions">
-            <a href="#book" className="btn-hero-green" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Instant Fare</a>
-            <a href="#corporate" className="btn-outline hero-outline" onClick={(e) => { e.preventDefault(); document.getElementById("corporate")?.scrollIntoView({ behavior:"smooth" }); }}>Corporate Enquiries</a>
-          </div>
-          <div className="hero-trust">
-            <div className="hero-trust-item"><IconPrice /><span>Fixed pricing</span></div>
-            <div className="hero-trust-item"><IconShield /><span>No surge</span></div>
-            <div className="hero-trust-item"><IconChatSmall /><span>Direct contact</span></div>
-            <div className="hero-trust-item"><IconDiamond /><span>Premium BMW i5</span></div>
-          </div>
-        </div>
-        <div className="hero-service-panel">
-          <div className="hero-service-row">
-            <div className="hero-service-icon"><IconPlaneHero /></div>
-            <div><h3>Airport Transfers</h3><p>Tullamarine &amp; Avalon</p><p>Flight tracked. Driver ready.</p></div>
-          </div>
-          <div className="hero-service-row">
-            <div className="hero-service-icon"><IconBriefcaseHero /></div>
-            <div><h3>Corporate Travel</h3><p>Executives &amp; business guests</p><p>Discreet, punctual, consistent.</p></div>
-          </div>
-          <div className="hero-service-row">
-            <div className="hero-service-icon"><IconCarHero /></div>
-            <div><h3>Private Hire</h3><p>Great Ocean Road &amp; Yarra Valley</p><p>Day trips across Victoria.</p></div>
-          </div>
-        </div>
+      <div className="hero-inner">
+        <h1 className="hero-title">Melbourne, privately.</h1>
+        <p className="hero-lede">
+          Private chauffeur transfers across Melbourne in a BMW i5 — airport, corporate and private travel.
+          See your fare instantly, with no surge pricing and no sign-up.
+        </p>
+        <button type="button" className="hero-route" onClick={goToBookingForm} aria-label="Get your fare — open the fare calculator">
+          <span className="hero-route-field"><span className="route-marker route-marker--dot" aria-hidden="true" />Pickup address</span>
+          <span className="hero-route-field"><span className="route-marker route-marker--square" aria-hidden="true" />Where to?</span>
+          <span className="hero-route-cta">Get your fare <span aria-hidden="true">→</span></span>
+        </button>
+        <ul className="hero-dataline" aria-label="Service overview">
+          <li>Melbourne Airport</li>
+          <li>Melbourne CBD</li>
+          <li>Corporate travel</li>
+          <li>BMW i5 electric</li>
+        </ul>
       </div>
     </section>
   );
@@ -496,119 +269,107 @@ function TrustStrip() {
   );
 }
 
-function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, from, to, time, fromSelected, toSelected, returnTrip, returnDate, returnTime }) {
+const selectAddressNotice = (
+  <div className="fare-hint">Please select an address from the dropdown to see your fare.</div>
+);
+
+const LABEL_STYLES = {
+  airport: { color: "var(--fare-green)" },
+  notice: { color: "var(--notice)" },
+  standard: {},
+};
+
+// One journey leg in the fare panel: automatic fare, event-day guide fare, or regional quote.
+function LegFare({ leg, legName, pendingText }) {
+  const prefix = legName ? `${legName} · ` : "";
+  if (leg.status === "regional") {
+    return (
+      <>
+        <div className="fare-label" style={LABEL_STYLES.notice}>{prefix}{REGIONAL_QUOTE_LABEL}</div>
+        <div className="fare-note">{REGIONAL_QUOTE_NOTE}</div>
+      </>
+    );
+  }
+  const quote = leg.quote;
+  if (!quote) {
+    return (
+      <>
+        <div className="fare-label" style={LABEL_STYLES.standard}>{legName}</div>
+        <div className="fare-guarantee">{pendingText}</div>
+      </>
+    );
+  }
+  const label = leg.event ? EVENT_FARE_LABEL : quote.isAirportTransfer ? "Airport Transfer Fare" : "Estimated Fare";
+  const style = leg.event ? LABEL_STYLES.notice : quote.isAirportTransfer ? LABEL_STYLES.airport : LABEL_STYLES.standard;
+  return (
+    <>
+      <div className="fare-label" style={style}>{prefix}{label}</div>
+      <div className="fare-price">{formatPrice(quote.fare)}</div>
+      {quote.venueFee > 0 && (
+        <div className="fare-guarantee">
+          Includes {formatPrice(quote.venueFee)} major venue fee ({leg.majorVenue?.name})
+        </div>
+      )}
+      {leg.event && (
+        <div className="fare-note">
+          <strong>{leg.event.name}.</strong> {EVENT_FARE_NOTE}
+        </div>
+      )}
+    </>
+  );
+}
+
+function returnPendingText(returnLeg, diffReturn) {
+  if (returnLeg.status === "loading") return "Calculating return fare...";
+  if (diffReturn && (returnLeg.status === "idle" || returnLeg.status === "unlocated")) {
+    return "Select both return addresses from the dropdown to see the return fare.";
+  }
+  return "Return fare will be confirmed with your booking.";
+}
+
+function FareEstimate({ from, to, fromSelected, toSelected, outbound, showReturn, returnLeg, diffReturn, total }) {
   if (from.trim().length < 4 || to.trim().length < 4) return null;
+  if (!fromSelected || !toSelected || outbound.status === "unlocated") return selectAddressNotice;
 
-  if (!fromSelected || !toSelected) {
-    return (
-      <div style={{
-        marginTop:"1.2rem", padding:"1rem 1.2rem",
-        background:"#f7f3ed", borderRadius:12,
-        border:"1px solid rgba(185,139,85,.2)",
-        fontSize:".82rem", color:"#B98B55",
-        display:"flex", alignItems:"center", gap:".6rem",
-      }}>
-        <span>⚠</span>
-        <span>Please select an address from the dropdown to see your fare.</span>
-      </div>
-    );
+  if (outbound.status === "loading") {
+    return <div className="fare-hint" aria-live="polite">Calculating fare...</div>;
   }
 
-  if (fareLoading) {
-    return (
-      <div style={{
-        marginTop:"1.2rem", padding:"1rem 1.2rem",
-        background:"rgba(255,255,255,.05)", borderRadius:12,
-        fontSize:".82rem", color:"rgba(255,255,255,.5)",
-        display:"flex", alignItems:"center", gap:".6rem",
-      }}>
-        <span>Calculating fare...</span>
-      </div>
-    );
+  if (outbound.status === "error") {
+    return <div className="fare-hint">We couldn't calculate this route automatically. Send your request and we'll confirm your fare.</div>;
   }
 
-  if (!fareResult || !fareResult.fare) return null;
+  if (outbound.status !== "ready" && outbound.status !== "regional") return null;
 
-  const isLate = isLateNight(time);
-  const hasAirport = fareResult.label === "Fixed Price";
+  const returnQuote = showReturn ? returnLeg.quote : null;
+  const lateOutbound = !!outbound.quote?.lateNight;
+  const lateReturn = !!returnQuote?.lateNight;
+  let lateNotice = null;
+  if (lateOutbound && lateReturn) lateNotice = `Late-night surcharge applied (${LATE_NIGHT_WINDOW})`;
+  else if (lateOutbound) lateNotice = `Late-night surcharge applied${showReturn ? " to outbound" : ""} (${LATE_NIGHT_WINDOW})`;
+  else if (lateReturn) lateNotice = `Late-night surcharge applied to return (${LATE_NIGHT_WINDOW})`;
 
-  let label, guarantee, labelColor;
-  if (hasAirport) {
-    label = "Fixed Price";
-    guarantee = "Confirmed at booking via WhatsApp — no surprises.";
-    labelColor = "#2a7a2a";
-  } else {
-    label = "Estimated Fare";
-    guarantee = "Final price confirmed on booking via WhatsApp.";
-    labelColor = "rgba(255,255,255,.5)";
-  }
+  const anyRegional = outbound.regional || (showReturn && returnLeg.regional);
+  const anyEvent = !!outbound.event || (showReturn && !!returnLeg.event);
+  let totalText = null;
+  if (showReturn && anyRegional) totalText = "Total: to be quoted (regional)";
+  else if (total != null) totalText = `Total: ${formatPrice(total)} · ${anyEvent ? "Event-day fare to be confirmed" : "Return fare included"}`;
 
   return (
-    <div className="fare-estimate">
-      {isLate && (
-        <div style={{
-          background:"rgba(255,180,0,.12)",
-          border:"1px solid rgba(255,180,0,.35)",
-          borderRadius:8, padding:".65rem 1rem",
-          marginBottom:"1rem",
-          display:"flex", alignItems:"center", gap:".5rem",
-          fontSize:".78rem", color:"#b8860b",
-        }}>
-          <span>🌙</span>
-          <span>Late-night surcharge applied (00:00–05:00)</span>
+    <div className="fare-estimate" aria-live="polite">
+      {lateNotice && <div className="fare-flag">{lateNotice}</div>}
+      <LegFare leg={outbound} legName={showReturn ? "Outbound" : ""} />
+      {showReturn && (
+        <div className="fare-leg-return">
+          <LegFare leg={returnLeg} legName="Return" pendingText={returnPendingText(returnLeg, diffReturn)} />
+          {totalText && (
+            <div className="fare-total">{totalText}</div>
+          )}
         </div>
       )}
-      <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>
-        {label}{returnTrip && returnDate && returnTime ? " — Outbound" : ""}
-      </div>
-      <div className="fare-price">${fareResult.fare}</div>
-      {fareResult.originalFare && fareResult.originalFare > fareResult.fare && (
-        <div className="fare-original">
-          <span className="fare-original-strike">${fareResult.originalFare}</span>
-          <span className="fare-discount-badge">15% OFF</span>
-        </div>
+      {(outbound.quote || returnQuote) && (
+        <div className="fare-guarantee">Final fixed price confirmed when your booking is confirmed.</div>
       )}
-      {returnTrip && returnDate && returnTime && fareResult && (() => {
-        let returnFare, returnOriginal;
-        if (diffReturn && returnFareResult && returnFareResult.fare) {
-          returnFare = returnFareResult.fare;
-          returnOriginal = returnFareResult.originalFare;
-        } else {
-          const baseKmCost = (() => {
-            const km = fareResult.km || 0;
-            if (km <= 25) return km * PRICING.RATE_0_25;
-            if (km <= 50) return 25 * PRICING.RATE_0_25 + (km - 25) * PRICING.RATE_25_50;
-            return 25 * PRICING.RATE_0_25 + 25 * PRICING.RATE_25_50 + (km - 50) * PRICING.RATE_50UP;
-          })();
-          let baseFare = Math.max(PRICING.BASE + baseKmCost, PRICING.MIN_FARE);
-          if (isLateNight(returnTime)) baseFare = baseFare * (1 + PRICING.LATE_SURCHARGE);
-          returnOriginal = roundFare(baseFare);
-          returnFare = roundFare(returnOriginal * (1 - PRICING.DISCOUNT));
-        }
-        const total = (fareResult.fare || 0) + (returnFare || 0);
-        const totalOriginal = (fareResult.originalFare || 0) + (returnOriginal || 0);
-        return (
-          <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(0,0,0,.1)", paddingTop:".8rem" }}>
-            <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>Return</div>
-            <div className="fare-price">${returnFare}</div>
-            {returnOriginal && returnOriginal > returnFare && (
-              <div className="fare-original">
-                <span className="fare-original-strike">${returnOriginal}</span>
-              </div>
-            )}
-            <div style={{
-              marginTop:".6rem", padding:".65rem .9rem",
-              background:"rgba(185,139,85,.15)", borderRadius:8,
-              fontSize:".8rem", color:"#9a7040",
-              display:"flex", alignItems:"center", gap:".5rem",
-            }}>
-              <span>↩</span>
-              <span>Total: ${total}{totalOriginal > total && <span style={{ textDecoration:"line-through", marginLeft:".4rem", color:"#C4954A", opacity:.7 }}>${totalOriginal}</span>} · Return fare included</span>
-            </div>
-          </div>
-        );
-      })()}
-      <div className="fare-guarantee">Fares are estimates. Final price confirmed on booking via WhatsApp.</div>
       <div className="fare-trust">
         <span>No hidden costs</span>
         <span>No surge pricing</span>
@@ -620,40 +381,13 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
 
 function getTodayLocal() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`; }
 
-function buildWhatsAppLinkReturn({ from, to, date, time, pax, bags, fare, flightNumber, returnDate, returnTime }) {
-  const lines = [
-    "VÉRNO — Transfer Request",
-    "",
-    "OUTBOUND",
-    `PICKUP     : ${from || ""}`,
-    `DROP-OFF   : ${to || ""}`,
-    `DATE       : ${date || ""}`,
-    `TIME       : ${time || ""}`,
-    `PASSENGERS : ${pax || ""}`,
-    `LUGGAGE    : ${bags || ""}`,
-    ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-    "",
-    ...(fare ? [`Fare estimate: $${fare}`] : []),
-    "",
-    "RETURN",
-    `PICKUP     : ${to || ""}`,
-    `DROP-OFF   : ${from || ""}`,
-    `DATE       : ${returnDate || ""}`,
-    `TIME       : ${returnTime || ""}`,
-    "",
-    ...(fare ? [`Fare estimate: $${fare}`] : []),
-    ...(fare ? [`Total (both ways): $${fare * 2}`] : []),
-    "",
-    "Please confirm availability.",
-  ];
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
-}
-
 function InlineBooking() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [fromSelected, setFromSelected] = useState(false);
   const [toSelected, setToSelected] = useState(false);
+  const [fromLocation, setFromLocation] = useState(null);
+  const [toLocation, setToLocation] = useState(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [pax, setPax] = useState("1");
@@ -667,107 +401,102 @@ function InlineBooking() {
   const [returnTo, setReturnTo] = useState("");
   const [returnFromSelected, setReturnFromSelected] = useState(false);
   const [returnToSelected, setReturnToSelected] = useState(false);
+  const [returnFromLocation, setReturnFromLocation] = useState(null);
+  const [returnToLocation, setReturnToLocation] = useState(null);
   const [returnFlightNumber, setReturnFlightNumber] = useState("");
   const [errors, setErrors] = useState({});
-  const [fareResult, setFareResult] = useState(null);
-  const [fareLoading, setFareLoading] = useState(false);
-  const [returnFareResult, setReturnFareResult] = useState(null);
 
-  const isAirportPickup = isAirport(from);
+  const hasAddress = (v) => v.trim().length >= 4;
 
-  useEffect(() => {
-    if (!fromSelected || !toSelected) { setFareResult(null); return; }
-    if (from.trim().length < 4 || to.trim().length < 4) { setFareResult(null); return; }
-    setFareLoading(true);
-    calculateFare(from, to, time).then((result) => {
-      setFareResult(result);
-      setFareLoading(false);
-    });
-  }, [from, to, time, fromSelected, toSelected]);
+  // Outbound leg
+  const outboundReady = fromSelected && toSelected && hasAddress(from) && hasAddress(to);
+  const outbound = useLegQuote({ from, to, fromLocation, toLocation, time, date, enabled: outboundReady });
+  const isAirportPickup = outbound.pickupIsAirport;
 
-  useEffect(() => {
-    if (!diffReturn || !returnFromSelected || !returnToSelected) { setReturnFareResult(null); return; }
-    if (returnFrom.trim().length < 4 || returnTo.trim().length < 4) { setReturnFareResult(null); return; }
-    calculateFare(returnFrom, returnTo, returnTime).then((result) => {
-      setReturnFareResult(result);
-    });
-  }, [returnFrom, returnTo, returnTime, returnFromSelected, returnToSelected, diffReturn]);
+  // Return leg: destination → original pickup, or the separately selected return addresses.
+  const returnPickup = diffReturn ? returnFrom : to;
+  const returnDropoff = diffReturn ? returnTo : from;
+  const returnReady = returnTrip && (diffReturn
+    ? returnFromSelected && returnToSelected && hasAddress(returnFrom) && hasAddress(returnTo)
+    : outboundReady);
+  const returnLeg = useLegQuote({
+    from: returnPickup,
+    to: returnDropoff,
+    fromLocation: diffReturn ? returnFromLocation : toLocation,
+    toLocation: diffReturn ? returnToLocation : fromLocation,
+    time: returnTime,
+    date: returnDate,
+    enabled: returnReady,
+  });
+  const isAirportReturnPickup = returnLeg.pickupIsAirport;
 
-  const fare = fareResult ? fareResult.fare : null;
+  // The exact values shown in the fare panel — also used verbatim in WhatsApp / SMS.
+  const showReturn = returnTrip && !!returnDate && !!returnTime;
+  const outboundFare = outbound.quote?.fare ?? null;
+  const returnFare = returnTrip ? returnLeg.quote?.fare ?? null : null;
+  const total = returnTrip ? totalFare(outboundFare, returnFare) : null;
 
   const validate = () => {
     const e = {};
-    if (from.trim().length < 4)  e.from = "Please enter a pickup location.";
-    if (to.trim().length < 4)    e.to   = "Please enter a destination.";
-    if (!date)                   e.date = "Please select a date.";
-    if (!time)                   e.time = "Please select a time.";
+    if (!hasAddress(from)) e.from = "Please enter a pickup location.";
+    if (!hasAddress(to))   e.to   = "Please enter a destination.";
+    if (!date)             e.date = "Please select a date.";
+    if (!time)             e.time = "Please select a time.";
     if (returnTrip) {
       if (!returnDate) e.returnDate = "Please select a return date.";
       if (!returnTime) e.returnTime = "Please select a return time.";
+      if (diffReturn) {
+        if (!hasAddress(returnFrom)) e.returnFrom = "Please enter a return pickup location.";
+        if (!hasAddress(returnTo))   e.returnTo   = "Please enter a return destination.";
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const handleWA = () => {
-    if (!validate()) return;
+  const bookingMessage = () => buildBookingMessage({
+    outbound: {
+      pickup: from, dropoff: to, date, time, passengers: pax, luggage: bags,
+      flightNumber: isAirportPickup ? flightNumber : "",
+      fare: outboundFare, lateNight: !!outbound.quote?.lateNight,
+      regional: outbound.regional, event: outbound.event?.name || "",
+      venueFee: outbound.quote?.venueFee || 0,
+    },
+    returnLeg: returnTrip ? {
+      pickup: returnPickup, dropoff: returnDropoff, date: returnDate, time: returnTime,
+      flightNumber: isAirportReturnPickup ? returnFlightNumber : "",
+      fare: returnFare, lateNight: !!returnLeg.quote?.lateNight,
+      regional: returnLeg.regional, event: returnLeg.event?.name || "",
+      venueFee: returnLeg.quote?.venueFee || 0,
+    } : null,
+    total,
+  });
+
+  const trackConversion = () => {
     if (window.gtag) {
       window.gtag('event', 'conversion', {
         'send_to': 'AW-18141523015/sdWqCPHY0bwcEMfYxspD'
       });
     }
-    const link = returnTrip
-      ? buildWhatsAppLinkReturn({ from, to, date, time, pax, bags, fare, flightNumber, returnDate, returnTime })
-      : buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber });
-    window.open(link, "_blank", "noopener");
+  };
+
+  const handleWA = () => {
+    if (!validate()) return;
+    trackConversion();
+    window.open(buildWhatsAppUrl(bookingMessage()), "_blank", "noopener");
   };
 
   const handleSMS = () => {
     if (!validate()) return;
-    if (window.gtag) {
-      window.gtag('event', 'conversion', {
-        'send_to': 'AW-18141523015/sdWqCPHY0bwcEMfYxspD'
-      });
-    }
-    const lines = returnTrip
-      ? [
-          "VÉRNO — Transfer Request",
-          "",
-          "OUTBOUND",
-          `PICKUP     : ${from}`,
-          `DROP-OFF   : ${to}`,
-          `DATE       : ${date}`,
-          `TIME       : ${time}`,
-          `PASSENGERS : ${pax}`,
-          `LUGGAGE    : ${bags}`,
-          ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-          ...(fare ? [`Fare estimate: $${fare}`] : []),
-          "",
-          "RETURN",
-          `PICKUP     : ${to}`,
-          `DROP-OFF   : ${from}`,
-          `DATE       : ${returnDate}`,
-          `TIME       : ${returnTime}`,
-          ...(fare ? [`Fare estimate: $${fare}`, `Total (both ways): $${fare * 2}`] : []),
-          "",
-          "Please confirm availability.",
-        ]
-      : [
-          "VÉRNO — Transfer Request",
-          "",
-          `PICKUP     : ${from}`,
-          `DROP-OFF   : ${to}`,
-          `DATE       : ${date}`,
-          `TIME       : ${time}`,
-          `PASSENGERS : ${pax}`,
-          `LUGGAGE    : ${bags}`,
-          ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-          ...(fare ? [`Fare estimate: $${fare}`] : []),
-          "",
-          "Please confirm availability.",
-        ];
-    const msg = encodeURIComponent(lines.join("\n"));
-    window.open(`sms:+61421238894&body=${msg}`, "_blank");
+    trackConversion();
+    window.location.href = buildSmsUrl(bookingMessage());
+  };
+
+  const resetReturnAddresses = () => {
+    setReturnFrom(""); setReturnTo("");
+    setReturnFromSelected(false); setReturnToSelected(false);
+    setReturnFromLocation(null); setReturnToLocation(null);
+    setErrors((p) => ({ ...p, returnFrom: null, returnTo: null }));
   };
 
   const handleDateChange = (e) => {
@@ -791,54 +520,47 @@ function InlineBooking() {
     return slots;
   };
 
-  const errStyle = { fontSize: "11px", color: "#e05050", marginTop: "5px", display: "block" };
 
   return (
     <div className="booking-panel" id="book">
       <div className="booking-panel-inner">
-        <div>
-          <h2 className="booking-panel-headline">Your fare,<br /><span className="gold-em">instantly.</span></h2>
-          <p className="booking-panel-sub">Enter your pickup and destination to see your fixed fare — no commitment required.</p>
-          <div style={{ marginTop:"1.2rem", display:"flex", flexDirection:"column", gap:".5rem" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#C4954A" }}>
-              <span>✓</span><span>Fare calculated instantly as you type</span>
-            </div>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#888" }}>
-              <span>✓</span><span>Fixed price — no surprises</span>
-            </div>
-            <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#888" }}>
-              <span>✓</span><span>Direct booking via WhatsApp</span>
-            </div>
-          </div>
+        <div className="booking-intro">
+          <h2 className="booking-panel-headline">Your fare, before you book.</h2>
+          <p className="booking-panel-sub">Enter your pickup and destination to see your fare — no commitment required.</p>
+          <ol className="booking-facts">
+            <li><span className="booking-fact-n">01</span><span><strong>Instant fare</strong>Calculated from your route as you type.</span></li>
+            <li><span className="booking-fact-n">02</span><span><strong>Fixed price confirmed before you travel</strong>We confirm your final price when your booking is accepted.</span></li>
+            <li><span className="booking-fact-n">03</span><span><strong>Direct booking</strong>By WhatsApp, SMS, phone or email. No app, no platform fees.</span></li>
+          </ol>
+          <p className="form-stars" aria-label="Rated 5.0 on Google">
+            <span className="form-stars-icons" aria-hidden="true">★</span>
+            <span className="form-stars-text">5.0 on Google Reviews</span>
+          </p>
         </div>
 
         <div className="booking-panel-form">
-          <div className="form-stars" aria-label="Rated 5.0 on Google">
-            <span className="form-stars-icons">★★★★★</span>
-            <span className="form-stars-text">5.0 on Google Reviews</span>
-          </div>
-          <button className="quick-chip" onClick={() => { setTo("Melbourne Airport (Tullamarine) VIC, Australia"); setToSelected(true); }}>
-            <span className="quick-chip-dot" />Airport transfer? Set Melbourne Airport as destination
+          <button type="button" className="quick-chip" onClick={() => { setTo("Melbourne Airport (Tullamarine) VIC, Australia"); setToSelected(true); setToLocation(null); setErrors((p) => ({ ...p, to: null })); }}>
+            Going to Melbourne Airport? Set it as your destination <span aria-hidden="true">→</span>
           </button>
 
-          <AddressField id="from" label="Pickup" placeholder="Suburb, hotel or airport — fare shown instantly" value={from}
-            onChange={(v) => { setFrom(v); setFromSelected(false); setErrors((p) => ({ ...p, from: null })); }}
-            onSelect={(v) => setFromSelected(!!v)}
+          <AddressField id="from" label="Pickup" marker="dot" placeholder="Suburb, hotel or airport — fare shown instantly" value={from}
+            onChange={(v) => { setFrom(v); setFromSelected(false); setFromLocation(null); setErrors((p) => ({ ...p, from: null })); }}
+            onSelect={(v, location) => { setFromSelected(!!v); setFromLocation(v ? location : null); }}
           />
-          {errors.from && <span style={errStyle}>{errors.from}</span>}
+          {errors.from && <span className="field-error">{errors.from}</span>}
 
-          <AddressField id="to" label="Destination" placeholder="Suburb, hotel or airport — fare shown instantly" value={to}
-            onChange={(v) => { setTo(v); setToSelected(false); setErrors((p) => ({ ...p, to: null })); }}
-            onSelect={(v) => setToSelected(!!v)}
+          <AddressField id="to" label="Destination" marker="square" placeholder="Suburb, hotel or airport — fare shown instantly" value={to}
+            onChange={(v) => { setTo(v); setToSelected(false); setToLocation(null); setErrors((p) => ({ ...p, to: null })); }}
+            onSelect={(v, location) => { setToSelected(!!v); setToLocation(v ? location : null); }}
           />
-          {errors.to && <span style={errStyle}>{errors.to}</span>}
+          {errors.to && <span className="field-error">{errors.to}</span>}
 
           <div>
             {isAirportPickup && (
               <div className="fg" style={{ marginBottom:"1rem" }}>
                 <label className="fl">Flight Number</label>
                 <input className="fi" placeholder="e.g. EK408" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value.toUpperCase())} />
-                <p style={{ fontSize:"12px", color:"#999", marginTop:"6px" }}>We monitor your flight to ensure perfect pickup timing.</p>
+                <p className="field-help">We monitor your flight to ensure perfect pickup timing.</p>
               </div>
             )}
 
@@ -846,7 +568,7 @@ function InlineBooking() {
               <div className="fg">
                 <label className="fl">Date</label>
                 <input className="fi" type="date" value={date} min={getTodayLocal()} onChange={handleDateChange} />
-                {errors.date && <span style={errStyle}>{errors.date}</span>}
+                {errors.date && <span className="field-error">{errors.date}</span>}
               </div>
               <div className="fg">
                 <label className="fl">Time</label>
@@ -856,7 +578,7 @@ function InlineBooking() {
                     : getSlots(date).length === 0 ? <option disabled>No available times</option>
                     : getSlots(date).map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
-                {errors.time && <span style={errStyle}>{errors.time}</span>}
+                {errors.time && <span className="field-error">{errors.time}</span>}
               </div>
             </div>
 
@@ -864,7 +586,7 @@ function InlineBooking() {
               <div className="fg">
                 <label className="fl">Passengers</label>
                 <select className="fi" value={pax} onChange={(e) => setPax(e.target.value)}>
-                  {[1,2,3,4,5,6,7].map((n) => <option key={n} value={n}>{n}</option>)}
+                  {Array.from({ length: MAX_PASSENGERS }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
               <div className="fg">
@@ -875,90 +597,89 @@ function InlineBooking() {
               </div>
             </div>
 
-            <div style={{ margin:"1rem 0", display:"flex", alignItems:"center", gap:".75rem", cursor:"pointer" }}
-              onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFrom(""); setReturnTo(""); }}>
-              <div style={{ width:42, height:24, borderRadius:12, background:returnTrip?"#B98B55":"#e0e0e0", position:"relative", transition:"background .2s", flexShrink:0 }}>
-                <div style={{ position:"absolute", top:3, left:returnTrip?21:3, width:18, height:18, borderRadius:"50%", background:"#fff", transition:"left .2s", boxShadow:"0 1px 4px rgba(0,0,0,.2)" }}/>
-              </div>
-              <span style={{ fontSize:".82rem", color:"#555", userSelect:"none" }}>Add return trip</span>
-            </div>
+            <button type="button" className="switch" role="switch" aria-checked={returnTrip}
+              onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFlightNumber(""); resetReturnAddresses(); setErrors((p) => ({ ...p, returnDate: null, returnTime: null })); }}>
+              <span className="switch-track" aria-hidden="true"><span className="switch-knob" /></span>
+              <span className="switch-label">Add return trip</span>
+            </button>
 
             {returnTrip && (
-              <div style={{ background:"#f7f3ed", padding:"1.2rem", borderRadius:"12px", marginBottom:"1rem", border:"1px solid rgba(185,139,85,.2)" }}>
-                <p style={{ fontSize:".68rem", textTransform:"uppercase", letterSpacing:".12em", color:"#B98B55", marginBottom:"1rem" }}>Return Journey</p>
+              <div className="return-panel">
+                <p className="return-panel-title">Return journey</p>
                 <div className="f2" style={{ marginBottom:"1rem" }}>
                   <div className="fg">
                     <label className="fl">Return Date</label>
                     <input className="fi" type="date" value={returnDate} min={date || getTodayLocal()}
                       onChange={(e) => { const s = e.target.value; if (date && s < date) { setReturnDate(date); setReturnTime(""); return; } setReturnDate(s); setReturnTime(""); }}
-                      style={{ background:"#fff" }} />
-                    {errors.returnDate && <span style={errStyle}>{errors.returnDate}</span>}
+                      />
+                    {errors.returnDate && <span className="field-error">{errors.returnDate}</span>}
                   </div>
                   <div className="fg">
                     <label className="fl">Return Time</label>
-                    <select className="fi" value={returnTime} onChange={(e) => { setReturnTime(e.target.value); setErrors((p) => ({ ...p, returnTime: null })); }} style={{ background:"#fff" }}>
+                    <select className="fi" value={returnTime} onChange={(e) => { setReturnTime(e.target.value); setErrors((p) => ({ ...p, returnTime: null })); }}>
                       <option value="">Select time</option>
                       {!returnDate ? <option disabled>Please select date first</option>
                         : (() => { const slots = getSlots(returnDate); const filtered = returnDate === date && time ? slots.filter(s => s > time) : slots;
                           return filtered.length === 0 ? <option disabled>No available times</option> : filtered.map((s) => <option key={s} value={s}>{s}</option>); })()}
                     </select>
-                    {errors.returnTime && <span style={errStyle}>{errors.returnTime}</span>}
+                    {errors.returnTime && <span className="field-error">{errors.returnTime}</span>}
                   </div>
                 </div>
-                <div style={{ display:"flex", alignItems:"center", gap:".6rem", cursor:"pointer", marginBottom:"1rem" }}
-                  onClick={() => { setDiffReturn(!diffReturn); setReturnFrom(""); setReturnTo(""); setReturnFromSelected(false); setReturnToSelected(false); }}>
-                  <div style={{ width:36, height:20, borderRadius:10, background:diffReturn?"#B98B55":"#ccc", position:"relative", transition:"background .2s", flexShrink:0 }}>
-                    <div style={{ position:"absolute", top:2, left:diffReturn?18:2, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"left .2s" }}/>
-                  </div>
-                  <span style={{ fontSize:".78rem", color:"#666", userSelect:"none" }}>Different return address</span>
-                </div>
-                <div style={{ display: diffReturn ? "flex" : "none", flexDirection:"column", gap:".75rem" }}>
+                <button type="button" className="switch switch--small" role="switch" aria-checked={diffReturn}
+                  onClick={() => { setDiffReturn(!diffReturn); resetReturnAddresses(); }}>
+                  <span className="switch-track" aria-hidden="true"><span className="switch-knob" /></span>
+                  <span className="switch-label">Different return address</span>
+                </button>
+                <div className="return-addresses" style={{ display: diffReturn ? "flex" : "none" }}>
                   <div className="fg">
                     <label className="fl">Return Pickup</label>
                     <AddressField id="returnFrom" label="" placeholder="Enter return pickup address" value={returnFrom}
-                      onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); }}
-                      onSelect={(v) => { setReturnFrom(v); setReturnFromSelected(true); }} />
+                      onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); setReturnFromLocation(null); setErrors((p) => ({ ...p, returnFrom: null })); }}
+                      onSelect={(v, location) => { setReturnFromSelected(!!v); setReturnFromLocation(v ? location : null); }} />
+                    {errors.returnFrom && <span className="field-error">{errors.returnFrom}</span>}
                   </div>
                   <div className="fg">
                     <label className="fl">Return Destination</label>
                     <AddressField id="returnTo" label="" placeholder="Enter return destination" value={returnTo}
-                      onChange={(v) => { setReturnTo(v); setReturnToSelected(false); }}
-                      onSelect={(v) => { setReturnTo(v); setReturnToSelected(true); }} />
+                      onChange={(v) => { setReturnTo(v); setReturnToSelected(false); setReturnToLocation(null); setErrors((p) => ({ ...p, returnTo: null })); }}
+                      onSelect={(v, location) => { setReturnToSelected(!!v); setReturnToLocation(v ? location : null); }} />
+                    {errors.returnTo && <span className="field-error">{errors.returnTo}</span>}
                   </div>
-                  {isAirport(returnFrom) && (
-                    <div className="fg">
-                      <label className="fl">Return Flight Number</label>
-                      <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
-                        onChange={(e) => setReturnFlightNumber(e.target.value)} style={{ background:"#fff" }} />
-                    </div>
-                  )}
                 </div>
+                {isAirportReturnPickup && (
+                  <div className="fg">
+                    <label className="fl">Return Flight Number</label>
+                    <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
+                      onChange={(e) => setReturnFlightNumber(e.target.value.toUpperCase())} />
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          <FareEstimate fareResult={fareResult} fareLoading={fareLoading} returnFareResult={returnFareResult} diffReturn={diffReturn} from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
+          <FareEstimate from={from} to={to} fromSelected={fromSelected} toSelected={toSelected}
+            outbound={outbound} showReturn={showReturn} returnLeg={returnLeg} diffReturn={diffReturn} total={total} />
 
-          <button className="btn-whatsapp premium-btn" style={{ width:"100%" }} onClick={handleWA}>
+          <button type="button" className="btn btn-primary btn-block booking-submit" onClick={handleWA}>
             <WAIcon s={18} /> Confirm via WhatsApp
           </button>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"1.5rem", marginTop:"1rem" }}>
+          <div className="booking-alt">
             <button className="btn-text-link" onClick={handleSMS}>
               <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
               Book via SMS
             </button>
-            <span style={{ color:"#e0e0e0" }}>|</span>
+            <span className="booking-alt-sep" aria-hidden="true" />
             <a href={`tel:${VERNO_PHONE}`} className="btn-text-link">
               <PhoneIcon s={15} />
               Call us
             </a>
-            <span style={{ color:"#e0e0e0" }}>|</span>
+            <span className="booking-alt-sep" aria-hidden="true" />
             <a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-text-link">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               Email us
             </a>
           </div>
-          <p className="wa-trust-line" style={{ marginTop:"1.2rem" }}>Instant response · No commitment · Fixed pricing</p>
+          <p className="wa-trust-line">Instant response · No commitment · Fixed pricing</p>
         </div>
       </div>
     </div>
@@ -1000,10 +721,21 @@ function CorporateSection() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
+  const [monthlyTrips, setMonthlyTrips] = useState("");
+  const [typicalRoute, setTypicalRoute] = useState("");
   const [details, setDetails] = useState("");
   const handleSubmit = () => {
     const subject = "Corporate Chauffeur Enquiry";
-    const body = `Name: ${name}\nCompany: ${company}\nEmail: ${email}\n\nDetails:\n${details}`;
+    const body = [
+      `Name: ${name}`,
+      `Company: ${company}`,
+      `Email: ${email}`,
+      `Estimated monthly trips: ${monthlyTrips}`,
+      `Typical route: ${typicalRoute}`,
+      "",
+      "Details:",
+      details,
+    ].join("\n");
     window.location.href = `mailto:${VERNO_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
   return (
@@ -1018,8 +750,8 @@ function CorporateSection() {
           <div className="fg"><label className="fl">Full Name</label><input className="fi" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div className="fg"><label className="fl">Company</label><input className="fi" value={company} onChange={(e) => setCompany(e.target.value)} /></div>
           <div className="fg"><label className="fl">Work Email</label><input className="fi" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="fg"><label className="fl">Estimated Monthly Trips</label><select className="fi" onChange={(e) => setDetails(e.target.value)}><option value="">Select</option><option>1–5 trips</option><option>5–15 trips</option><option>15+ trips</option></select></div>
-          <div className="fg"><label className="fl">Typical Route</label><input className="fi" placeholder="e.g. Melbourne Airport ↔ CBD" onChange={(e) => setDetails((prev) => prev + "\nRoute: " + e.target.value)} /></div>
+          <div className="fg"><label className="fl">Estimated Monthly Trips</label><select className="fi" value={monthlyTrips} onChange={(e) => setMonthlyTrips(e.target.value)}><option value="">Select</option><option>1–5 trips</option><option>5–15 trips</option><option>15+ trips</option></select></div>
+          <div className="fg"><label className="fl">Typical Route</label><input className="fi" placeholder="e.g. Melbourne Airport ↔ CBD" value={typicalRoute} onChange={(e) => setTypicalRoute(e.target.value)} /></div>
           <div className="fg"><label className="fl">Additional Details (optional)</label><textarea className="fi" rows="3" placeholder="Any specific requirements..." value={details} onChange={(e) => setDetails(e.target.value)} /></div>
           <button className="btn-whatsapp" onClick={handleSubmit}>Request Corporate Account Access</button>
           <p style={{ fontSize: "12px", color: "#999", marginTop: "14px" }}>Suitable for businesses of all sizes — from occasional bookings to ongoing travel requirements.</p>
@@ -1140,22 +872,8 @@ function WhyMoments() {
 }
 
 function Pricing() {
-  const airports = [
-    { from: "CBD", to: "Tullamarine Airport", price: "from $115" },
-    { from: "St Kilda", to: "Tullamarine Airport", price: "from $133" },
-    { from: "South Yarra", to: "Tullamarine Airport", price: "from $123" },
-    { from: "Toorak", to: "Tullamarine Airport", price: "from $128" },
-    { from: "Brighton", to: "Tullamarine Airport", price: "from $138" },
-    { from: "CBD", to: "Avalon Airport", price: "from $195" },
-  ];
-  const pointToPoint = [
-    { from: "CBD", to: "St Kilda", price: "from $90" },
-    { from: "CBD", to: "Brighton", price: "from $105" },
-    { from: "CBD", to: "Ringwood", price: "from $125" },
-    { from: "CBD", to: "Frankston", price: "from $170" },
-    { from: "CBD", to: "Mornington", price: "from $215" },
-    { from: "CBD", to: "Geelong", price: "from $240" },
-  ];
+  const airports = AIRPORT_FARE_EXAMPLES;
+  const pointToPoint = POINT_TO_POINT_EXAMPLES;
 
   return (
     <section id="pricing" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
@@ -1170,7 +888,7 @@ function Pricing() {
             {airports.map((r) => (
               <div key={r.from + r.to} className="pricing-row">
                 <span className="pricing-route">{r.from} &rarr; {r.to}</span>
-                <span className="pricing-price">{r.price}</span>
+                <span className="pricing-price">from {formatPrice(r.price)}</span>
               </div>
             ))}
           </div>
@@ -1179,16 +897,19 @@ function Pricing() {
             {pointToPoint.map((r) => (
               <div key={r.from + r.to} className="pricing-row">
                 <span className="pricing-route">{r.from} &rarr; {r.to}</span>
-                <span className="pricing-price">{r.price}</span>
+                <span className="pricing-price">from {formatPrice(r.price)}</span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="pricing-note">
-          <p>Late-night surcharge applies 12am–5am &middot; Exact fare calculated instantly below.</p>
+          <p>Late-night surcharge of {LATE_NIGHT_SURCHARGE_LABEL} applies to pickups {LATE_NIGHT_WINDOW} &middot; Your fare is calculated instantly in the booking form.</p>
+          <p>{WAITING_POLICY}</p>
+          <p>{MAJOR_VENUE_FEE_NOTE}</p>
+          <p>{SPECIAL_QUOTE_NOTE}</p>
           <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
-            Calculate your exact fare &rarr;
+            Calculate your fare &rarr;
           </a>
         </div>
       </div>
@@ -1248,40 +969,7 @@ function Fleet() {
 
 function FAQ() {
   const [open, setOpen] = useState(null);
-  const faqs = [
-    {
-      q: "How much does a chauffeur cost in Melbourne?",
-      a: "Fares start from $90 for short transfers within inner Melbourne. CBD to Tullamarine Airport is from $115, St Kilda to Airport from $133. Pricing is fixed and calculated by distance — enter your pickup and destination above to see your exact fare instantly."
-    },
-    {
-      q: "Do you provide airport transfers from Tullamarine and Avalon?",
-      a: "Yes. We specialise in Melbourne airport transfers — both Tullamarine (MEL) and Avalon (AVV). Your flight is tracked in real-time, so we adjust pickup if your flight is delayed or arrives early. No extra charge for waiting if your flight is late."
-    },
-    {
-      q: "What if my flight is delayed?",
-      a: "No problem — we monitor your flight automatically using the flight number you provide. If your flight is delayed, we adjust your pickup accordingly with no additional charge. If your flight arrives early, we'll be there waiting."
-    },
-    {
-      q: "How far in advance should I book?",
-      a: "We recommend booking at least 12 hours in advance to guarantee availability. For peak times (early mornings, weekends, major events) earlier booking is best. For last-minute requests, message us on WhatsApp — we'll do our best to accommodate."
-    },
-    {
-      q: "Do you charge a waiting fee?",
-      a: "No. We don't charge waiting fees for reasonable pickup delays, including flight delays. Our pricing is fixed and transparent — what you see is what you pay."
-    },
-    {
-      q: "What vehicles do you operate?",
-      a: "Our fleet consists of modern BMW i5 electric sedans — premium, quiet, and zero-emission. Each vehicle seats up to 4 passengers comfortably with generous luggage capacity. All vehicles are kept immaculate and fully equipped for executive travel."
-    },
-    {
-      q: "Do you serve corporate clients?",
-      a: "Yes. We offer dedicated corporate chauffeur services for executives, business guests and clients across Melbourne. Account billing, recurring transfers and priority booking available. Contact us via the Corporate Enquiries section for tailored arrangements."
-    },
-    {
-      q: "Can I book a return trip?",
-      a: "Yes. When booking, toggle 'Add return trip' to schedule both directions in one booking. You can specify a different return address if needed, and the return fare is automatically calculated and included in your quote."
-    },
-  ];
+  const faqs = FAQS;
 
   return (
     <section id="faq" style={{ background:"#fdf9f4", padding:"5rem 5vw" }}>
@@ -1366,45 +1054,16 @@ function Footer() {
 }
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&text=V%C3%89RNO&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth}
-:root{--gold:#C4954A;--gold2:#D4A55A;--black:#0f0d0a;--white:#fdf9f4;--wa:#128C7E;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',Arial,sans-serif}
+:root{--gold:#C4954A;--gold2:#D4A55A;--black:#0f0d0a;--white:#fdf9f4;--wa:#128C7E;--serif:'Instrument Serif',Georgia,serif;--sans:'Inter Tight','Inter',Arial,sans-serif}
 body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:82px;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;background:transparent;border-bottom:1px solid transparent;}
-.nav.solid{background:rgba(12,12,12,.86);backdrop-filter:blur(16px);border-color:rgba(255,255,255,.08);}
-.nav-links{display:flex;gap:2.4rem;list-style:none;} .nav-links a,.nav-btn{font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);}
-.nav-btn{border:1px solid rgba(210,176,109,.55);padding:.85rem 1.7rem;} .nav-right{display:flex;align-items:center;gap:.5rem;} .hamburger{display:none;} .hamburger-btn{display:none;}
-.nav-phone{display:inline-flex;align-items:center;gap:.5rem;color:#D2B06D;font-size:.78rem;font-weight:600;letter-spacing:.06em;padding:.85rem 1.1rem;border:1px solid rgba(210,176,109,.35);margin-right:.6rem;}
-.nav-phone:hover{border-color:rgba(210,176,109,.7);}
-.btn-hero-green{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;background:#128C7E;color:#fff;border:1px solid #128C7E;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:2px;}
-.btn-hero-green:hover{background:#0d6b60;border-color:#0d6b60;transform:translateY(-2px);box-shadow:0 8px 24px rgba(18,140,126,.3);}
 .verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);}
-.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 80%/cover no-repeat;color:#fff;overflow:hidden;}
-.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));pointer-events:none;}
-.hero-content{position:relative;z-index:2;min-height:calc(78vh - 105px);max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0, 1.05fr) 390px;gap:6vw;align-items:center;}
-.hero-left{padding-bottom:5vh;}
-.hero-label{font-size:.72rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:#C29A66;margin-bottom:1.8rem;}
-.hero-h1{font-family:var(--serif);line-height:.95;letter-spacing:-.055em;margin-bottom:1.8rem;max-width:720px;}
-.hero-top{display:block;font-style:normal;font-weight:600;font-size:clamp(2.8rem,3.8vw,4.6rem);color:#fff;}
-.hero-bottom{display:block;font-style:italic;font-weight:500;font-size:clamp(2.6rem,3.6vw,4.4rem);color:rgba(255,255,255,.92);margin-top:.05rem;white-space:nowrap;}
-.hero-line{background:#C29A66;width:46px;height:2px;margin-bottom:1.6rem;}
-.hero-sub{max-width:520px;font-size:.95rem;line-height:1.65;font-weight:300;color:rgba(255,255,255,.55);margin-bottom:2.5rem;}
-.hero-tagline{font-size:.72rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;}
-.hero-actions{display:flex;align-items:center;gap:1.6rem;flex-wrap:wrap;}
-.hero-gold{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(180deg,#C49A60,#A8753F);color:#fff;border:1px solid rgba(201,164,109,.65);}
-.hero-outline{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid rgba(201,164,109,.58);color:rgba(255,255,255,.82);background:rgba(255,255,255,.02);}
 .btn-wa-note{font-size:.75rem;color:rgba(255,255,255,.45);margin-top:.4rem;display:block;}
-.hero-trust{display:flex;align-items:center;gap:2.2rem;flex-wrap:wrap;margin-top:2.6rem;}
-.hero-trust-item{display:flex;align-items:center;gap:.55rem;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.56);}
 .trust-small-icon{width:19px;height:19px;fill:none;stroke:#B98B55;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
-.hero-service-panel{width:390px;border-radius:18px;background:rgba(10,10,10,.34);backdrop-filter:blur(8px);border:1px solid rgba(201,164,109,.26);box-shadow:0 25px 70px rgba(0,0,0,.35);overflow:hidden;}
-.hero-service-row{display:grid;grid-template-columns:92px 1fr;gap:1.25rem;padding:2.05rem 2.15rem;border-bottom:1px solid rgba(255,255,255,.08);align-items:flex-start;}
-.hero-service-row:last-child{border-bottom:none;}
-.hero-service-icon{width:68px;height:68px;border-radius:50%;border:1.4px solid rgba(210,176,109,.45);background:rgba(210,176,109,.055);color:#D2B06D;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .lux-icon{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;}
-.hero-service-row h3{font-family:var(--serif);font-size:1.15rem;font-weight:600;color:#fff;margin-bottom:.3rem;}
-.hero-service-row p{font-size:.78rem;line-height:1.4;color:rgba(255,255,255,.52);}
-.trust-strip{background:rgba(18,18,18,.96);padding:2.25rem 5vw;border-top:1px solid rgba(201,164,109,.11);border-bottom:1px solid rgba(201,164,109,.11);}
+.trust-strip{display:flex;flex-wrap:wrap;gap:18px;color:rgba(247,245,240,.76);font-size:12px;letter-spacing:.14em;text-transform:uppercase;background:rgba(18,18,18,.96);padding:2.25rem 5vw;border-top:1px solid rgba(201,164,109,.11);border-bottom:1px solid rgba(201,164,109,.11);}
 .trust-strip-inner{max-width:1050px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
 .trust-feature{display:grid;grid-template-columns:52px 1fr;gap:1.3rem;align-items:flex-start;padding:0 2.6rem;border-right:1px solid rgba(255,255,255,.08);}
 .trust-feature:last-child{border-right:none;}
@@ -1419,34 +1078,16 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .inv{color:var(--gold)} .s-h{font-family:var(--serif);font-size:clamp(2rem,4vw,3.4rem);font-weight:400;line-height:1.1;margin-bottom:2rem;} .s-h.inv{color:#fff;}
 .s-h-em,.booking-panel-headline-em,.fleet-text-title-em,.closer-h-em,.gold-em{color:var(--gold);font-style:italic;}
 .s-body{color:rgba(255,255,255,.5);line-height:1.75;}
-.booking-panel{padding:7rem 5vw 6rem;background:#fdf9f4;}
 .booking-panel-inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:360px 620px;gap:6rem;align-items:center;justify-content:center;}
 .booking-panel-headline{font-family:var(--serif);font-size:clamp(2.2rem,3vw,3rem);font-weight:400;line-height:1.05;margin-bottom:1.6rem;}
-.booking-panel-sub{max-width:330px;font-size:.95rem;line-height:1.75;color:#777;font-weight:300;}
-.booking-panel-form{width:100%;max-width:620px;background:#fff;padding:2.7rem;border-radius:22px;border:1px solid rgba(0,0,0,.06);box-shadow:0 28px 80px rgba(0,0,0,.09);}
 .fg{position:relative;margin-bottom:1.15rem;} .fl{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:#999;margin-bottom:.55rem;}
 .fi{width:100%;height:56px;padding:0 18px;background:#fafafa;border:1px solid #e6e6e6;border-radius:12px;outline:none;font-size:.9rem;color:#111;}
 .fi:focus{background:#fff;border-color:#B98B55;box-shadow:0 0 0 3px rgba(185,139,85,.12);}
 textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .fi[type="date"]{height:56px;padding:0 18px;-webkit-appearance:none;appearance:none;line-height:normal;}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:1.15rem;align-items:end;}
-.address-field{position:relative;} .address-input{padding-right:42px;}
-.clear-address-btn{position:absolute;right:12px;top:34px;width:24px;height:24px;border:0;border-radius:50%;background:rgba(0,0,0,.08);color:#777;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.clear-address-btn:hover{background:rgba(0,0,0,.14);color:#111;}
-.quick-chip{width:auto;display:inline-flex;align-items:center;justify-content:center;background:#f7f3ed;border:1px solid rgba(185,139,85,.28);color:#B98B55;padding:.65rem 1rem;margin-bottom:1.6rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;border-radius:0;cursor:pointer;}
-.quick-chip-dot{display:inline-block;width:5px;height:5px;background:var(--wa);border-radius:50%;margin-right:.5rem;}
-.fare-estimate{margin-top:1.5rem;background:#f5ead4;color:#111;padding:2rem;border-radius:14px;}
-.fare-label{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,0,0,.5);margin-bottom:.7rem;}
-.fare-price{font-family:var(--sans);font-size:3.6rem;font-weight:600;line-height:1;color:#111;letter-spacing:-.02em;}
-.fare-original{margin-top:.5rem;display:flex;align-items:center;gap:.7rem;}
-.fare-original-strike{font-family:var(--serif);font-size:1.4rem;color:#C4954A;text-decoration:line-through;opacity:.75;}
-.fare-discount-badge{font-size:.65rem;font-weight:700;letter-spacing:.1em;background:#C4954A;color:#fff;padding:.25rem .55rem;border-radius:3px;}
-.fare-guarantee{color:rgba(0,0,0,.5);font-size:.75rem;margin-top:.4rem;}
-.fare-trust{display:flex;gap:1rem;flex-wrap:wrap;border-top:1px solid rgba(0,0,0,.1);padding-top:1rem;margin-top:1rem;color:rgba(0,0,0,.5);font-size:.7rem;}
 .btn-whatsapp{width:100%;height:58px;display:flex;align-items:center;justify-content:center;gap:.65rem;background:linear-gradient(180deg,#D4A96F,#A8753F);color:#111;border:1px solid rgba(212,169,111,.65);border-radius:14px;font-size:.86rem;font-weight:700;letter-spacing:.03em;margin-top:1.8rem;cursor:pointer;}
 .btn-whatsapp:hover{filter:brightness(1.06);}
-.premium-btn{width:100%;padding:16px;border-radius:14px;border:1px solid rgba(212,169,111,.7);background:linear-gradient(180deg,#D4A96F,#A8753F);color:#fff;font-size:14px;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .25s ease;}
-.premium-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(168,117,63,.35);} .premium-btn:active{transform:scale(.98);}
 .btn-reserve-fare{width:100%;padding:1rem;background:#1a1510;color:#fff;border:none;cursor:pointer;font-size:.85rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;margin-top:.5rem;transition:background .2s;}
 .btn-reserve-fare:hover{background:#2a2318;}
 .btn-text-link{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:500;color:#666;background:none;border:none;cursor:pointer;padding:0;letter-spacing:.04em;text-decoration:none;transition:color .2s;}
@@ -1558,36 +1199,8 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 .ft-links{list-style:none;display:grid;gap:.5rem;}
 .ft-bottom{max-width:1200px;margin:4rem auto 0;border-top:1px solid rgba(255,255,255,.08);padding-top:2rem;display:flex;justify-content:space-between;}
 .wa-float{position:fixed;right:2rem;bottom:2rem;background:var(--wa);color:#fff;padding:.8rem 1.3rem;z-index:999;display:flex;gap:.6rem;align-items:center;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
-.hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:40px;height:40px;background:transparent;border:1px solid rgba(255,255,255,.22);cursor:pointer;margin-left:1rem;padding:0;}
-.hamburger span{display:block;width:20px;height:1.5px;background:rgba(255,255,255,.85);transition:all .25s ease;}
-.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:998;opacity:0;transition:opacity .35s ease;}
-.mob-overlay.open{opacity:1;}
-.mob-drawer{position:fixed;top:0;right:0;bottom:0;width:min(360px, 88vw);background:#0c0c0c;z-index:999;display:flex;flex-direction:column;padding:2rem 2.2rem;transform:translateX(100%);transition:transform .38s cubic-bezier(.22,.61,.36,1);border-left:1px solid rgba(194,154,102,.18);}
-.mob-drawer.open{transform:translateX(0);}
-.mob-drawer-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3rem;}
-.mob-close{width:38px;height:38px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.mob-nav{display:flex;flex-direction:column;gap:0;flex:1;}
-.mob-nav-link{font-family:var(--serif);font-size:2rem;font-weight:400;color:rgba(255,255,255,.82);padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.07);letter-spacing:-.02em;transition:color .2s;}
-.mob-nav-link:hover{color:var(--gold);}
-.mob-drawer-bottom{margin-top:2.5rem;display:flex;flex-direction:column;gap:1rem;}
-.mob-wa-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;padding:1rem;background:linear-gradient(180deg,#C49A60,#A8753F);color:#fff;font-size:.82rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(201,164,109,.5);}
-.mob-email-link{text-align:center;font-size:.72rem;color:rgba(255,255,255,.35);letter-spacing:.04em;}
-.hero-fare-teaser{display:none;cursor:pointer;flex-direction:column;gap:.6rem;margin-bottom:1.6rem;}
-.fare-teaser-box{display:flex;align-items:center;gap:.75rem;background:rgba(255,255,255,.97);border-radius:12px;padding:1.05rem 1.15rem;color:#666;font-size:16px;box-shadow:0 10px 32px rgba(0,0,0,.38);}
-.ft-dot{width:9px;height:9px;border-radius:50%;background:#128C7E;flex-shrink:0;}
-.ft-sq{width:9px;height:9px;background:#C4954A;flex-shrink:0;}
-.fare-teaser-note{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#C29A66;margin-top:.1rem;}
-.form-stars{display:flex;align-items:center;gap:.55rem;margin-bottom:1.1rem;}
-.form-stars-icons{color:#C4954A;font-size:.95rem;letter-spacing:2px;}
-.form-stars-text{color:#777;font-size:.76rem;letter-spacing:.02em;}
-.sticky-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:997;background:rgba(12,12,12,.97);backdrop-filter:blur(12px);border-top:1px solid rgba(201,164,109,.3);padding:.6rem .8rem calc(.6rem + env(safe-area-inset-bottom));gap:.6rem;align-items:center;}
-.sb-cta{flex:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#D4A96F,#A8753F);color:#fff;font-size:.86rem;font-weight:600;letter-spacing:.04em;padding:.95rem;border-radius:10px;}
-.sb-icon{width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,164,109,.4);border-radius:10px;color:#D2B06D;}
-.sb-wa{background:#128C7E;border-color:#128C7E;color:#fff;}
 @media(max-width:1024px){
   .booking-panel-inner,.why-layout,.fleet-layout,.moments-inner{grid-template-columns:1fr;gap:3rem;}
-  .hero-content{grid-template-columns:1fr;min-height:auto;}
-  .hero-service-panel{width:100%;max-width:520px;}
   .areas-list{grid-template-columns:repeat(2,1fr);}
   .ft-grid{grid-template-columns:1fr 1fr;}
   .svc-layout{grid-template-columns:1fr;}
@@ -1595,23 +1208,12 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
   .svc-nav-item{white-space:nowrap;}
   .trust-strip-inner{grid-template-columns:1fr;gap:2rem;}
   .trust-feature{border-right:none;padding:0;}
-  .nav-links,.nav-btn{display:none;}
-  .nav-phone{margin-right:.2rem;padding:.7rem .9rem;}
-  .nav-phone-num{display:none;}
-  .hamburger-btn{display:flex !important;}
-  .mob-overlay{display:block;}
 }
 @media(max-width:768px){
   body{overflow-x:hidden;padding-bottom:76px;}
-  .hero-fare-teaser{display:flex;}
-  .sticky-bar{display:flex;}
-  .hero-service-panel{display:none;}
   .trust-strip{display:none;}
   .wa-float{display:none;}
   .fi{font-size:16px;}
-  .hero{min-height:auto;padding:100px 5vw 60px;}
-  .hero-top,.hero-bottom{font-size:2rem;white-space:normal;}
-  .hero-actions{flex-direction:column;}
   .booking-panel,.sec{padding:5rem 5vw;}
   .trust-strip{width:100%;overflow:hidden;}
   .trust-strip-inner{display:flex;flex-direction:column;gap:1.5rem;width:100%;}
@@ -1623,10 +1225,194 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
   .btn-wa,.btn-outline,.btn-hero-green{width:100%;justify-content:center;}
   .wa-float{right:1rem;bottom:1rem;}
 }
+.booking-panel-sub{max-width:330px;font-size:.95rem;line-height:1.75;color:#777;font-weight:300;}
+.booking-panel-form{width:100%;max-width:620px;background:#fff;padding:2.7rem;border-radius:22px;border:1px solid rgba(0,0,0,.06);box-shadow:0 28px 80px rgba(0,0,0,.09);}
+/* =====================================================================
+   VÉRNO design system — Phase 1 (tokens, navigation, hero, calculator)
+   ===================================================================== */
+:root{
+  --ink:#111213; --graphite:#26282B; --bluestone:#3E4852;
+  --slate:#5E6166; --stone:#8C8F93; --placeholder:#767980;
+  --rule:#D6D3CD; --rule-dark:#34363A;
+  --concrete:#EDEBE7; --paper:#F6F5F2; --field:#FFFFFF;
+  --bronze:#9C7A4F; --bronze-text:#7E6038; --bronze-dark:#B89468;
+  --fare-green:#2F6B4F; --notice:#8A5A1F; --error:#B3261E;
+  --radius-sm:2px; --radius:4px;
+  --gutter:clamp(20px,5vw,80px); --maxw:1320px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+body{font-synthesis-weight:none;}
+.verno-word{font-family:'Playfair Display',Georgia,serif;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 28px;border-radius:var(--radius-sm);border:1px solid transparent;font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:0;cursor:pointer;text-decoration:none;transition:background-color .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease);}
+.btn-primary{background:var(--ink);color:var(--paper);}
+.btn-primary:hover{background:var(--graphite);}
+.btn-primary:active{transform:translateY(1px);}
+.btn-inverse{background:var(--paper);color:var(--ink);}
+.btn-inverse:hover{background:#fff;}
+.btn-block{width:100%;}
+.btn:focus-visible,.nav a:focus-visible,.nav button:focus-visible,.nav-menu a:focus-visible,.nav-menu button:focus-visible,.hero-route:focus-visible,.switch:focus-visible,.quick-chip:focus-visible,.btn-text-link:focus-visible{outline:2px solid var(--bronze);outline-offset:2px;}
+
+/* Navigation */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:76px;padding:0 var(--gutter);display:flex;align-items:center;justify-content:space-between;gap:24px;background:transparent;border-bottom:1px solid transparent;transition:background-color .25s var(--ease),border-color .25s var(--ease);}
+.nav.solid{background:var(--paper);border-color:var(--rule);}
+.nav .verno-word{font-size:26px;}
+.nav .verno-city{margin-left:34px;}
+.nav.solid .verno-word{color:var(--ink);}
+.nav.solid .verno-city{color:var(--slate);}
+.nav-links{display:flex;gap:36px;list-style:none;}
+.nav-links a{font-size:15px;color:rgba(255,255,255,.88);padding:6px 0;border-bottom:1px solid transparent;transition:border-color .18s var(--ease);}
+.nav-links a:hover{border-bottom-color:currentColor;}
+.nav.solid .nav-links a{color:var(--ink);}
+.nav-right{display:flex;align-items:center;gap:24px;}
+.nav-phone{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums;}
+.nav-phone:hover{text-decoration:underline;text-underline-offset:4px;}
+.nav.solid .nav-phone{color:var(--ink);}
+.nav-cta{display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-size:14px;font-weight:500;transition:background-color .18s var(--ease);}
+.nav-cta:hover{background:#fff;}
+.nav.solid .nav-cta{background:var(--ink);color:var(--paper);}
+.nav.solid .nav-cta:hover{background:var(--graphite);}
+.nav-menu-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:6px;width:44px;height:44px;margin-right:-10px;background:transparent;border:0;cursor:pointer;}
+.nav-menu-btn span{display:block;width:22px;height:1.5px;background:#fff;}
+.nav.solid .nav-menu-btn span{background:var(--ink);}
+.nav-menu{position:fixed;inset:0;z-index:1000;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;padding:16px var(--gutter) calc(32px + env(safe-area-inset-bottom));overflow-y:auto;opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility 0s linear .3s;}
+.nav-menu.open{opacity:1;visibility:visible;transition:opacity .3s var(--ease);}
+.nav-menu-top{display:flex;align-items:center;justify-content:space-between;min-height:60px;margin-bottom:32px;}
+.nav-menu .verno-word{font-size:26px;}
+.nav-menu .verno-city{margin-left:34px;}
+.nav-menu-close{width:44px;height:44px;margin-right:-10px;background:transparent;border:0;color:var(--paper);font-size:32px;font-weight:300;line-height:1;cursor:pointer;}
+.nav-menu-links{display:flex;flex-direction:column;margin-bottom:40px;}
+.nav-menu-link{font-family:var(--serif);font-size:40px;line-height:1.1;letter-spacing:-.01em;color:var(--paper);padding:14px 0;border-bottom:1px solid var(--rule-dark);}
+.nav-menu-link:hover{color:var(--bronze-dark);}
+.nav-menu-actions{display:flex;flex-direction:column;gap:18px;margin-top:auto;}
+.nav-menu-actions .btn{width:100%;margin-bottom:8px;}
+.nav-menu-contact{display:inline-flex;align-items:center;gap:12px;font-size:16px;color:rgba(246,245,242,.82);}
+
+/* Hero */
+.hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:100vh;min-height:min(100svh,920px);padding:120px var(--gutter) 0;background:var(--ink) url("/images/hero-bg.jpg") center 70%/cover no-repeat;color:#fff;overflow:hidden;}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(180deg,rgba(10,10,11,.5) 0%,rgba(10,10,11,0) 22%),
+  linear-gradient(0deg,rgba(10,10,11,.82) 0%,rgba(10,10,11,.45) 38%,rgba(10,10,11,0) 70%),
+  linear-gradient(90deg,rgba(10,10,11,.5) 0%,rgba(10,10,11,0) 62%);}
+.hero-inner{position:relative;z-index:1;width:100%;max-width:var(--maxw);margin:0 auto;}
+.hero-title{font-family:var(--serif);font-weight:400;font-size:clamp(56px,8.4vw,120px);line-height:.98;letter-spacing:-.02em;color:#fff;max-width:11ch;margin-bottom:24px;}
+.hero-lede{font-size:clamp(17px,1.35vw,20px);line-height:1.55;color:rgba(255,255,255,.84);max-width:36em;margin-bottom:40px;}
+.hero-route{display:grid;grid-template-columns:1fr 1fr auto;width:100%;max-width:880px;padding:0;border:0;border-radius:var(--radius);overflow:hidden;background:var(--field);font:inherit;text-align:left;cursor:pointer;}
+.hero-route-field{display:flex;align-items:center;gap:14px;height:64px;padding:0 22px;font-size:16px;color:var(--slate);border-right:1px solid var(--rule);}
+.hero-route-cta{display:flex;align-items:center;gap:10px;height:64px;padding:0 28px;background:var(--ink);color:var(--paper);font-size:15px;font-weight:500;transition:background-color .18s var(--ease);}
+.hero-route:hover .hero-route-cta{background:var(--graphite);}
+.route-marker{display:inline-block;flex-shrink:0;width:8px;height:8px;background:var(--ink);}
+.route-marker--dot{border-radius:50%;}
+.route-marker--square{background:var(--bronze);}
+.hero-dataline{display:flex;flex-wrap:wrap;gap:8px 32px;list-style:none;margin-top:48px;padding:18px 0 22px;border-top:1px solid rgba(255,255,255,.2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.72);}
+
+/* Booking calculator */
+.booking-panel{background:var(--concrete);color:var(--ink);padding:clamp(80px,10vw,144px) var(--gutter);}
+.booking-panel .booking-panel-inner{max-width:var(--maxw);margin:0 auto;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;row-gap:48px;align-items:start;justify-content:stretch;}
+.booking-intro{grid-column:1 / span 4;position:sticky;top:112px;}
+.booking-panel .booking-panel-headline{font-family:var(--serif);font-weight:400;font-size:clamp(40px,4.4vw,64px);line-height:1;letter-spacing:-.02em;color:var(--ink);margin-bottom:24px;}
+.booking-panel .booking-panel-sub{font-size:17px;font-weight:400;line-height:1.55;color:var(--slate);max-width:26em;margin-bottom:40px;}
+.booking-facts{list-style:none;border-top:1px solid var(--rule);margin-bottom:32px;}
+.booking-facts li{display:grid;grid-template-columns:40px 1fr;gap:8px;padding:18px 0;border-bottom:1px solid var(--rule);font-size:15px;line-height:1.5;color:var(--slate);}
+.booking-facts strong{display:block;font-weight:500;color:var(--ink);font-size:16px;margin-bottom:2px;}
+.booking-fact-n{font-size:12px;letter-spacing:.08em;color:var(--bronze-text);font-variant-numeric:tabular-nums;padding-top:3px;}
+.form-stars{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--slate);}
+.form-stars-icons{color:var(--bronze);}
+.booking-panel .booking-panel-form{grid-column:6 / span 7;width:auto;max-width:none;background:none;padding:0;border:0;border-radius:0;box-shadow:none;}
+.quick-chip{display:inline-flex;align-items:baseline;justify-content:flex-start;gap:8px;margin-bottom:28px;padding:4px 0;background:none;border:0;border-bottom:1px solid var(--ink);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.4;text-align:left;cursor:pointer;}
+.quick-chip:hover{color:var(--bronze-text);border-bottom-color:var(--bronze-text);}
+.booking-panel .fg{position:relative;margin-bottom:20px;}
+.booking-panel .fl{display:block;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:8px;}
+.booking-panel .fi{width:100%;height:56px;padding:0 16px;background:var(--field);border:1px solid var(--rule);border-radius:var(--radius-sm);font-family:var(--sans);font-size:16px;color:var(--ink);outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease);}
+.booking-panel .fi::placeholder{color:var(--placeholder);}
+.booking-panel .fi:hover{border-color:#BEBAB2;}
+.booking-panel .fi:focus{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--field);}
+.booking-panel select.fi{appearance:none;-webkit-appearance:none;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23111213' stroke-width='1.4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;}
+.booking-panel .f2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:4px;}
+.booking-panel .f2 .fg{margin-bottom:20px;}
+.address-control{position:relative;}
+.address-control .route-marker{position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none;}
+.address-input{padding-right:44px !important;}
+.address-input.has-marker{padding-left:42px !important;}
+.clear-address-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--slate);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.clear-address-btn:hover{background:var(--concrete);color:var(--ink);}
+.field-error{display:block;margin:-12px 0 16px;font-size:13px;color:var(--error);}
+.booking-panel .fg .field-error{margin:6px 0 0;}
+.field-help{margin-top:8px;font-size:13px;color:var(--slate);}
+.switch{display:inline-flex;align-items:center;gap:12px;margin:8px 0 20px;padding:4px 0;background:none;border:0;cursor:pointer;font-family:var(--sans);font-size:15px;color:var(--ink);text-align:left;}
+.switch-track{position:relative;flex-shrink:0;width:40px;height:22px;border-radius:11px;background:#C9C5BE;transition:background-color .18s var(--ease);}
+.switch-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .18s var(--ease);}
+.switch[aria-checked="true"] .switch-track{background:var(--ink);}
+.switch[aria-checked="true"] .switch-knob{transform:translateX(18px);}
+.switch--small{margin:0 0 16px;font-size:14px;}
+.return-panel{background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius-sm);padding:24px 24px 4px;margin-bottom:20px;}
+.return-panel-title{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:16px;}
+.return-addresses{flex-direction:column;}
+.booking-panel .return-addresses .address-field{margin-bottom:0;}
+
+/* Fare summary */
+.fare-hint{margin:8px 0 24px;padding:4px 0 4px 14px;border-left:3px solid var(--bronze);font-size:15px;line-height:1.5;color:var(--slate);}
+.fare-estimate{margin:8px 0 24px;padding:24px 24px 18px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--radius);color:var(--ink);}
+.fare-flag{margin-bottom:18px;padding:2px 0 2px 12px;border-left:3px solid var(--bronze);font-size:14px;color:var(--ink);}
+.fare-label{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:8px;}
+.fare-price{font-family:var(--serif);font-weight:400;font-size:clamp(52px,5vw,68px);line-height:1;letter-spacing:-.01em;color:var(--ink);font-variant-numeric:lining-nums tabular-nums;}
+.fare-guarantee{margin-top:10px;font-size:14px;line-height:1.5;color:var(--slate);}
+.fare-note{margin-top:10px;padding-left:12px;border-left:3px solid var(--bronze);font-size:15px;line-height:1.55;color:var(--ink);}
+.fare-leg-return{margin-top:20px;padding-top:20px;border-top:1px solid var(--rule);}
+.fare-total{margin-top:20px;padding-top:16px;border-top:1px solid var(--ink);font-size:17px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;}
+.fare-trust{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:18px;padding-top:14px;border-top:1px solid var(--rule);font-size:13px;color:var(--slate);}
+.booking-submit{margin-top:4px;}
+.booking-alt{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 24px;margin-top:18px;}
+.booking-alt-sep{width:1px;height:14px;background:var(--rule);}
+.booking-panel .btn-text-link{display:inline-flex;align-items:center;gap:8px;padding:6px 0;background:none;border:0;font-family:var(--sans);font-size:14px;font-weight:400;letter-spacing:0;color:var(--slate);cursor:pointer;}
+.booking-panel .btn-text-link:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px;}
+.booking-panel .wa-trust-line{margin-top:20px;text-align:center;font-size:13px;color:var(--slate);}
+
+/* Mobile sticky bar */
+.sticky-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:997;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--ink);border-top:1px solid var(--rule-dark);}
+.sb-cta{flex:1;display:flex;align-items:center;justify-content:center;height:48px;border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-size:15px;font-weight:500;}
+.sb-icon{width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--rule-dark);border-radius:var(--radius-sm);color:var(--paper);}
+
+@media(max-width:1024px){
+  .nav-links,.nav-phone-num{display:none;}
+  .nav-menu-btn{display:flex;}
+  .nav-right{gap:16px;}
+  .booking-intro{grid-column:1 / -1;position:static;}
+  .booking-panel .booking-panel-form{grid-column:1 / -1;}
+  .booking-facts{display:grid;grid-template-columns:repeat(3,1fr);column-gap:24px;border-top:0;}
+  .booking-facts li{border-top:1px solid var(--rule);}
+}
+@media(max-width:768px){
+  .nav{height:64px;}
+  .nav .verno-word{font-size:22px;}
+  .nav .verno-city{margin-left:30px;font-size:9px;}
+  .nav-cta{display:none;}
+  .sticky-bar{display:flex;}
+  .hero{min-height:auto;padding-top:128px;background-position:60% 30%;}
+  .hero-title{font-size:clamp(48px,14vw,64px);margin-bottom:18px;}
+  .hero-lede{font-size:17px;margin-bottom:28px;}
+  .hero-route{grid-template-columns:1fr;}
+  .hero-route-field{height:56px;border-right:0;border-bottom:1px solid var(--rule);}
+  .hero-route-cta{height:56px;justify-content:center;}
+  .hero-dataline{margin-top:32px;gap:6px 20px;font-size:11px;}
+  .booking-panel{padding:72px var(--gutter);}
+  .booking-panel .booking-panel-inner{row-gap:32px;}
+  .booking-facts{display:block;border-top:1px solid var(--rule);}
+  .booking-facts li{border-top:0;}
+  .booking-panel .f2{grid-template-columns:1fr 1fr;gap:12px;}
+  .booking-panel .fi{font-size:16px;}
+  .return-panel{padding:18px 16px 2px;}
+  .fare-estimate{padding:20px 18px 14px;}
+  .booking-alt-sep{display:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  .nav,.nav-menu,.btn,.switch-track,.switch-knob,.hero-route-cta{transition:none!important;}
+}
+
 `;
 
 function StickyBar() {
-  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
   return (
     <div className="sticky-bar">
       <a href={`tel:${VERNO_PHONE}`} className="sb-icon" aria-label="Call Verno Chauffeur"><PhoneIcon s={19} /></a>
@@ -1634,14 +1420,13 @@ function StickyBar() {
         href="#book"
         className="sb-cta"
         onClick={(e) => { e.preventDefault(); goToBookingForm(); }}
-      >See your fixed fare &rarr;</a>
-      <a href={wa} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
+      >See your fare &rarr;</a>
+      <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
     </div>
   );
 }
 
 export default function Home() {
-  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
@@ -1657,7 +1442,7 @@ export default function Home() {
     <AboutSEO />
     <Closer />
     <Footer />
-    <a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
+    <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
     <StickyBar />
   </>;
 }
