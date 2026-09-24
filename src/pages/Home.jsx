@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  quoteFare, totalFare, detectAirport, normalizeAirportAddress, formatPrice,
+  quoteFare, totalFare, assessJourney, normalizeAirportAddress, formatPrice,
   LATE_NIGHT_WINDOW, LATE_NIGHT_SURCHARGE_LABEL, WAITING_POLICY, SPECIAL_QUOTE_NOTE,
+  REGIONAL_QUOTE_LABEL, REGIONAL_QUOTE_NOTE, EVENT_FARE_LABEL, EVENT_FARE_NOTE,
   AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES,
 } from "../lib/pricing.js";
 import { getDrivingDistanceKm } from "../lib/distance.js";
@@ -54,14 +55,30 @@ function useRouteDistance(origin, destination, enabled) {
 
 // Prices one journey leg with the shared engine. Pickup time only affects the
 // late-night surcharge, so changing it re-prices without a new distance request.
-function useLegQuote({ from, to, fromLocation, toLocation, time, enabled }) {
-  const fromAirport = detectAirport(from, fromLocation);
-  const toAirport = detectAirport(to, toLocation);
-  const origin = enabled ? normalizeAirportAddress(from, fromLocation) : "";
-  const destination = enabled ? normalizeAirportAddress(to, toLocation) : "";
-  const { status, km } = useRouteDistance(origin, destination, enabled);
-  const quote = status === "ready" ? quoteFare({ km, time, isAirportTransfer: !!(fromAirport || toAirport) }) : null;
-  return { status, quote, pickupIsAirport: !!fromAirport };
+//
+// status: idle | unlocated (no coordinates to check the service area) |
+//         regional (quote required — no automatic fare) | loading | error | ready
+function useLegQuote({ from, to, fromLocation, toLocation, time, date, enabled }) {
+  const journey = assessJourney({ from, to, fromLocation, toLocation, date });
+  const priceable = enabled && journey.located && !journey.regional;
+  const origin = priceable ? normalizeAirportAddress(from, fromLocation) : "";
+  const destination = priceable ? normalizeAirportAddress(to, toLocation) : "";
+  const distance = useRouteDistance(origin, destination, priceable);
+
+  let status = distance.status;
+  if (enabled && !journey.located) status = "unlocated";
+  else if (enabled && journey.regional) status = "regional";
+  const quote = status === "ready"
+    ? quoteFare({ km: distance.km, time, isAirportTransfer: journey.isAirportTransfer })
+    : null;
+
+  return {
+    status,
+    quote,
+    regional: status === "regional",
+    event: enabled && journey.located ? journey.event : null,
+    pickupIsAirport: !!journey.fromAirport,
+  };
 }
 
 function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
@@ -441,27 +458,71 @@ const fareNoticeStyle = {
   display:"flex", alignItems:"center", gap:".6rem",
 };
 
-function fareLabel(quote) {
-  return quote.isAirportTransfer ? "Airport Transfer Fare" : "Estimated Fare";
+const selectAddressNotice = (
+  <div style={{
+    marginTop:"1.2rem", padding:"1rem 1.2rem",
+    background:"#f7f3ed", borderRadius:12,
+    border:"1px solid rgba(185,139,85,.2)",
+    fontSize:".82rem", color:"#B98B55",
+    display:"flex", alignItems:"center", gap:".6rem",
+  }}>
+    <span>⚠</span>
+    <span>Please select an address from the dropdown to see your fare.</span>
+  </div>
+);
+
+const LABEL_STYLES = {
+  airport: { color: "#2a7a2a", fontWeight: 600 },
+  notice: { color: "#9a7040", fontWeight: 600 },
+  standard: { fontWeight: 600 },
+};
+
+// One journey leg in the fare panel: automatic fare, event-day guide fare, or regional quote.
+function LegFare({ leg, legName, pendingText }) {
+  const prefix = legName ? `${legName} · ` : "";
+  if (leg.status === "regional") {
+    return (
+      <>
+        <div className="fare-label" style={LABEL_STYLES.notice}>{prefix}{REGIONAL_QUOTE_LABEL}</div>
+        <div className="fare-guarantee" style={{ fontSize:".82rem", lineHeight:1.55 }}>{REGIONAL_QUOTE_NOTE}</div>
+      </>
+    );
+  }
+  const quote = leg.quote;
+  if (!quote) {
+    return (
+      <>
+        <div className="fare-label" style={LABEL_STYLES.standard}>{legName}</div>
+        <div className="fare-guarantee">{pendingText}</div>
+      </>
+    );
+  }
+  const label = leg.event ? EVENT_FARE_LABEL : quote.isAirportTransfer ? "Airport Transfer Fare" : "Estimated Fare";
+  const style = leg.event ? LABEL_STYLES.notice : quote.isAirportTransfer ? LABEL_STYLES.airport : LABEL_STYLES.standard;
+  return (
+    <>
+      <div className="fare-label" style={style}>{prefix}{label}</div>
+      <div className="fare-price">{formatPrice(quote.fare)}</div>
+      {leg.event && (
+        <div className="fare-guarantee" style={{ fontSize:".82rem", lineHeight:1.55, marginTop:".6rem" }}>
+          <strong>{leg.event.name}.</strong> {EVENT_FARE_NOTE}
+        </div>
+      )}
+    </>
+  );
+}
+
+function returnPendingText(returnLeg, diffReturn) {
+  if (returnLeg.status === "loading") return "Calculating return fare...";
+  if (diffReturn && (returnLeg.status === "idle" || returnLeg.status === "unlocated")) {
+    return "Select both return addresses from the dropdown to see the return fare.";
+  }
+  return "Return fare will be confirmed with your booking.";
 }
 
 function FareEstimate({ from, to, fromSelected, toSelected, outbound, showReturn, returnLeg, diffReturn, total }) {
   if (from.trim().length < 4 || to.trim().length < 4) return null;
-
-  if (!fromSelected || !toSelected) {
-    return (
-      <div style={{
-        marginTop:"1.2rem", padding:"1rem 1.2rem",
-        background:"#f7f3ed", borderRadius:12,
-        border:"1px solid rgba(185,139,85,.2)",
-        fontSize:".82rem", color:"#B98B55",
-        display:"flex", alignItems:"center", gap:".6rem",
-      }}>
-        <span>⚠</span>
-        <span>Please select an address from the dropdown to see your fare.</span>
-      </div>
-    );
-  }
+  if (!fromSelected || !toSelected || outbound.status === "unlocated") return selectAddressNotice;
 
   if (outbound.status === "loading") {
     return <div style={fareNoticeStyle}><span>Calculating fare...</span></div>;
@@ -471,19 +532,21 @@ function FareEstimate({ from, to, fromSelected, toSelected, outbound, showReturn
     return <div style={fareNoticeStyle}><span>We couldn't calculate this route automatically. Send your request and we'll confirm your fare.</span></div>;
   }
 
-  const quote = outbound.quote;
-  if (!quote) return null;
+  if (outbound.status !== "ready" && outbound.status !== "regional") return null;
 
   const returnQuote = showReturn ? returnLeg.quote : null;
-  const lateOutbound = quote.lateNight;
+  const lateOutbound = !!outbound.quote?.lateNight;
   const lateReturn = !!returnQuote?.lateNight;
   let lateNotice = null;
   if (lateOutbound && lateReturn) lateNotice = `Late-night surcharge applied (${LATE_NIGHT_WINDOW})`;
   else if (lateOutbound) lateNotice = `Late-night surcharge applied${showReturn ? " to outbound" : ""} (${LATE_NIGHT_WINDOW})`;
   else if (lateReturn) lateNotice = `Late-night surcharge applied to return (${LATE_NIGHT_WINDOW})`;
 
-  const airportLabelStyle = { color: "#2a7a2a", fontWeight: 600 };
-  const labelStyle = (q) => (q?.isAirportTransfer ? airportLabelStyle : { fontWeight: 600 });
+  const anyRegional = outbound.regional || (showReturn && returnLeg.regional);
+  const anyEvent = !!outbound.event || (showReturn && !!returnLeg.event);
+  let totalText = null;
+  if (showReturn && anyRegional) totalText = "Total: to be quoted (regional)";
+  else if (total != null) totalText = `Total: ${formatPrice(total)} · ${anyEvent ? "Event-day fare to be confirmed" : "Return fare included"}`;
 
   return (
     <div className="fare-estimate">
@@ -500,26 +563,11 @@ function FareEstimate({ from, to, fromSelected, toSelected, outbound, showReturn
           <span>{lateNotice}</span>
         </div>
       )}
-      <div className="fare-label" style={labelStyle(quote)}>
-        {fareLabel(quote)}{showReturn ? " — Outbound" : ""}
-      </div>
-      <div className="fare-price">{formatPrice(quote.fare)}</div>
+      <LegFare leg={outbound} legName={showReturn ? "Outbound" : ""} />
       {showReturn && (
         <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(0,0,0,.1)", paddingTop:".8rem" }}>
-          <div className="fare-label" style={labelStyle(returnQuote)}>
-            {returnQuote ? `${fareLabel(returnQuote)} — Return` : "Return"}
-          </div>
-          {returnQuote ? (
-            <div className="fare-price">{formatPrice(returnQuote.fare)}</div>
-          ) : (
-            <div className="fare-guarantee">
-              {returnLeg.status === "loading" ? "Calculating return fare..."
-                : returnLeg.status === "error" ? "Return fare will be confirmed with your booking."
-                : diffReturn ? "Select both return addresses from the dropdown to see the return fare."
-                : "Return fare will be confirmed with your booking."}
-            </div>
-          )}
-          {total != null && (
+          <LegFare leg={returnLeg} legName="Return" pendingText={returnPendingText(returnLeg, diffReturn)} />
+          {totalText && (
             <div style={{
               marginTop:".6rem", padding:".65rem .9rem",
               background:"rgba(185,139,85,.15)", borderRadius:8,
@@ -527,12 +575,14 @@ function FareEstimate({ from, to, fromSelected, toSelected, outbound, showReturn
               display:"flex", alignItems:"center", gap:".5rem",
             }}>
               <span>↩</span>
-              <span>Total: {formatPrice(total)} · Return fare included</span>
+              <span>{totalText}</span>
             </div>
           )}
         </div>
       )}
-      <div className="fare-guarantee">Final fixed price confirmed when your booking is confirmed.</div>
+      {(outbound.quote || returnQuote) && (
+        <div className="fare-guarantee">Final fixed price confirmed when your booking is confirmed.</div>
+      )}
       <div className="fare-trust">
         <span>No hidden costs</span>
         <span>No surge pricing</span>
@@ -573,7 +623,7 @@ function InlineBooking() {
 
   // Outbound leg
   const outboundReady = fromSelected && toSelected && hasAddress(from) && hasAddress(to);
-  const outbound = useLegQuote({ from, to, fromLocation, toLocation, time, enabled: outboundReady });
+  const outbound = useLegQuote({ from, to, fromLocation, toLocation, time, date, enabled: outboundReady });
   const isAirportPickup = outbound.pickupIsAirport;
 
   // Return leg: destination → original pickup, or the separately selected return addresses.
@@ -588,6 +638,7 @@ function InlineBooking() {
     fromLocation: diffReturn ? returnFromLocation : toLocation,
     toLocation: diffReturn ? returnToLocation : fromLocation,
     time: returnTime,
+    date: returnDate,
     enabled: returnReady,
   });
   const isAirportReturnPickup = returnLeg.pickupIsAirport;
@@ -621,11 +672,13 @@ function InlineBooking() {
       pickup: from, dropoff: to, date, time, passengers: pax, luggage: bags,
       flightNumber: isAirportPickup ? flightNumber : "",
       fare: outboundFare, lateNight: !!outbound.quote?.lateNight,
+      regional: outbound.regional, event: outbound.event?.name || "",
     },
     returnLeg: returnTrip ? {
       pickup: returnPickup, dropoff: returnDropoff, date: returnDate, time: returnTime,
       flightNumber: isAirportReturnPickup ? returnFlightNumber : "",
       fare: returnFare, lateNight: !!returnLeg.quote?.lateNight,
+      regional: returnLeg.regional, event: returnLeg.event?.name || "",
     } : null,
     total,
   });

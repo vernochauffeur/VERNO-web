@@ -77,6 +77,47 @@ describe("buildBookingMessage — return", () => {
   });
 });
 
+describe("buildBookingMessage — regional and event legs", () => {
+  const regional = { pickup: "Torquay VIC 3228, Australia", dropoff: "Mount Duneed Estate, Waurn Ponds VIC 3217, Australia", date: "2026-10-03", time: "12:00", passengers: "2", luggage: "0", fare: null, regional: true };
+
+  it("never prices a regional leg", () => {
+    const msg = buildBookingMessage({ outbound: regional });
+    expect(msg).toContain("FARE       : To be quoted (regional)");
+    expect(msg).not.toMatch(/\$\d/);
+  });
+
+  it("quotes a regional return leg independently, and the total", () => {
+    const msg = buildBookingMessage({
+      outbound: { ...outbound, fare: 135 },
+      returnLeg: { pickup: "Torquay VIC 3228", dropoff: "St Kilda VIC 3182", date: "2026-10-05", time: "12:00", fare: null, regional: true },
+      total: null,
+    });
+    const [out, ret] = msg.split("RETURN");
+    expect(out).toContain("FARE       : $135");
+    expect(ret).toContain("FARE       : To be quoted (regional)");
+    expect(ret).toContain("TOTAL      : To be quoted (regional)");
+  });
+
+  it("names the event and marks the fare as a guide", () => {
+    const msg = buildBookingMessage({ outbound: { ...outbound, dropoff: "MCG", fare: 100, event: "AFL Grand Final" } });
+    expect(msg).toContain("EVENT      : AFL Grand Final — pricing to be confirmed");
+    expect(msg).toContain("FARE       : $100 (guide — final fare to be confirmed)");
+  });
+
+  it("marks the total as a guide when any leg is on an event day", () => {
+    const msg = buildBookingMessage({
+      outbound: { ...outbound, fare: 100, event: "AFL Grand Final" },
+      returnLeg: { pickup: "MCG", dropoff: "St Kilda", date: "2026-09-26", time: "18:00", fare: 100, event: "AFL Grand Final" },
+      total: 200,
+    });
+    expect(msg).toContain("TOTAL      : $200 (guide — final fare to be confirmed)");
+  });
+
+  it("adds no event line for normal bookings", () => {
+    expect(buildBookingMessage({ outbound })).not.toContain("EVENT");
+  });
+});
+
 describe("links", () => {
   const msg = buildBookingMessage({ outbound });
 

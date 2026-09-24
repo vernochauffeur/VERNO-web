@@ -12,22 +12,43 @@ export const VERNO_PHONE_DISPLAY = "0421 238 894";
 export const MAX_PASSENGERS = 4;
 
 const TO_BE_CONFIRMED = "To be confirmed";
+const REGIONAL_QUOTE = "To be quoted (regional)";
+const EVENT_GUIDE = "(guide — final fare to be confirmed)";
 
-function fareLine(label, fare, lateNight) {
-  const value = fare == null ? TO_BE_CONFIRMED : `${formatPrice(fare)}${lateNight ? " (incl. late-night surcharge)" : ""}`;
-  return `${label}${value}`;
+function fareValue(leg) {
+  if (leg.regional) return REGIONAL_QUOTE;
+  if (leg.fare == null) return TO_BE_CONFIRMED;
+  const notes = [
+    ...(leg.lateNight ? ["(incl. late-night surcharge)"] : []),
+    ...(leg.event ? [EVENT_GUIDE] : []),
+  ];
+  return [formatPrice(leg.fare), ...notes].join(" ");
 }
 
-function flightLine(flightNumber) {
-  const flight = (flightNumber || "").trim();
-  return flight ? [`FLIGHT     : ${flight.toUpperCase()}`] : [];
+function legLines(leg) {
+  const flight = (leg.flightNumber || "").trim();
+  return [
+    ...(flight ? [`FLIGHT     : ${flight.toUpperCase()}`] : []),
+    ...(leg.event ? [`EVENT      : ${leg.event} — pricing to be confirmed`] : []),
+    `FARE       : ${fareValue(leg)}`,
+  ];
+}
+
+function totalValue(legs, total) {
+  if (legs.some((leg) => leg.regional)) return REGIONAL_QUOTE;
+  if (total == null) return TO_BE_CONFIRMED;
+  return legs.some((leg) => leg.event) ? `${formatPrice(total)} ${EVENT_GUIDE}` : formatPrice(total);
 }
 
 /**
  * Build the plain-text booking request.
  *
- * @param {object} outbound  { pickup, dropoff, date, time, passengers, luggage, flightNumber, fare, lateNight }
- * @param {object|null} returnLeg { pickup, dropoff, date, time, flightNumber, fare, lateNight }
+ * Leg fields: { pickup, dropoff, date, time, flightNumber, fare, lateNight, regional, event }
+ * where `event` is the major-event name (or empty) and `regional` means no automatic fare.
+ * The outbound leg also carries passengers and luggage.
+ *
+ * @param {object} outbound
+ * @param {object|null} returnLeg
  * @param {number|null} total combined fare shown to the customer (return bookings)
  */
 export function buildBookingMessage({ outbound, returnLeg = null, total = null }) {
@@ -42,8 +63,7 @@ export function buildBookingMessage({ outbound, returnLeg = null, total = null }
     `TIME       : ${o.time || ""}`,
     `PASSENGERS : ${o.passengers ?? ""}`,
     `LUGGAGE    : ${o.luggage ?? ""}`,
-    ...flightLine(o.flightNumber),
-    fareLine("FARE       : ", o.fare, o.lateNight),
+    ...legLines(o),
   ];
 
   if (returnLeg) {
@@ -55,10 +75,9 @@ export function buildBookingMessage({ outbound, returnLeg = null, total = null }
       `DROP-OFF   : ${r.dropoff || ""}`,
       `DATE       : ${r.date || ""}`,
       `TIME       : ${r.time || ""}`,
-      ...flightLine(r.flightNumber),
-      fareLine("FARE       : ", r.fare, r.lateNight),
+      ...legLines(r),
       "",
-      `TOTAL      : ${total == null ? TO_BE_CONFIRMED : formatPrice(total)}`,
+      `TOTAL      : ${totalValue([o, r], total)}`,
     );
   }
 

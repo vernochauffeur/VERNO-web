@@ -3,6 +3,7 @@ import {
   PRICING, quoteFare, distanceCharge, roundUpFare, isLateNight, totalFare,
   detectAirport, normalizeAirportAddress, AIRPORTS, formatPrice,
   AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES, LATE_NIGHT_WINDOW, WAITING_POLICY,
+  SERVICE_AREA, isWithinServiceArea, resolveLocation, assessJourney, findMajorEvent, MAJOR_EVENTS,
 } from "./pricing.js";
 
 const fare = (km, opts = {}) => quoteFare({ km, ...opts }).fare;
@@ -206,9 +207,13 @@ describe("published pricing examples", () => {
 
   it("point-to-point examples come from the engine", () => {
     expect(POINT_TO_POINT_EXAMPLES.map((e) => [e.to, e.price])).toEqual([
-      ["St Kilda", 100], ["Ringwood", 145], ["Frankston", 215], ["Mornington", 255], ["Geelong", 260],
+      ["St Kilda", 100], ["Ringwood", 145], ["Dandenong", 160], ["Frankston", 215], ["Mornington", 255],
     ]);
     for (const e of POINT_TO_POINT_EXAMPLES) expect(e.price).toBeGreaterThanOrEqual(PRICING.MIN_FARE);
+  });
+
+  it("only publishes point-to-point prices the calculator will actually quote", () => {
+    for (const e of POINT_TO_POINT_EXAMPLES) expect(isWithinServiceArea(e.location), e.to).toBe(true);
   });
 });
 
@@ -222,5 +227,152 @@ describe("copy helpers", () => {
     expect(WAITING_POLICY).toBe(
       "15 minutes complimentary waiting time is included with standard pickups. Additional waiting time is charged at $1.25 per minute. Airport pickups are monitored using live flight information, so flight delays do not reduce your complimentary waiting time."
     );
+  });
+});
+
+// Google Places coordinates (Sept 2026).
+const PLACES = {
+  cbd: { address: "Melbourne VIC 3000, Australia", location: { lat: -37.8152, lng: 144.9639 } },
+  stKilda: { address: "St Kilda VIC 3182, Australia", location: { lat: -37.8640, lng: 144.9820 } },
+  hawthorn: { address: "Hawthorn VIC 3122, Australia", location: { lat: -37.8226, lng: 145.0354 } },
+  crown: { address: "Crown Melbourne, 8 Whiteman St, Southbank VIC 3006, Australia", location: { lat: -37.8242, lng: 144.9575 } },
+  frankston: { address: "Frankston VIC 3199, Australia", location: { lat: -38.1466, lng: 145.1357 } },
+  mornington: { address: "Mornington VIC 3931, Australia", location: { lat: -38.2288, lng: 145.0600 } },
+  yarraGlen: { address: "Yarra Glen VIC 3775, Australia", location: { lat: -37.6571, lng: 145.3746 } },
+  torquay: { address: "Torquay VIC 3228, Australia", location: { lat: -38.3148, lng: 144.3183 } },
+  mtDuneed: { address: "Mount Duneed Estate, 65 Pettavel Rd, Waurn Ponds VIC 3217, Australia", location: { lat: -38.2175, lng: 144.2471 } },
+  healesville: { address: "Healesville VIC 3777, Australia", location: { lat: -37.6541, lng: 145.5168 } },
+  sorrento: { address: "Sorrento VIC 3943, Australia", location: { lat: -38.3401, lng: 144.7365 } },
+  redHill: { address: "Red Hill VIC 3937, Australia", location: { lat: -38.3697, lng: 145.0106 } },
+  geelong: { address: "Geelong VIC 3220, Australia", location: { lat: -38.1493, lng: 144.3598 } },
+  melAirport: { address: "Terminal 2 - International, Arrival Dr, Melbourne Airport VIC 3045, Australia", location: { lat: -37.6708, lng: 144.8430 } },
+  melAirportChip: { address: "Melbourne Airport (Tullamarine) VIC, Australia", location: null },
+  avalon: { address: "Avalon Airport, 80 Beach Rd, Lara VIC 3212, Australia", location: { lat: -38.0390, lng: 144.4684 } },
+  mcg: { address: "Melbourne Cricket Ground, Brunton Ave, Richmond VIC 3002, Australia", location: { lat: -37.8200, lng: 144.9834 } },
+  rodLaver: { address: "Rod Laver Arena, 200 Batman Ave, Melbourne VIC 3004, Australia", location: { lat: -37.8216, lng: 144.9786 } },
+};
+
+const journey = (from, to, date = "") => assessJourney({
+  from: PLACES[from].address, fromLocation: PLACES[from].location,
+  to: PLACES[to].address, toLocation: PLACES[to].location, date,
+});
+
+describe("service area", () => {
+  it("is a 50 km radius around Melbourne CBD", () => {
+    expect(SERVICE_AREA.radiusKm).toBe(50);
+    expect(SERVICE_AREA.center).toEqual({ lat: -37.8136, lng: 144.9631 });
+  });
+
+  it.each(["cbd", "stKilda", "hawthorn", "frankston", "mornington", "yarraGlen", "melAirport"])("%s is inside", (place) => {
+    expect(isWithinServiceArea(PLACES[place].location)).toBe(true);
+  });
+
+  it.each(["torquay", "mtDuneed", "healesville", "sorrento", "redHill", "geelong"])("%s is outside", (place) => {
+    expect(isWithinServiceArea(PLACES[place].location)).toBe(false);
+  });
+
+  it("has no coordinates without a Places selection, unless the address is an airport", () => {
+    expect(resolveLocation("Some typed text")).toBeNull();
+    expect(resolveLocation(PLACES.melAirportChip.address)).toEqual(AIRPORTS.MEL.location);
+  });
+});
+
+describe("regional bookings", () => {
+  it.each([
+    ["torquay", "mtDuneed"],
+    ["healesville", "yarraGlen"],
+    ["sorrento", "redHill"],
+    ["cbd", "geelong"],   // destination outside
+    ["geelong", "cbd"],   // pickup outside
+    ["geelong", "avalon"],
+  ])("%s → %s requires a quote", (from, to) => {
+    const j = journey(from, to);
+    expect(j.located).toBe(true);
+    expect(j.regional).toBe(true);
+  });
+
+  it("Torquay → Mt Duneed Estate is never auto-priced at the $115 passenger-distance fare", () => {
+    // 18.3 km would be $115 on distance alone — the assessment must stop it being quoted.
+    expect(quoteFare({ km: 18.3 }).fare).toBe(115);
+    expect(journey("torquay", "mtDuneed").regional).toBe(true);
+    expect(journey("mtDuneed", "torquay").regional).toBe(true);
+  });
+
+  it.each([
+    ["cbd", "melAirport"],
+    ["melAirport", "cbd"],
+    ["cbd", "melAirportChip"],   // quick "airport" chip has no Places coordinates
+    ["melAirportChip", "frankston"],
+    ["cbd", "avalon"],           // Avalon sits just beyond 50 km but airports are always serviced
+    ["stKilda", "mornington"],
+    ["crown", "hawthorn"],
+  ])("%s → %s is priced automatically", (from, to) => {
+    const j = journey(from, to);
+    expect(j.located).toBe(true);
+    expect(j.regional).toBe(false);
+  });
+
+  it("can't be assessed without coordinates (typed text) — so it isn't auto-priced", () => {
+    const j = assessJourney({ from: "Torquay", to: "Mt Duneed", fromLocation: null, toLocation: null });
+    expect(j.located).toBe(false);
+    expect(j.regional).toBe(false);
+  });
+});
+
+describe("major events", () => {
+  it("are configured with verified dates and a venue radius", () => {
+    expect(MAJOR_EVENTS.map((e) => [e.name, e.start, e.end, e.venue.name])).toEqual([
+      ["AFL Grand Final", "2026-09-26", "2026-09-26", "MCG"],
+      ["Boxing Day Test", "2026-12-26", "2026-12-30", "MCG"],
+      ["Australian Open Finals", "2027-01-30", "2027-01-31", "Melbourne Park"],
+    ]);
+    for (const e of MAJOR_EVENTS) {
+      expect(e.start).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(e.end >= e.start).toBe(true);
+      expect(e.venue.radiusKm).toBeGreaterThan(0);
+      expect(Number.isFinite(e.venue.location.lat) && Number.isFinite(e.venue.location.lng)).toBe(true);
+    }
+  });
+
+  it("flags an MCG trip on Grand Final day", () => {
+    expect(journey("cbd", "mcg", "2026-09-26").event?.name).toBe("AFL Grand Final");
+    expect(journey("mcg", "stKilda", "2026-09-26").event?.name).toBe("AFL Grand Final"); // pickup at the venue
+  });
+
+  it("does not flag an airport transfer on Grand Final day", () => {
+    expect(journey("cbd", "melAirport", "2026-09-26").event).toBeNull();
+    expect(journey("stKilda", "melAirportChip", "2026-09-26").event).toBeNull();
+  });
+
+  it("does not flag the MCG on other days", () => {
+    expect(journey("cbd", "mcg", "2026-09-25").event).toBeNull();
+    expect(journey("cbd", "mcg", "2026-09-27").event).toBeNull();
+    expect(journey("cbd", "mcg", "").event).toBeNull();
+  });
+
+  it("flags every day of the Boxing Day Test, and only those", () => {
+    for (const d of ["2026-12-26", "2026-12-27", "2026-12-28", "2026-12-29", "2026-12-30"]) {
+      expect(journey("stKilda", "mcg", d).event?.name).toBe("Boxing Day Test");
+    }
+    expect(journey("stKilda", "mcg", "2026-12-25").event).toBeNull();
+    expect(journey("stKilda", "mcg", "2026-12-31").event).toBeNull();
+  });
+
+  it("flags Melbourne Park on Australian Open finals weekend only", () => {
+    expect(journey("hawthorn", "rodLaver", "2027-01-30").event?.name).toBe("Australian Open Finals");
+    expect(journey("rodLaver", "crown", "2027-01-31").event?.name).toBe("Australian Open Finals");
+    expect(journey("hawthorn", "rodLaver", "2027-01-29").event).toBeNull();
+  });
+
+  it("does not flag trips that don't touch the venue", () => {
+    expect(journey("crown", "hawthorn", "2026-09-26").event).toBeNull(); // Southbank → Hawthorn
+    expect(journey("cbd", "stKilda", "2026-12-26").event).toBeNull();
+  });
+
+  it("accepts new events without engine changes", () => {
+    const custom = [{ name: "Test Event", start: "2027-03-01", end: "2027-03-02", venue: { name: "X", location: PLACES.crown.location, radiusKm: 1 } }];
+    expect(findMajorEvent("2027-03-02", [PLACES.crown.location], custom)?.name).toBe("Test Event");
+    expect(findMajorEvent("2027-03-03", [PLACES.crown.location], custom)).toBeNull();
+    expect(findMajorEvent("not-a-date", [PLACES.crown.location], custom)).toBeNull();
   });
 });
