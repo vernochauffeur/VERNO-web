@@ -113,6 +113,16 @@ describe("buildBookingMessage — regional and event legs", () => {
     expect(msg).toContain("TOTAL      : $200 (guide — final fare to be confirmed)");
   });
 
+  it("shows the major venue fee inside the leg fare", () => {
+    const msg = buildBookingMessage({ outbound: { ...outbound, dropoff: "John Cain Arena", fare: 125, venueFee: 20 } });
+    expect(msg).toContain("FARE       : $125 (incl. $20 major venue fee)");
+  });
+
+  it("combines venue fee and event notes", () => {
+    const msg = buildBookingMessage({ outbound: { ...outbound, dropoff: "MCG", fare: 120, venueFee: 20, event: "AFL Grand Final" } });
+    expect(msg).toContain("FARE       : $120 (incl. $20 major venue fee) (guide — final fare to be confirmed)");
+  });
+
   it("adds no event line for normal bookings", () => {
     expect(buildBookingMessage({ outbound })).not.toContain("EVENT");
   });

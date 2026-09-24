@@ -4,6 +4,7 @@ import {
   detectAirport, normalizeAirportAddress, AIRPORTS, formatPrice,
   AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES, LATE_NIGHT_WINDOW, WAITING_POLICY,
   SERVICE_AREA, isWithinServiceArea, resolveLocation, assessJourney, findMajorEvent, MAJOR_EVENTS,
+  MAJOR_VENUES, findMajorVenue, MAJOR_VENUE_FEE_NOTE,
 } from "./pricing.js";
 
 const fare = (km, opts = {}) => quoteFare({ km, ...opts }).fare;
@@ -250,6 +251,11 @@ const PLACES = {
   avalon: { address: "Avalon Airport, 80 Beach Rd, Lara VIC 3212, Australia", location: { lat: -38.0390, lng: 144.4684 } },
   mcg: { address: "Melbourne Cricket Ground, Brunton Ave, Richmond VIC 3002, Australia", location: { lat: -37.8200, lng: 144.9834 } },
   rodLaver: { address: "Rod Laver Arena, 200 Batman Ave, Melbourne VIC 3004, Australia", location: { lat: -37.8216, lng: 144.9786 } },
+  williamstown: { address: "Williamstown VIC 3016, Australia", location: { lat: -37.8636, lng: 144.8979 } },
+  johnCain: { address: "John Cain Arena, Olympic Blvd, Melbourne VIC 3001, Australia", location: { lat: -37.82277, lng: 144.98197 } },
+  marvel: { address: "Marvel Stadium, 740 Bourke St, Docklands VIC 3008, Australia", location: { lat: -37.81650, lng: 144.94760 } },
+  flemington: { address: "Flemington Racecourse, 448 Epsom Rd, Flemington VIC 3031, Australia", location: { lat: -37.79097, lng: 144.91189 } },
+  caulfield: { address: "Caulfield Racecourse, Station St, Caulfield East VIC 3145, Australia", location: { lat: -37.87759, lng: 145.03841 } },
 };
 
 const journey = (from, to, date = "") => assessJourney({
@@ -374,5 +380,113 @@ describe("major events", () => {
     expect(findMajorEvent("2027-03-02", [PLACES.crown.location], custom)?.name).toBe("Test Event");
     expect(findMajorEvent("2027-03-03", [PLACES.crown.location], custom)).toBeNull();
     expect(findMajorEvent("not-a-date", [PLACES.crown.location], custom)).toBeNull();
+  });
+});
+
+describe("major venue fee", () => {
+  // Google Places coordinates of the configured venues and their close neighbours (Sept 2026).
+  const VENUE_POINTS = {
+    "John Cain Arena": { lat: -37.82277, lng: 144.98197 },
+    "Rod Laver Arena": { lat: -37.82162, lng: 144.97856 },
+    "MCG": { lat: -37.81997, lng: 144.98345 },
+    "Marvel Stadium": { lat: -37.81650, lng: 144.94760 },
+    "Flemington Racecourse": { lat: -37.79097, lng: 144.91189 },
+    "Caulfield Racecourse": { lat: -37.87759, lng: 145.03841 },
+  };
+  const NEIGHBOURS = {
+    "Margaret Court Arena": { lat: -37.82113, lng: 144.97764 },   // 100 m from Rod Laver Arena
+    "AAMI Park": { lat: -37.82443, lng: 144.98441 },              // 280 m from John Cain Arena
+    "Jolimont station": { lat: -37.81656, lng: 144.98410 },
+    "Richmond station": { lat: -37.82379, lng: 144.98920 },
+    "Southern Cross Station": { lat: -37.81839, lng: 144.95250 },
+    "Caulfield station": { lat: -37.87706, lng: 145.04203 },
+    "Monash University Caulfield": { lat: -37.87735, lng: 145.04500 },
+    "Melbourne Showgrounds": { lat: -37.78213, lng: 144.90900 },
+    "Palais Theatre": { lat: -37.86758, lng: 144.97603 },
+    "Crown Melbourne": { lat: -37.82423, lng: 144.95753 },
+    "Melbourne CBD": { lat: -37.8152, lng: 144.9639 },
+  };
+
+  it("configures exactly the six major venues, with a $20 fee", () => {
+    expect(PRICING.MAJOR_VENUE_FEE).toBe(20);
+    expect(MAJOR_VENUES.map((v) => v.name)).toEqual(Object.keys(VENUE_POINTS));
+    for (const v of MAJOR_VENUES) expect(v.radiusKm).toBeGreaterThan(0);
+  });
+
+  it.each(Object.entries(VENUE_POINTS))("detects %s from its Places coordinates", (name, location) => {
+    expect(findMajorVenue(location)?.name).toBe(name);
+  });
+
+  it.each(Object.entries(NEIGHBOURS))("does not charge nearby %s", (_, location) => {
+    expect(findMajorVenue(location)).toBeNull();
+  });
+
+  it("never uses text matching", () => {
+    expect(findMajorVenue(null)).toBeNull();
+    const j = assessJourney({ from: "Melbourne Cricket Ground", to: "Marvel Stadium" }); // typed, no coordinates
+    expect(j.majorVenue).toBeNull();
+  });
+
+  it("Williamstown → John Cain Arena: $105 becomes $125 one way", () => {
+    const j = journey("williamstown", "johnCain");
+    expect(j.majorVenue?.name).toBe("John Cain Arena");
+    expect(quoteFare({ km: 15.443 }).fare).toBe(105);
+    const q = quoteFare({ km: 15.443, atMajorVenue: !!j.majorVenue });
+    expect(q.fare).toBe(125);
+    expect(q.venueFee).toBe(20);
+  });
+
+  it("each return leg pays its own fee", () => {
+    const out = quoteFare({ km: 15.443, atMajorVenue: !!journey("williamstown", "johnCain").majorVenue });
+    // With a same-length return route: $125 + $125 = $250
+    const sameRoute = quoteFare({ km: 15.443, atMajorVenue: !!journey("johnCain", "williamstown").majorVenue });
+    expect(totalFare(out.fare, sameRoute.fare)).toBe(250);
+    // Google's actual John Cain Arena → Williamstown route is 20.7 km: $120 + $20 = $140, total $265
+    const actualBack = quoteFare({ km: 20.7, atMajorVenue: true });
+    expect(actualBack.fare).toBe(140);
+    expect(totalFare(out.fare, actualBack.fare)).toBe(265);
+  });
+
+  it.each(["rodLaver", "mcg", "marvel", "flemington", "caulfield"])("applies to trips to and from %s", (venue) => {
+    expect(journey("stKilda", venue).majorVenue).not.toBeNull();
+    expect(journey(venue, "stKilda").majorVenue).not.toBeNull();
+  });
+
+  it("charges only once per leg when both ends are major venues", () => {
+    const j = journey("mcg", "marvel");
+    expect(j.majorVenue).not.toBeNull();
+    expect(quoteFare({ km: 4, atMajorVenue: !!j.majorVenue }).fare).toBe(120); // $100 minimum + one $20 fee
+  });
+
+  it("is a flat fee: added after the minimum, surcharge and rounding", () => {
+    expect(quoteFare({ km: 2.5, atMajorVenue: true }).fare).toBe(120);                    // 100 + 20
+    expect(quoteFare({ km: 15.443, time: "02:00", atMajorVenue: true }).fare).toBe(140);  // 102.87 × 1.15 → 120, + 20
+    expect(quoteFare({ km: 22.9, isAirportTransfer: true, atMajorVenue: true }).fare).toBe(140); // 120 airport + 20
+  });
+
+  it("does not apply to ordinary trips", () => {
+    expect(journey("cbd", "stKilda").majorVenue).toBeNull();
+    expect(quoteFare({ km: 6.7 }).venueFee).toBe(0);
+  });
+
+  it("stays separate from event flagging: MCG on Grand Final day gets both", () => {
+    const j = journey("cbd", "mcg", "2026-09-26");
+    expect(j.event?.name).toBe("AFL Grand Final");
+    expect(j.majorVenue?.name).toBe("MCG");
+  });
+
+  it("is overridden by the regional quote rule", () => {
+    const j = assessJourney({
+      from: PLACES.torquay.address, fromLocation: PLACES.torquay.location,
+      to: PLACES.flemington.address, toLocation: PLACES.flemington.location,
+    });
+    expect(j.majorVenue?.name).toBe("Flemington Racecourse");
+    expect(j.regional).toBe(true); // UI shows "Quote Required" — no automatic fare or fee
+  });
+
+  it("publishes the fee and venue list", () => {
+    expect(MAJOR_VENUE_FEE_NOTE).toBe(
+      "A $20 major venue fee applies per trip to or from John Cain Arena, Rod Laver Arena, MCG, Marvel Stadium, Flemington Racecourse and Caulfield Racecourse."
+    );
   });
 });

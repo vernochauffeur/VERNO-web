@@ -20,6 +20,7 @@ function fareValue(leg) {
   if (leg.fare == null) return TO_BE_CONFIRMED;
   const notes = [
     ...(leg.lateNight ? ["(incl. late-night surcharge)"] : []),
+    ...(leg.venueFee ? [`(incl. ${formatPrice(leg.venueFee)} major venue fee)`] : []),
     ...(leg.event ? [EVENT_GUIDE] : []),
   ];
   return [formatPrice(leg.fare), ...notes].join(" ");
@@ -43,7 +44,7 @@ function totalValue(legs, total) {
 /**
  * Build the plain-text booking request.
  *
- * Leg fields: { pickup, dropoff, date, time, flightNumber, fare, lateNight, regional, event }
+ * Leg fields: { pickup, dropoff, date, time, flightNumber, fare, lateNight, venueFee, regional, event }
  * where `event` is the major-event name (or empty) and `regional` means no automatic fare.
  * The outbound leg also carries passengers and luggage.
  *

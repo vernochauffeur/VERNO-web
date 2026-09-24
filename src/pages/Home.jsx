@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   quoteFare, totalFare, assessJourney, normalizeAirportAddress, formatPrice,
   LATE_NIGHT_WINDOW, LATE_NIGHT_SURCHARGE_LABEL, WAITING_POLICY, SPECIAL_QUOTE_NOTE,
-  REGIONAL_QUOTE_LABEL, REGIONAL_QUOTE_NOTE, EVENT_FARE_LABEL, EVENT_FARE_NOTE,
+  REGIONAL_QUOTE_LABEL, REGIONAL_QUOTE_NOTE, EVENT_FARE_LABEL, EVENT_FARE_NOTE, MAJOR_VENUE_FEE_NOTE,
   AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES,
 } from "../lib/pricing.js";
 import { getDrivingDistanceKm } from "../lib/distance.js";
@@ -69,7 +69,7 @@ function useLegQuote({ from, to, fromLocation, toLocation, time, date, enabled }
   if (enabled && !journey.located) status = "unlocated";
   else if (enabled && journey.regional) status = "regional";
   const quote = status === "ready"
-    ? quoteFare({ km: distance.km, time, isAirportTransfer: journey.isAirportTransfer })
+    ? quoteFare({ km: distance.km, time, isAirportTransfer: journey.isAirportTransfer, atMajorVenue: !!journey.majorVenue })
     : null;
 
   return {
@@ -77,6 +77,7 @@ function useLegQuote({ from, to, fromLocation, toLocation, time, date, enabled }
     quote,
     regional: status === "regional",
     event: enabled && journey.located ? journey.event : null,
+    majorVenue: enabled && journey.located ? journey.majorVenue : null,
     pickupIsAirport: !!journey.fromAirport,
   };
 }
@@ -503,6 +504,11 @@ function LegFare({ leg, legName, pendingText }) {
     <>
       <div className="fare-label" style={style}>{prefix}{label}</div>
       <div className="fare-price">{formatPrice(quote.fare)}</div>
+      {quote.venueFee > 0 && (
+        <div className="fare-guarantee" style={{ marginTop:".5rem" }}>
+          Includes {formatPrice(quote.venueFee)} major venue fee ({leg.majorVenue?.name})
+        </div>
+      )}
       {leg.event && (
         <div className="fare-guarantee" style={{ fontSize:".82rem", lineHeight:1.55, marginTop:".6rem" }}>
           <strong>{leg.event.name}.</strong> {EVENT_FARE_NOTE}
@@ -673,12 +679,14 @@ function InlineBooking() {
       flightNumber: isAirportPickup ? flightNumber : "",
       fare: outboundFare, lateNight: !!outbound.quote?.lateNight,
       regional: outbound.regional, event: outbound.event?.name || "",
+      venueFee: outbound.quote?.venueFee || 0,
     },
     returnLeg: returnTrip ? {
       pickup: returnPickup, dropoff: returnDropoff, date: returnDate, time: returnTime,
       flightNumber: isAirportReturnPickup ? returnFlightNumber : "",
       fare: returnFare, lateNight: !!returnLeg.quote?.lateNight,
       regional: returnLeg.regional, event: returnLeg.event?.name || "",
+      venueFee: returnLeg.quote?.venueFee || 0,
     } : null,
     total,
   });
@@ -1117,6 +1125,7 @@ function Pricing() {
         <div className="pricing-note">
           <p>Late-night surcharge of {LATE_NIGHT_SURCHARGE_LABEL} applies to pickups {LATE_NIGHT_WINDOW} &middot; Your fare is calculated instantly in the booking form.</p>
           <p>{WAITING_POLICY}</p>
+          <p>{MAJOR_VENUE_FEE_NOTE}</p>
           <p>{SPECIAL_QUOTE_NOTE}</p>
           <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
             Calculate your fare &rarr;

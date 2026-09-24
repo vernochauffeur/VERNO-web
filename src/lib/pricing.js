@@ -28,6 +28,10 @@ export const PRICING = {
   // Distance Matrix distances — see src/lib/pricing.test.js.
   AIRPORT: { RATE_MULTIPLIER: 0.90, MIN_FARE: 120 },
 
+  // Flat fee per leg whose pickup or destination is a configured major venue
+  // (see MAJOR_VENUES). Added after the minimum fare, surcharge and rounding.
+  MAJOR_VENUE_FEE: 20,
+
   // Waiting time (not added automatically — charged only if it occurs).
   WAITING: { COMPLIMENTARY_MINUTES: 15, RATE_PER_MINUTE: 1.25 },
 };
@@ -99,15 +103,17 @@ export function roundUpFare(amount) {
 /**
  * Price one journey leg.
  *
- * Order: (base + distance) → airport rate → minimum fare → late-night surcharge → round up.
+ * Order: (base + distance) → airport rate → minimum fare → late-night surcharge → round up
+ *        → + flat major venue fee (once per leg).
  *
  * @param {object} args
  * @param {number} args.km                   driving distance in km
  * @param {string} [args.time]               pickup time "HH:MM" (drives late-night surcharge)
  * @param {boolean} [args.isAirportTransfer] pickup or drop-off is an airport
- * @returns {{ fare:number, km:number, lateNight:boolean, isAirportTransfer:boolean, minimumApplied:boolean } | null}
+ * @param {boolean} [args.atMajorVenue]      pickup or drop-off is a configured major venue
+ * @returns {{ fare:number, km:number, lateNight:boolean, isAirportTransfer:boolean, minimumApplied:boolean, venueFee:number } | null}
  */
-export function quoteFare({ km, time = "", isAirportTransfer = false } = {}) {
+export function quoteFare({ km, time = "", isAirportTransfer = false, atMajorVenue = false } = {}) {
   if (typeof km !== "number" || !Number.isFinite(km) || km < 0) return null;
 
   const multiplier = isAirportTransfer ? PRICING.AIRPORT.RATE_MULTIPLIER : 1;
@@ -120,7 +126,8 @@ export function quoteFare({ km, time = "", isAirportTransfer = false } = {}) {
   const lateNight = isLateNight(time);
   if (lateNight) fare *= 1 + PRICING.LATE_NIGHT.SURCHARGE;
 
-  return { fare: roundUpFare(fare), km, lateNight, isAirportTransfer, minimumApplied };
+  const venueFee = atMajorVenue ? PRICING.MAJOR_VENUE_FEE : 0;
+  return { fare: roundUpFare(fare) + venueFee, km, lateNight, isAirportTransfer, minimumApplied, venueFee };
 }
 
 /** Sum of leg fares, or null if any leg has no fare yet. */
@@ -244,6 +251,36 @@ export function resolveLocation(address, location = null) {
 }
 
 // ---------------------------------------------------------------------------
+// Major venues (flat venue fee)
+// ---------------------------------------------------------------------------
+
+// EDIT HERE to add or remove venues. A leg whose pickup or destination is within
+// `radiusKm` of a venue's Google Places coordinates pays PRICING.MAJOR_VENUE_FEE
+// once. Radii are kept tight so neighbouring places are not charged
+// (e.g. Margaret Court Arena, AAMI Park, Southern Cross, Caulfield station).
+export const MAJOR_VENUES = [
+  { name: "John Cain Arena", location: { lat: -37.82277, lng: 144.98197 }, radiusKm: 0.15 },
+  { name: "Rod Laver Arena", location: { lat: -37.82162, lng: 144.97856 }, radiusKm: 0.08 },
+  { name: "MCG", location: { lat: -37.81997, lng: 144.98345 }, radiusKm: 0.25 },
+  { name: "Marvel Stadium", location: { lat: -37.81650, lng: 144.94760 }, radiusKm: 0.2 },
+  { name: "Flemington Racecourse", location: { lat: -37.79097, lng: 144.91189 }, radiusKm: 0.6 },
+  { name: "Caulfield Racecourse", location: { lat: -37.87759, lng: 145.03841 }, radiusKm: 0.3 },
+];
+
+/** The configured major venue at `location`, or null. */
+export function findMajorVenue(location, venues = MAJOR_VENUES) {
+  if (!isValidLocation(location)) return null;
+  return venues.find((venue) => haversineKm(location, venue.location) <= venue.radiusKm) || null;
+}
+
+function listNames(names) {
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names.join("");
+}
+
+export const MAJOR_VENUE_FEE_NOTE =
+  `A ${formatPrice(PRICING.MAJOR_VENUE_FEE)} major venue fee applies per trip to or from ${listNames(MAJOR_VENUES.map((v) => v.name))}.`;
+
+// ---------------------------------------------------------------------------
 // Major events
 // ---------------------------------------------------------------------------
 
@@ -285,6 +322,7 @@ export function findMajorEvent(date, locations = [], events = MAJOR_EVENTS) {
  * - located:  both ends have coordinates (a Places selection, or a recognised airport)
  * - regional: an end is outside the service area → quote required, no automatic fare
  * - event:    a configured major event on this date near either end → fare shown as a guide
+ * - majorVenue: the configured major venue at either end (flat venue fee, once per leg)
  */
 export function assessJourney({ from, to, fromLocation = null, toLocation = null, date = "" } = {}) {
   const fromAirport = detectAirport(from, fromLocation);
@@ -300,6 +338,7 @@ export function assessJourney({ from, to, fromLocation = null, toLocation = null
     located,
     regional: located && (outside(fromAirport, fromPoint) || outside(toAirport, toPoint)),
     event: located ? findMajorEvent(date, [fromPoint, toPoint]) : null,
+    majorVenue: located ? findMajorVenue(fromPoint) || findMajorVenue(toPoint) : null,
   };
 }
 
