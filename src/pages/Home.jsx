@@ -1,4 +1,15 @@
 import { useState, useEffect, useRef } from "react";
+import {
+  quoteFare, totalFare, detectAirport, normalizeAirportAddress, formatPrice,
+  LATE_NIGHT_WINDOW, LATE_NIGHT_SURCHARGE_LABEL, WAITING_POLICY, SPECIAL_QUOTE_NOTE,
+  AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES,
+} from "../lib/pricing.js";
+import { getDrivingDistanceKm } from "../lib/distance.js";
+import {
+  VERNO_EMAIL, VERNO_PHONE, VERNO_PHONE_DISPLAY, MAX_PASSENGERS,
+  buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
+} from "../lib/booking.js";
+import { FAQS } from "../content/faq.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -10,10 +21,7 @@ const SVC_CORPORATE = "/images/svc-corporate.jpg";
 const SVC_PRIVATE = "/images/svc-private.jpg";
 const SVC_EVENTS = "/images/svc-events.jpg";
 const FLEET_IMG = "/images/fleet.jpg";
-const WA_NUMBER = "61421238894";
-const VERNO_EMAIL = "book@vernochauffeur.com.au";
-const VERNO_PHONE = "+61421238894";
-const VERNO_PHONE_DISPLAY = "0421 238 894";
+const GENERIC_WA_URL = buildWhatsAppUrl(buildBlankBookingMessage());
 
 function goToBookingForm() {
   const el = document.getElementById("from");
@@ -24,89 +32,37 @@ function goToBookingForm() {
   }, 400);
 }
 
-const PRICING = { BASE: 50, RATE_0_25: 2.80, RATE_25_50: 2.50, RATE_50UP: 2.20, MIN_FARE: 90, LATE_SURCHARGE: 0.15, LATE_START: 0, LATE_END: 5, DISCOUNT: 0.15 };
-
-function isLateNight(t) { if (!t) return false; const h = parseInt(t.split(":")[0]); return h >= PRICING.LATE_START && h < PRICING.LATE_END; }
-
-function roundFare(fare) { return Math.ceil(fare / 5) * 5; }
-
-function calcFare(km, bookingTime) {
-  let kmCost = 0;
-  if (km <= 25) {
-    kmCost = km * PRICING.RATE_0_25;
-  } else if (km <= 50) {
-    kmCost = 25 * PRICING.RATE_0_25 + (km - 25) * PRICING.RATE_25_50;
-  } else {
-    kmCost = 25 * PRICING.RATE_0_25 + 25 * PRICING.RATE_25_50 + (km - 50) * PRICING.RATE_50UP;
-  }
-  let fare = PRICING.BASE + kmCost;
-  fare = Math.max(fare, PRICING.MIN_FARE);
-  if (isLateNight(bookingTime)) fare = fare * (1 + PRICING.LATE_SURCHARGE);
-  return roundFare(fare);
-}
-
-function normalizeAddress(text) { if (!text) return ""; return text.toLowerCase().replace(/\bvic\b|\bnsw\b|\bqld\b|\bsa\b|\bwa\b|\btas\b|\bact\b|\bnt\b/g, " ").replace(/\b3\d{3}\b/g, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
-
-function isAirport(text) { if (!text) return false; const t = normalizeAddress(text); return t.includes("airport") || t.includes("tullamarine") || t.includes("terminal") || t.includes("avalon") || t.includes("avv") || t.includes(" mel "); }
-
-function normalizeAirportAddress(text) {
-  if (!text) return text;
-  const t = text.toLowerCase();
-  if (
-    t.includes("tullamarine") ||
-    t.includes("melbourne airport") ||
-    t.includes("qantas") ||
-    t.includes("jetstar") ||
-    t.includes("virgin australia") ||
-    t.includes("rex ") ||
-    t.includes("departure drive") ||
-    t.includes("arrival drive") ||
-    (t.includes("terminal") && (t.includes("melbourne") || t.includes("mel")))
-  ) {
-    return "Melbourne Airport (Tullamarine) VIC 3045, Australia";
-  }
-  if (t.includes("avalon") || t.includes("avv")) {
-    return "Avalon Airport VIC 3212, Australia";
-  }
-  return text;
-}
-
-async function getDistanceKm(from, to) {
-  return new Promise((resolve) => {
-    const service = new window.google.maps.DistanceMatrixService();
-    service.getDistanceMatrix({
-      origins: [from],
-      destinations: [to],
-      travelMode: window.google.maps.TravelMode.DRIVING,
-      unitSystem: window.google.maps.UnitSystem.METRIC,
-    }, (response, status) => {
-      if (status === "OK") {
-        const element = response.rows[0].elements[0];
-        if (element.status === "OK") {
-          const km = element.distance.value / 1000;
-          resolve(km);
-        } else {
-          resolve(null);
-        }
-      } else {
-        resolve(null);
-      }
+// Driving distance for one route. Only the latest request can update state, so a
+// slow Distance Matrix response for an old address never overwrites a newer one.
+function useRouteDistance(origin, destination, enabled) {
+  const active = enabled && !!origin && !!destination;
+  const routeKey = active ? `${origin}\u0000${destination}` : "";
+  const [state, setState] = useState({ routeKey: "", status: "idle", km: null });
+  useEffect(() => {
+    if (!routeKey) { setState({ routeKey: "", status: "idle", km: null }); return; }
+    let current = true;
+    setState({ routeKey, status: "loading", km: null });
+    getDrivingDistanceKm(origin, destination).then((km) => {
+      if (current) setState(km === null ? { routeKey, status: "error", km: null } : { routeKey, status: "ready", km });
     });
-  });
+    return () => { current = false; };
+  }, [routeKey]);
+  // Never return a result that belongs to a different route (e.g. the render before the effect runs).
+  if (!routeKey) return { status: "idle", km: null };
+  return state.routeKey === routeKey ? state : { status: "loading", km: null };
 }
 
-async function calculateFare(from, to, bookingTime) {
-  const normFrom = normalizeAirportAddress(from);
-  const normTo = normalizeAirportAddress(to);
-  const km = await getDistanceKm(normFrom, normTo);
-  if (km === null) return { fare: null, originalFare: null, label: "Indicative", km: null };
-  const originalFare = calcFare(km, bookingTime);
-  const fare = roundFare(originalFare * (1 - PRICING.DISCOUNT));
-  const hasAirport = isAirport(from) || isAirport(to);
-  const label = hasAirport ? "Fixed Price" : "Estimated Fare";
-  return { fare, originalFare, label, km: Math.round(km) };
+// Prices one journey leg with the shared engine. Pickup time only affects the
+// late-night surcharge, so changing it re-prices without a new distance request.
+function useLegQuote({ from, to, fromLocation, toLocation, time, enabled }) {
+  const fromAirport = detectAirport(from, fromLocation);
+  const toAirport = detectAirport(to, toLocation);
+  const origin = enabled ? normalizeAirportAddress(from, fromLocation) : "";
+  const destination = enabled ? normalizeAirportAddress(to, toLocation) : "";
+  const { status, km } = useRouteDistance(origin, destination, enabled);
+  const quote = status === "ready" ? quoteFare({ km, time, isAirportTransfer: !!(fromAirport || toAirport) }) : null;
+  return { status, quote, pickupIsAirport: !!fromAirport };
 }
-
 
 function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
   const inputRef = useRef(null);
@@ -114,13 +70,15 @@ function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
     let timer;
     const initAutocomplete = () => {
       if (!window.google?.maps?.places || !inputRef.current) { timer = setTimeout(initAutocomplete, 300); return; }
-      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, { componentRestrictions: { country: "au" }, fields: ["formatted_address", "name"] });
+      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, { componentRestrictions: { country: "au" }, fields: ["formatted_address", "name", "geometry"] });
       autocomplete.addListener("place_changed", () => {
         try {
           const place = autocomplete.getPlace();
           const selected = place.formatted_address || place.name || "";
+          const loc = place.geometry?.location;
+          const location = loc ? { lat: loc.lat(), lng: loc.lng() } : null;
           onChange(selected);
-          if (onSelect) onSelect(selected);
+          if (onSelect) onSelect(selected || null, location);
         } catch(e) { console.error("Autocomplete error:", e); }
       });
     };
@@ -144,25 +102,6 @@ function AddressField({ label, placeholder, value, onChange, onSelect, id }) {
       )}
     </div>
   );
-}
-
-function buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber }) {
-  const lines = [
-    "VÉRNO — Transfer Request",
-    "",
-    `PICKUP     : ${from || ""}`,
-    `DROP-OFF   : ${to || ""}`,
-    `DATE       : ${date || ""}`,
-    `TIME       : ${time || ""}`,
-    `PASSENGERS : ${pax || ""}`,
-    `LUGGAGE    : ${bags || ""}`,
-    ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-    "",
-    ...(fare ? [`Fare estimate: $${fare}`] : []),
-    "",
-    "Please confirm availability.",
-  ];
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 function WAIcon({ s = 20 }) { return <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.53 5.85L0 24l6.34-1.52A11.95 11.95 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 22a9.96 9.96 0 01-5.19-1.37l-.37-.22-3.84.92.98-3.73-.24-.38A9.96 9.96 0 012 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg>; }
@@ -397,7 +336,7 @@ function Nav() {
             >Get Instant Fare</a>
 
             <a
-              href={buildWhatsAppLink({ from: "", to: "", fare: null })}
+              href={GENERIC_WA_URL}
               target="_blank"
               rel="noopener noreferrer"
               onClick={close}
@@ -433,7 +372,6 @@ function Nav() {
 }
 
 function Hero() {
-  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
   return (
     <section className="hero">
       <div className="hero-content">
@@ -450,7 +388,7 @@ function Hero() {
           >
             <div className="fare-teaser-box"><span className="ft-dot" />Pickup address</div>
             <div className="fare-teaser-box"><span className="ft-sq" />Where to?</div>
-            <p className="fare-teaser-note">Instant fixed fare &middot; 15% off &middot; no signup needed</p>
+            <p className="fare-teaser-note">Instant&nbsp;fare&nbsp;&middot; no&nbsp;surge&nbsp;pricing&nbsp;&middot; no&nbsp;signup&nbsp;needed</p>
           </div>
           <p className="hero-tagline">Airport. Boardroom. Beyond.</p>
           <p className="hero-sub">As Melbourne as it gets.</p>
@@ -496,7 +434,18 @@ function TrustStrip() {
   );
 }
 
-function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, from, to, time, fromSelected, toSelected, returnTrip, returnDate, returnTime }) {
+const fareNoticeStyle = {
+  marginTop:"1.2rem", padding:"1rem 1.2rem",
+  background:"rgba(255,255,255,.05)", borderRadius:12,
+  fontSize:".82rem", color:"rgba(255,255,255,.5)",
+  display:"flex", alignItems:"center", gap:".6rem",
+};
+
+function fareLabel(quote) {
+  return quote.isAirportTransfer ? "Airport Transfer Fare" : "Estimated Fare";
+}
+
+function FareEstimate({ from, to, fromSelected, toSelected, outbound, showReturn, returnLeg, diffReturn, total }) {
   if (from.trim().length < 4 || to.trim().length < 4) return null;
 
   if (!fromSelected || !toSelected) {
@@ -514,38 +463,31 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
     );
   }
 
-  if (fareLoading) {
-    return (
-      <div style={{
-        marginTop:"1.2rem", padding:"1rem 1.2rem",
-        background:"rgba(255,255,255,.05)", borderRadius:12,
-        fontSize:".82rem", color:"rgba(255,255,255,.5)",
-        display:"flex", alignItems:"center", gap:".6rem",
-      }}>
-        <span>Calculating fare...</span>
-      </div>
-    );
+  if (outbound.status === "loading") {
+    return <div style={fareNoticeStyle}><span>Calculating fare...</span></div>;
   }
 
-  if (!fareResult || !fareResult.fare) return null;
-
-  const isLate = isLateNight(time);
-  const hasAirport = fareResult.label === "Fixed Price";
-
-  let label, guarantee, labelColor;
-  if (hasAirport) {
-    label = "Fixed Price";
-    guarantee = "Confirmed at booking via WhatsApp — no surprises.";
-    labelColor = "#2a7a2a";
-  } else {
-    label = "Estimated Fare";
-    guarantee = "Final price confirmed on booking via WhatsApp.";
-    labelColor = "rgba(255,255,255,.5)";
+  if (outbound.status === "error") {
+    return <div style={fareNoticeStyle}><span>We couldn't calculate this route automatically. Send your request and we'll confirm your fare.</span></div>;
   }
+
+  const quote = outbound.quote;
+  if (!quote) return null;
+
+  const returnQuote = showReturn ? returnLeg.quote : null;
+  const lateOutbound = quote.lateNight;
+  const lateReturn = !!returnQuote?.lateNight;
+  let lateNotice = null;
+  if (lateOutbound && lateReturn) lateNotice = `Late-night surcharge applied (${LATE_NIGHT_WINDOW})`;
+  else if (lateOutbound) lateNotice = `Late-night surcharge applied${showReturn ? " to outbound" : ""} (${LATE_NIGHT_WINDOW})`;
+  else if (lateReturn) lateNotice = `Late-night surcharge applied to return (${LATE_NIGHT_WINDOW})`;
+
+  const airportLabelStyle = { color: "#2a7a2a", fontWeight: 600 };
+  const labelStyle = (q) => (q?.isAirportTransfer ? airportLabelStyle : { fontWeight: 600 });
 
   return (
     <div className="fare-estimate">
-      {isLate && (
+      {lateNotice && (
         <div style={{
           background:"rgba(255,180,0,.12)",
           border:"1px solid rgba(255,180,0,.35)",
@@ -555,47 +497,29 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
           fontSize:".78rem", color:"#b8860b",
         }}>
           <span>🌙</span>
-          <span>Late-night surcharge applied (00:00–05:00)</span>
+          <span>{lateNotice}</span>
         </div>
       )}
-      <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>
-        {label}{returnTrip && returnDate && returnTime ? " — Outbound" : ""}
+      <div className="fare-label" style={labelStyle(quote)}>
+        {fareLabel(quote)}{showReturn ? " — Outbound" : ""}
       </div>
-      <div className="fare-price">${fareResult.fare}</div>
-      {fareResult.originalFare && fareResult.originalFare > fareResult.fare && (
-        <div className="fare-original">
-          <span className="fare-original-strike">${fareResult.originalFare}</span>
-          <span className="fare-discount-badge">15% OFF</span>
-        </div>
-      )}
-      {returnTrip && returnDate && returnTime && fareResult && (() => {
-        let returnFare, returnOriginal;
-        if (diffReturn && returnFareResult && returnFareResult.fare) {
-          returnFare = returnFareResult.fare;
-          returnOriginal = returnFareResult.originalFare;
-        } else {
-          const baseKmCost = (() => {
-            const km = fareResult.km || 0;
-            if (km <= 25) return km * PRICING.RATE_0_25;
-            if (km <= 50) return 25 * PRICING.RATE_0_25 + (km - 25) * PRICING.RATE_25_50;
-            return 25 * PRICING.RATE_0_25 + 25 * PRICING.RATE_25_50 + (km - 50) * PRICING.RATE_50UP;
-          })();
-          let baseFare = Math.max(PRICING.BASE + baseKmCost, PRICING.MIN_FARE);
-          if (isLateNight(returnTime)) baseFare = baseFare * (1 + PRICING.LATE_SURCHARGE);
-          returnOriginal = roundFare(baseFare);
-          returnFare = roundFare(returnOriginal * (1 - PRICING.DISCOUNT));
-        }
-        const total = (fareResult.fare || 0) + (returnFare || 0);
-        const totalOriginal = (fareResult.originalFare || 0) + (returnOriginal || 0);
-        return (
-          <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(0,0,0,.1)", paddingTop:".8rem" }}>
-            <div className="fare-label" style={{ color: labelColor, fontWeight: 600 }}>Return</div>
-            <div className="fare-price">${returnFare}</div>
-            {returnOriginal && returnOriginal > returnFare && (
-              <div className="fare-original">
-                <span className="fare-original-strike">${returnOriginal}</span>
-              </div>
-            )}
+      <div className="fare-price">{formatPrice(quote.fare)}</div>
+      {showReturn && (
+        <div style={{ marginTop:".8rem", borderTop:"1px solid rgba(0,0,0,.1)", paddingTop:".8rem" }}>
+          <div className="fare-label" style={labelStyle(returnQuote)}>
+            {returnQuote ? `${fareLabel(returnQuote)} — Return` : "Return"}
+          </div>
+          {returnQuote ? (
+            <div className="fare-price">{formatPrice(returnQuote.fare)}</div>
+          ) : (
+            <div className="fare-guarantee">
+              {returnLeg.status === "loading" ? "Calculating return fare..."
+                : returnLeg.status === "error" ? "Return fare will be confirmed with your booking."
+                : diffReturn ? "Select both return addresses from the dropdown to see the return fare."
+                : "Return fare will be confirmed with your booking."}
+            </div>
+          )}
+          {total != null && (
             <div style={{
               marginTop:".6rem", padding:".65rem .9rem",
               background:"rgba(185,139,85,.15)", borderRadius:8,
@@ -603,12 +527,12 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
               display:"flex", alignItems:"center", gap:".5rem",
             }}>
               <span>↩</span>
-              <span>Total: ${total}{totalOriginal > total && <span style={{ textDecoration:"line-through", marginLeft:".4rem", color:"#C4954A", opacity:.7 }}>${totalOriginal}</span>} · Return fare included</span>
+              <span>Total: {formatPrice(total)} · Return fare included</span>
             </div>
-          </div>
-        );
-      })()}
-      <div className="fare-guarantee">Fares are estimates. Final price confirmed on booking via WhatsApp.</div>
+          )}
+        </div>
+      )}
+      <div className="fare-guarantee">Final fixed price confirmed when your booking is confirmed.</div>
       <div className="fare-trust">
         <span>No hidden costs</span>
         <span>No surge pricing</span>
@@ -620,40 +544,13 @@ function FareEstimate({ fareResult, fareLoading, returnFareResult, diffReturn, f
 
 function getTodayLocal() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`; }
 
-function buildWhatsAppLinkReturn({ from, to, date, time, pax, bags, fare, flightNumber, returnDate, returnTime }) {
-  const lines = [
-    "VÉRNO — Transfer Request",
-    "",
-    "OUTBOUND",
-    `PICKUP     : ${from || ""}`,
-    `DROP-OFF   : ${to || ""}`,
-    `DATE       : ${date || ""}`,
-    `TIME       : ${time || ""}`,
-    `PASSENGERS : ${pax || ""}`,
-    `LUGGAGE    : ${bags || ""}`,
-    ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-    "",
-    ...(fare ? [`Fare estimate: $${fare}`] : []),
-    "",
-    "RETURN",
-    `PICKUP     : ${to || ""}`,
-    `DROP-OFF   : ${from || ""}`,
-    `DATE       : ${returnDate || ""}`,
-    `TIME       : ${returnTime || ""}`,
-    "",
-    ...(fare ? [`Fare estimate: $${fare}`] : []),
-    ...(fare ? [`Total (both ways): $${fare * 2}`] : []),
-    "",
-    "Please confirm availability.",
-  ];
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
-}
-
 function InlineBooking() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [fromSelected, setFromSelected] = useState(false);
   const [toSelected, setToSelected] = useState(false);
+  const [fromLocation, setFromLocation] = useState(null);
+  const [toLocation, setToLocation] = useState(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [pax, setPax] = useState("1");
@@ -667,107 +564,97 @@ function InlineBooking() {
   const [returnTo, setReturnTo] = useState("");
   const [returnFromSelected, setReturnFromSelected] = useState(false);
   const [returnToSelected, setReturnToSelected] = useState(false);
+  const [returnFromLocation, setReturnFromLocation] = useState(null);
+  const [returnToLocation, setReturnToLocation] = useState(null);
   const [returnFlightNumber, setReturnFlightNumber] = useState("");
   const [errors, setErrors] = useState({});
-  const [fareResult, setFareResult] = useState(null);
-  const [fareLoading, setFareLoading] = useState(false);
-  const [returnFareResult, setReturnFareResult] = useState(null);
 
-  const isAirportPickup = isAirport(from);
+  const hasAddress = (v) => v.trim().length >= 4;
 
-  useEffect(() => {
-    if (!fromSelected || !toSelected) { setFareResult(null); return; }
-    if (from.trim().length < 4 || to.trim().length < 4) { setFareResult(null); return; }
-    setFareLoading(true);
-    calculateFare(from, to, time).then((result) => {
-      setFareResult(result);
-      setFareLoading(false);
-    });
-  }, [from, to, time, fromSelected, toSelected]);
+  // Outbound leg
+  const outboundReady = fromSelected && toSelected && hasAddress(from) && hasAddress(to);
+  const outbound = useLegQuote({ from, to, fromLocation, toLocation, time, enabled: outboundReady });
+  const isAirportPickup = outbound.pickupIsAirport;
 
-  useEffect(() => {
-    if (!diffReturn || !returnFromSelected || !returnToSelected) { setReturnFareResult(null); return; }
-    if (returnFrom.trim().length < 4 || returnTo.trim().length < 4) { setReturnFareResult(null); return; }
-    calculateFare(returnFrom, returnTo, returnTime).then((result) => {
-      setReturnFareResult(result);
-    });
-  }, [returnFrom, returnTo, returnTime, returnFromSelected, returnToSelected, diffReturn]);
+  // Return leg: destination → original pickup, or the separately selected return addresses.
+  const returnPickup = diffReturn ? returnFrom : to;
+  const returnDropoff = diffReturn ? returnTo : from;
+  const returnReady = returnTrip && (diffReturn
+    ? returnFromSelected && returnToSelected && hasAddress(returnFrom) && hasAddress(returnTo)
+    : outboundReady);
+  const returnLeg = useLegQuote({
+    from: returnPickup,
+    to: returnDropoff,
+    fromLocation: diffReturn ? returnFromLocation : toLocation,
+    toLocation: diffReturn ? returnToLocation : fromLocation,
+    time: returnTime,
+    enabled: returnReady,
+  });
+  const isAirportReturnPickup = returnLeg.pickupIsAirport;
 
-  const fare = fareResult ? fareResult.fare : null;
+  // The exact values shown in the fare panel — also used verbatim in WhatsApp / SMS.
+  const showReturn = returnTrip && !!returnDate && !!returnTime;
+  const outboundFare = outbound.quote?.fare ?? null;
+  const returnFare = returnTrip ? returnLeg.quote?.fare ?? null : null;
+  const total = returnTrip ? totalFare(outboundFare, returnFare) : null;
 
   const validate = () => {
     const e = {};
-    if (from.trim().length < 4)  e.from = "Please enter a pickup location.";
-    if (to.trim().length < 4)    e.to   = "Please enter a destination.";
-    if (!date)                   e.date = "Please select a date.";
-    if (!time)                   e.time = "Please select a time.";
+    if (!hasAddress(from)) e.from = "Please enter a pickup location.";
+    if (!hasAddress(to))   e.to   = "Please enter a destination.";
+    if (!date)             e.date = "Please select a date.";
+    if (!time)             e.time = "Please select a time.";
     if (returnTrip) {
       if (!returnDate) e.returnDate = "Please select a return date.";
       if (!returnTime) e.returnTime = "Please select a return time.";
+      if (diffReturn) {
+        if (!hasAddress(returnFrom)) e.returnFrom = "Please enter a return pickup location.";
+        if (!hasAddress(returnTo))   e.returnTo   = "Please enter a return destination.";
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const handleWA = () => {
-    if (!validate()) return;
+  const bookingMessage = () => buildBookingMessage({
+    outbound: {
+      pickup: from, dropoff: to, date, time, passengers: pax, luggage: bags,
+      flightNumber: isAirportPickup ? flightNumber : "",
+      fare: outboundFare, lateNight: !!outbound.quote?.lateNight,
+    },
+    returnLeg: returnTrip ? {
+      pickup: returnPickup, dropoff: returnDropoff, date: returnDate, time: returnTime,
+      flightNumber: isAirportReturnPickup ? returnFlightNumber : "",
+      fare: returnFare, lateNight: !!returnLeg.quote?.lateNight,
+    } : null,
+    total,
+  });
+
+  const trackConversion = () => {
     if (window.gtag) {
       window.gtag('event', 'conversion', {
         'send_to': 'AW-18141523015/sdWqCPHY0bwcEMfYxspD'
       });
     }
-    const link = returnTrip
-      ? buildWhatsAppLinkReturn({ from, to, date, time, pax, bags, fare, flightNumber, returnDate, returnTime })
-      : buildWhatsAppLink({ from, to, date, time, pax, bags, fare, flightNumber });
-    window.open(link, "_blank", "noopener");
+  };
+
+  const handleWA = () => {
+    if (!validate()) return;
+    trackConversion();
+    window.open(buildWhatsAppUrl(bookingMessage()), "_blank", "noopener");
   };
 
   const handleSMS = () => {
     if (!validate()) return;
-    if (window.gtag) {
-      window.gtag('event', 'conversion', {
-        'send_to': 'AW-18141523015/sdWqCPHY0bwcEMfYxspD'
-      });
-    }
-    const lines = returnTrip
-      ? [
-          "VÉRNO — Transfer Request",
-          "",
-          "OUTBOUND",
-          `PICKUP     : ${from}`,
-          `DROP-OFF   : ${to}`,
-          `DATE       : ${date}`,
-          `TIME       : ${time}`,
-          `PASSENGERS : ${pax}`,
-          `LUGGAGE    : ${bags}`,
-          ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-          ...(fare ? [`Fare estimate: $${fare}`] : []),
-          "",
-          "RETURN",
-          `PICKUP     : ${to}`,
-          `DROP-OFF   : ${from}`,
-          `DATE       : ${returnDate}`,
-          `TIME       : ${returnTime}`,
-          ...(fare ? [`Fare estimate: $${fare}`, `Total (both ways): $${fare * 2}`] : []),
-          "",
-          "Please confirm availability.",
-        ]
-      : [
-          "VÉRNO — Transfer Request",
-          "",
-          `PICKUP     : ${from}`,
-          `DROP-OFF   : ${to}`,
-          `DATE       : ${date}`,
-          `TIME       : ${time}`,
-          `PASSENGERS : ${pax}`,
-          `LUGGAGE    : ${bags}`,
-          ...(flightNumber ? [`FLIGHT     : ${flightNumber}`] : []),
-          ...(fare ? [`Fare estimate: $${fare}`] : []),
-          "",
-          "Please confirm availability.",
-        ];
-    const msg = encodeURIComponent(lines.join("\n"));
-    window.open(`sms:+61421238894&body=${msg}`, "_blank");
+    trackConversion();
+    window.location.href = buildSmsUrl(bookingMessage());
+  };
+
+  const resetReturnAddresses = () => {
+    setReturnFrom(""); setReturnTo("");
+    setReturnFromSelected(false); setReturnToSelected(false);
+    setReturnFromLocation(null); setReturnToLocation(null);
+    setErrors((p) => ({ ...p, returnFrom: null, returnTo: null }));
   };
 
   const handleDateChange = (e) => {
@@ -798,13 +685,13 @@ function InlineBooking() {
       <div className="booking-panel-inner">
         <div>
           <h2 className="booking-panel-headline">Your fare,<br /><span className="gold-em">instantly.</span></h2>
-          <p className="booking-panel-sub">Enter your pickup and destination to see your fixed fare — no commitment required.</p>
+          <p className="booking-panel-sub">Enter your pickup and destination to see your fare — no commitment required.</p>
           <div style={{ marginTop:"1.2rem", display:"flex", flexDirection:"column", gap:".5rem" }}>
             <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#C4954A" }}>
               <span>✓</span><span>Fare calculated instantly as you type</span>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#888" }}>
-              <span>✓</span><span>Fixed price — no surprises</span>
+              <span>✓</span><span>Fixed price confirmed before you travel</span>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:".5rem", fontSize:".8rem", color:"#888" }}>
               <span>✓</span><span>Direct booking via WhatsApp</span>
@@ -817,19 +704,19 @@ function InlineBooking() {
             <span className="form-stars-icons">★★★★★</span>
             <span className="form-stars-text">5.0 on Google Reviews</span>
           </div>
-          <button className="quick-chip" onClick={() => { setTo("Melbourne Airport (Tullamarine) VIC, Australia"); setToSelected(true); }}>
+          <button className="quick-chip" onClick={() => { setTo("Melbourne Airport (Tullamarine) VIC, Australia"); setToSelected(true); setToLocation(null); setErrors((p) => ({ ...p, to: null })); }}>
             <span className="quick-chip-dot" />Airport transfer? Set Melbourne Airport as destination
           </button>
 
           <AddressField id="from" label="Pickup" placeholder="Suburb, hotel or airport — fare shown instantly" value={from}
-            onChange={(v) => { setFrom(v); setFromSelected(false); setErrors((p) => ({ ...p, from: null })); }}
-            onSelect={(v) => setFromSelected(!!v)}
+            onChange={(v) => { setFrom(v); setFromSelected(false); setFromLocation(null); setErrors((p) => ({ ...p, from: null })); }}
+            onSelect={(v, location) => { setFromSelected(!!v); setFromLocation(v ? location : null); }}
           />
           {errors.from && <span style={errStyle}>{errors.from}</span>}
 
           <AddressField id="to" label="Destination" placeholder="Suburb, hotel or airport — fare shown instantly" value={to}
-            onChange={(v) => { setTo(v); setToSelected(false); setErrors((p) => ({ ...p, to: null })); }}
-            onSelect={(v) => setToSelected(!!v)}
+            onChange={(v) => { setTo(v); setToSelected(false); setToLocation(null); setErrors((p) => ({ ...p, to: null })); }}
+            onSelect={(v, location) => { setToSelected(!!v); setToLocation(v ? location : null); }}
           />
           {errors.to && <span style={errStyle}>{errors.to}</span>}
 
@@ -864,7 +751,7 @@ function InlineBooking() {
               <div className="fg">
                 <label className="fl">Passengers</label>
                 <select className="fi" value={pax} onChange={(e) => setPax(e.target.value)}>
-                  {[1,2,3,4,5,6,7].map((n) => <option key={n} value={n}>{n}</option>)}
+                  {Array.from({ length: MAX_PASSENGERS }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </div>
               <div className="fg">
@@ -876,7 +763,7 @@ function InlineBooking() {
             </div>
 
             <div style={{ margin:"1rem 0", display:"flex", alignItems:"center", gap:".75rem", cursor:"pointer" }}
-              onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFrom(""); setReturnTo(""); }}>
+              onClick={() => { setReturnTrip(!returnTrip); setReturnDate(""); setReturnTime(""); setDiffReturn(false); setReturnFlightNumber(""); resetReturnAddresses(); setErrors((p) => ({ ...p, returnDate: null, returnTime: null })); }}>
               <div style={{ width:42, height:24, borderRadius:12, background:returnTrip?"#B98B55":"#e0e0e0", position:"relative", transition:"background .2s", flexShrink:0 }}>
                 <div style={{ position:"absolute", top:3, left:returnTrip?21:3, width:18, height:18, borderRadius:"50%", background:"#fff", transition:"left .2s", boxShadow:"0 1px 4px rgba(0,0,0,.2)" }}/>
               </div>
@@ -906,7 +793,7 @@ function InlineBooking() {
                   </div>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:".6rem", cursor:"pointer", marginBottom:"1rem" }}
-                  onClick={() => { setDiffReturn(!diffReturn); setReturnFrom(""); setReturnTo(""); setReturnFromSelected(false); setReturnToSelected(false); }}>
+                  onClick={() => { setDiffReturn(!diffReturn); resetReturnAddresses(); }}>
                   <div style={{ width:36, height:20, borderRadius:10, background:diffReturn?"#B98B55":"#ccc", position:"relative", transition:"background .2s", flexShrink:0 }}>
                     <div style={{ position:"absolute", top:2, left:diffReturn?18:2, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"left .2s" }}/>
                   </div>
@@ -916,28 +803,31 @@ function InlineBooking() {
                   <div className="fg">
                     <label className="fl">Return Pickup</label>
                     <AddressField id="returnFrom" label="" placeholder="Enter return pickup address" value={returnFrom}
-                      onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); }}
-                      onSelect={(v) => { setReturnFrom(v); setReturnFromSelected(true); }} />
+                      onChange={(v) => { setReturnFrom(v); setReturnFromSelected(false); setReturnFromLocation(null); setErrors((p) => ({ ...p, returnFrom: null })); }}
+                      onSelect={(v, location) => { setReturnFromSelected(!!v); setReturnFromLocation(v ? location : null); }} />
+                    {errors.returnFrom && <span style={errStyle}>{errors.returnFrom}</span>}
                   </div>
                   <div className="fg">
                     <label className="fl">Return Destination</label>
                     <AddressField id="returnTo" label="" placeholder="Enter return destination" value={returnTo}
-                      onChange={(v) => { setReturnTo(v); setReturnToSelected(false); }}
-                      onSelect={(v) => { setReturnTo(v); setReturnToSelected(true); }} />
+                      onChange={(v) => { setReturnTo(v); setReturnToSelected(false); setReturnToLocation(null); setErrors((p) => ({ ...p, returnTo: null })); }}
+                      onSelect={(v, location) => { setReturnToSelected(!!v); setReturnToLocation(v ? location : null); }} />
+                    {errors.returnTo && <span style={errStyle}>{errors.returnTo}</span>}
                   </div>
-                  {isAirport(returnFrom) && (
-                    <div className="fg">
-                      <label className="fl">Return Flight Number</label>
-                      <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
-                        onChange={(e) => setReturnFlightNumber(e.target.value)} style={{ background:"#fff" }} />
-                    </div>
-                  )}
                 </div>
+                {isAirportReturnPickup && (
+                  <div className="fg" style={{ marginTop: diffReturn ? ".75rem" : 0 }}>
+                    <label className="fl">Return Flight Number</label>
+                    <input className="fi" type="text" placeholder="e.g. QF409" value={returnFlightNumber}
+                      onChange={(e) => setReturnFlightNumber(e.target.value.toUpperCase())} style={{ background:"#fff" }} />
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          <FareEstimate fareResult={fareResult} fareLoading={fareLoading} returnFareResult={returnFareResult} diffReturn={diffReturn} from={from} to={to} time={time} fromSelected={fromSelected} toSelected={toSelected} returnTrip={returnTrip} returnDate={returnDate} returnTime={returnTime} />
+          <FareEstimate from={from} to={to} fromSelected={fromSelected} toSelected={toSelected}
+            outbound={outbound} showReturn={showReturn} returnLeg={returnLeg} diffReturn={diffReturn} total={total} />
 
           <button className="btn-whatsapp premium-btn" style={{ width:"100%" }} onClick={handleWA}>
             <WAIcon s={18} /> Confirm via WhatsApp
@@ -1140,22 +1030,8 @@ function WhyMoments() {
 }
 
 function Pricing() {
-  const airports = [
-    { from: "CBD", to: "Tullamarine Airport", price: "from $115" },
-    { from: "St Kilda", to: "Tullamarine Airport", price: "from $133" },
-    { from: "South Yarra", to: "Tullamarine Airport", price: "from $123" },
-    { from: "Toorak", to: "Tullamarine Airport", price: "from $128" },
-    { from: "Brighton", to: "Tullamarine Airport", price: "from $138" },
-    { from: "CBD", to: "Avalon Airport", price: "from $195" },
-  ];
-  const pointToPoint = [
-    { from: "CBD", to: "St Kilda", price: "from $90" },
-    { from: "CBD", to: "Brighton", price: "from $105" },
-    { from: "CBD", to: "Ringwood", price: "from $125" },
-    { from: "CBD", to: "Frankston", price: "from $170" },
-    { from: "CBD", to: "Mornington", price: "from $215" },
-    { from: "CBD", to: "Geelong", price: "from $240" },
-  ];
+  const airports = AIRPORT_FARE_EXAMPLES;
+  const pointToPoint = POINT_TO_POINT_EXAMPLES;
 
   return (
     <section id="pricing" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
@@ -1170,7 +1046,7 @@ function Pricing() {
             {airports.map((r) => (
               <div key={r.from + r.to} className="pricing-row">
                 <span className="pricing-route">{r.from} &rarr; {r.to}</span>
-                <span className="pricing-price">{r.price}</span>
+                <span className="pricing-price">from {formatPrice(r.price)}</span>
               </div>
             ))}
           </div>
@@ -1179,16 +1055,18 @@ function Pricing() {
             {pointToPoint.map((r) => (
               <div key={r.from + r.to} className="pricing-row">
                 <span className="pricing-route">{r.from} &rarr; {r.to}</span>
-                <span className="pricing-price">{r.price}</span>
+                <span className="pricing-price">from {formatPrice(r.price)}</span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="pricing-note">
-          <p>Late-night surcharge applies 12am–5am &middot; Exact fare calculated instantly below.</p>
+          <p>Late-night surcharge of {LATE_NIGHT_SURCHARGE_LABEL} applies to pickups {LATE_NIGHT_WINDOW} &middot; Your fare is calculated instantly in the booking form.</p>
+          <p>{WAITING_POLICY}</p>
+          <p>{SPECIAL_QUOTE_NOTE}</p>
           <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
-            Calculate your exact fare &rarr;
+            Calculate your fare &rarr;
           </a>
         </div>
       </div>
@@ -1248,40 +1126,7 @@ function Fleet() {
 
 function FAQ() {
   const [open, setOpen] = useState(null);
-  const faqs = [
-    {
-      q: "How much does a chauffeur cost in Melbourne?",
-      a: "Fares start from $90 for short transfers within inner Melbourne. CBD to Tullamarine Airport is from $115, St Kilda to Airport from $133. Pricing is fixed and calculated by distance — enter your pickup and destination above to see your exact fare instantly."
-    },
-    {
-      q: "Do you provide airport transfers from Tullamarine and Avalon?",
-      a: "Yes. We specialise in Melbourne airport transfers — both Tullamarine (MEL) and Avalon (AVV). Your flight is tracked in real-time, so we adjust pickup if your flight is delayed or arrives early. No extra charge for waiting if your flight is late."
-    },
-    {
-      q: "What if my flight is delayed?",
-      a: "No problem — we monitor your flight automatically using the flight number you provide. If your flight is delayed, we adjust your pickup accordingly with no additional charge. If your flight arrives early, we'll be there waiting."
-    },
-    {
-      q: "How far in advance should I book?",
-      a: "We recommend booking at least 12 hours in advance to guarantee availability. For peak times (early mornings, weekends, major events) earlier booking is best. For last-minute requests, message us on WhatsApp — we'll do our best to accommodate."
-    },
-    {
-      q: "Do you charge a waiting fee?",
-      a: "No. We don't charge waiting fees for reasonable pickup delays, including flight delays. Our pricing is fixed and transparent — what you see is what you pay."
-    },
-    {
-      q: "What vehicles do you operate?",
-      a: "Our fleet consists of modern BMW i5 electric sedans — premium, quiet, and zero-emission. Each vehicle seats up to 4 passengers comfortably with generous luggage capacity. All vehicles are kept immaculate and fully equipped for executive travel."
-    },
-    {
-      q: "Do you serve corporate clients?",
-      a: "Yes. We offer dedicated corporate chauffeur services for executives, business guests and clients across Melbourne. Account billing, recurring transfers and priority booking available. Contact us via the Corporate Enquiries section for tailored arrangements."
-    },
-    {
-      q: "Can I book a return trip?",
-      a: "Yes. When booking, toggle 'Add return trip' to schedule both directions in one booking. You can specify a different return address if needed, and the return fare is automatically calculated and included in your quote."
-    },
-  ];
+  const faqs = FAQS;
 
   return (
     <section id="faq" style={{ background:"#fdf9f4", padding:"5rem 5vw" }}>
@@ -1366,7 +1211,7 @@ function Footer() {
 }
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,300;6..96,400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth}
 :root{--gold:#C4954A;--gold2:#D4A55A;--black:#0f0d0a;--white:#fdf9f4;--wa:#128C7E;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',Arial,sans-serif}
 body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden} a{text-decoration:none;color:inherit} button,input,select{font-family:var(--sans)}
@@ -1379,12 +1224,12 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .btn-hero-green{display:inline-flex;align-items:center;justify-content:center;gap:.65rem;background:#128C7E;color:#fff;border:1px solid #128C7E;padding:1rem 1.9rem;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;border-radius:2px;}
 .btn-hero-green:hover{background:#0d6b60;border-color:#0d6b60;transform:translateY(-2px);box-shadow:0 8px 24px rgba(18,140,126,.3);}
 .verno-logo{display:flex;flex-direction:column;align-items:flex-start;line-height:1;} .verno-logo-top{display:flex;align-items:center;gap:12px;} .verno-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);display:inline-block;} .verno-word{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.22em;color:#fff;} .verno-city{margin-left:38px;margin-top:6px;font-family:var(--sans);font-size:10px;letter-spacing:.42em;color:rgba(255,255,255,.45);}
-.hero{position:relative;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 80%/cover no-repeat;color:#fff;overflow:hidden;}
+.hero{position:relative;display:flex;flex-direction:column;min-height:78vh;padding:105px 5vw 0;background:radial-gradient(circle at 88% 42%, rgba(185,139,85,.2), transparent 32%),linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(8,8,8,.62) 38%, rgba(8,8,8,.15) 66%, rgba(8,8,8,.25) 100%),linear-gradient(180deg, rgba(5,5,5,.2) 0%, rgba(5,5,5,.65) 100%),url("/images/hero-bg.jpg") center 80%/cover no-repeat;color:#fff;overflow:hidden;}
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom, transparent, rgba(10,10,10,.92));pointer-events:none;}
 .hero-content{position:relative;z-index:2;min-height:calc(78vh - 105px);max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0, 1.05fr) 390px;gap:6vw;align-items:center;}
 .hero-left{padding-bottom:5vh;}
 .hero-label{font-size:.72rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:#C29A66;margin-bottom:1.8rem;}
-.hero-h1{font-family:var(--serif);line-height:.95;letter-spacing:-.055em;margin-bottom:1.8rem;max-width:720px;}
+.hero-h1{font-family:'Bodoni Moda',serif;font-weight:300;font-size:clamp(44px,10vw,96px);line-height:1.02;letter-spacing:-.055em;margin-bottom:18px;max-width:760px;}
 .hero-top{display:block;font-style:normal;font-weight:600;font-size:clamp(2.8rem,3.8vw,4.6rem);color:#fff;}
 .hero-bottom{display:block;font-style:italic;font-weight:500;font-size:clamp(2.6rem,3.6vw,4.4rem);color:rgba(255,255,255,.92);margin-top:.05rem;white-space:nowrap;}
 .hero-line{background:#C29A66;width:46px;height:2px;margin-bottom:1.6rem;}
@@ -1404,7 +1249,7 @@ body{font-family:var(--sans);background:#0f0d0a;color:#111;-webkit-font-smoothin
 .lux-icon{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;}
 .hero-service-row h3{font-family:var(--serif);font-size:1.15rem;font-weight:600;color:#fff;margin-bottom:.3rem;}
 .hero-service-row p{font-size:.78rem;line-height:1.4;color:rgba(255,255,255,.52);}
-.trust-strip{background:rgba(18,18,18,.96);padding:2.25rem 5vw;border-top:1px solid rgba(201,164,109,.11);border-bottom:1px solid rgba(201,164,109,.11);}
+.trust-strip{display:flex;flex-wrap:wrap;gap:18px;color:rgba(247,245,240,.76);font-size:12px;letter-spacing:.14em;text-transform:uppercase;background:rgba(18,18,18,.96);padding:2.25rem 5vw;border-top:1px solid rgba(201,164,109,.11);border-bottom:1px solid rgba(201,164,109,.11);}
 .trust-strip-inner{max-width:1050px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
 .trust-feature{display:grid;grid-template-columns:52px 1fr;gap:1.3rem;align-items:flex-start;padding:0 2.6rem;border-right:1px solid rgba(255,255,255,.08);}
 .trust-feature:last-child{border-right:none;}
@@ -1438,9 +1283,6 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .fare-estimate{margin-top:1.5rem;background:#f5ead4;color:#111;padding:2rem;border-radius:14px;}
 .fare-label{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(0,0,0,.5);margin-bottom:.7rem;}
 .fare-price{font-family:var(--sans);font-size:3.6rem;font-weight:600;line-height:1;color:#111;letter-spacing:-.02em;}
-.fare-original{margin-top:.5rem;display:flex;align-items:center;gap:.7rem;}
-.fare-original-strike{font-family:var(--serif);font-size:1.4rem;color:#C4954A;text-decoration:line-through;opacity:.75;}
-.fare-discount-badge{font-size:.65rem;font-weight:700;letter-spacing:.1em;background:#C4954A;color:#fff;padding:.25rem .55rem;border-radius:3px;}
 .fare-guarantee{color:rgba(0,0,0,.5);font-size:.75rem;margin-top:.4rem;}
 .fare-trust{display:flex;gap:1rem;flex-wrap:wrap;border-top:1px solid rgba(0,0,0,.1);padding-top:1rem;margin-top:1rem;color:rgba(0,0,0,.5);font-size:.7rem;}
 .btn-whatsapp{width:100%;height:58px;display:flex;align-items:center;justify-content:center;gap:.65rem;background:linear-gradient(180deg,#D4A96F,#A8753F);color:#111;border:1px solid rgba(212,169,111,.65);border-radius:14px;font-size:.86rem;font-weight:700;letter-spacing:.03em;margin-top:1.8rem;cursor:pointer;}
@@ -1576,7 +1418,7 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 .fare-teaser-box{display:flex;align-items:center;gap:.75rem;background:rgba(255,255,255,.97);border-radius:12px;padding:1.05rem 1.15rem;color:#666;font-size:16px;box-shadow:0 10px 32px rgba(0,0,0,.38);}
 .ft-dot{width:9px;height:9px;border-radius:50%;background:#128C7E;flex-shrink:0;}
 .ft-sq{width:9px;height:9px;background:#C4954A;flex-shrink:0;}
-.fare-teaser-note{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#C29A66;margin-top:.1rem;}
+.fare-teaser-note{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#C29A66;margin-top:.1rem;text-wrap:balance;}
 .form-stars{display:flex;align-items:center;gap:.55rem;margin-bottom:1.1rem;}
 .form-stars-icons{color:#C4954A;font-size:.95rem;letter-spacing:2px;}
 .form-stars-text{color:#777;font-size:.76rem;letter-spacing:.02em;}
@@ -1626,7 +1468,6 @@ footer{background:#080808;color:#fff;padding:5rem 5vw 2.5rem;}
 `;
 
 function StickyBar() {
-  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
   return (
     <div className="sticky-bar">
       <a href={`tel:${VERNO_PHONE}`} className="sb-icon" aria-label="Call Verno Chauffeur"><PhoneIcon s={19} /></a>
@@ -1634,14 +1475,13 @@ function StickyBar() {
         href="#book"
         className="sb-cta"
         onClick={(e) => { e.preventDefault(); goToBookingForm(); }}
-      >See your fixed fare &rarr;</a>
-      <a href={wa} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
+      >See your fare &rarr;</a>
+      <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
     </div>
   );
 }
 
 export default function Home() {
-  const wa = buildWhatsAppLink({ from: "", to: "", fare: null });
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
@@ -1657,7 +1497,7 @@ export default function Home() {
     <AboutSEO />
     <Closer />
     <Footer />
-    <a href={wa} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
+    <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
     <StickyBar />
   </>;
 }
