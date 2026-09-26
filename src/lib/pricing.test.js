@@ -17,7 +17,7 @@ describe("pricing configuration", () => {
     expect(PRICING.DISTANCE_TIERS.map((t) => t.upToKm)).toEqual([25, 50, Infinity]);
     expect(PRICING.ROUND_UP_TO).toBe(5);
     expect(PRICING.LATE_NIGHT).toEqual({ START_HOUR: 0, END_HOUR: 5, SURCHARGE: 0.15 });
-    expect(PRICING.WAITING).toEqual({ COMPLIMENTARY_MINUTES: 15, RATE_PER_MINUTE: 1.25 });
+    expect(PRICING.WAITING).toEqual({ COMPLIMENTARY_MINUTES: 15, AIRPORT_COMPLIMENTARY_MINUTES: 60, RATE_PER_MINUTE: 1.25 });
   });
 
   it("has no discount model", () => {
@@ -226,7 +226,7 @@ describe("copy helpers", () => {
   });
   it("states the waiting policy from config", () => {
     expect(WAITING_POLICY).toBe(
-      "15 minutes complimentary waiting time is included with standard pickups. Additional waiting time is charged at $1.25 per minute. Airport pickups are monitored using live flight information, so flight delays do not reduce your complimentary waiting time."
+      "Airport pickups include 60 minutes complimentary waiting from your flight's actual landing time. Standard pickups include 15 minutes. Additional waiting time is charged at $1.25 per minute. Flights are tracked live, so delays never reduce your complimentary waiting time."
     );
   });
 });

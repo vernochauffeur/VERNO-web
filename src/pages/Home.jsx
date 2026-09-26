@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  quoteFare, totalFare, assessJourney, normalizeAirportAddress, formatPrice,
+  PRICING, quoteFare, totalFare, assessJourney, normalizeAirportAddress, formatPrice,
   LATE_NIGHT_WINDOW, LATE_NIGHT_SURCHARGE_LABEL, WAITING_POLICY, SPECIAL_QUOTE_NOTE,
   REGIONAL_QUOTE_LABEL, REGIONAL_QUOTE_NOTE, EVENT_FARE_LABEL, EVENT_FARE_NOTE, MAJOR_VENUE_FEE_NOTE,
   AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES,
@@ -698,7 +698,7 @@ const SERVICES = [
     label: "Airport Transfers",
     h: "Airport Transfers",
     img: SVC_AIRPORT,
-    d: "Your flight lands, we're already there. Tullamarine and Avalon transfers with real-time flight tracking and a fixed fare — no surprises, no waiting.",
+    d: `Your flight lands, we're already there. Tullamarine and Avalon transfers with real-time flight tracking, ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting from landing and a fixed fare — no surprises.`,
     features: ["Flight tracked in real-time", "Fixed fare, no surprises", "Driver in position on arrival"]
   },
   {
