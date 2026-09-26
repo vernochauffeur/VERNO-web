@@ -1,11 +1,35 @@
 // Every prerendered page besides the home page: suburb and hotel landing pages
-// (places.js) plus the corporate page. Each entry gives the URL path, the props
+// (places.js), the corporate page and the airport-transfer hub listing them. Each entry gives the URL path, the props
 // the Home component renders with, and the page's head tags and schema.
 
 import { PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema } from "./places.js";
-import { PRICING } from "../lib/pricing.js";
+import { PRICING, formatPrice } from "../lib/pricing.js";
 
 export const CORPORATE_PATH = "/corporate";
+export const AIRPORT_HUB_PATH = "/melbourne-airport-transfers";
+
+function airportHubHead() {
+  return {
+    title: `Melbourne Airport Transfers by Hotel & Suburb | From ${formatPrice(PRICING.AIRPORT.MIN_FARE)} | VÉRNO`,
+    description:
+      "Fixed-fare chauffeur transfers between Melbourne Airport and Melbourne's hotels and suburbs in a BMW i5: " +
+      `name board meet & greet, live flight tracking and ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.`,
+    url: `${SITE_URL}${AIRPORT_HUB_PATH}`,
+  };
+}
+
+function airportHubSchema() {
+  const head = airportHubHead();
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Melbourne Airport chauffeur transfers",
+    url: head.url,
+    itemListElement: PLACES.map((place, i) => ({
+      "@type": "ListItem", position: i + 1, name: place.name, url: `${SITE_URL}${placePath(place)}`,
+    })),
+  };
+}
 
 function corporateHead() {
   return {
@@ -36,6 +60,7 @@ export const PAGES = [
     path: placePath(place), props: { place }, head: placeHead(place), schema: buildPlaceSchema(place),
   })),
   { path: CORPORATE_PATH, props: { corporate: true }, head: corporateHead(), schema: corporateSchema() },
+  { path: AIRPORT_HUB_PATH, props: { airportHub: true }, head: airportHubHead(), schema: airportHubSchema() },
 ];
 
 /** The page at `pathname`, or null (home page, unknown paths). */

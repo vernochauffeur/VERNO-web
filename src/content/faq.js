@@ -23,6 +23,10 @@ export const FAQS = [
     a: "No problem — we monitor your flight automatically using the flight number you provide. If your flight is delayed, we adjust your pickup accordingly with no additional charge. If your flight arrives early, we'll be there waiting.",
   },
   {
+    q: "Where will my chauffeur meet me at the airport?",
+    a: `Your chauffeur waits in the arrivals hall holding a name board with your name. Your flight is tracked live, and airport pickups include ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting from landing.`,
+  },
+  {
     q: "How far in advance should I book?",
     a: "We recommend booking at least 12 hours in advance to guarantee availability. For peak times (early mornings, weekends, major events) earlier booking is best. For last-minute requests, message us on WhatsApp — we'll do our best to accommodate.",
   },
