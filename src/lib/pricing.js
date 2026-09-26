@@ -356,7 +356,7 @@ export function assessJourney({ from, to, fromLocation = null, toLocation = null
 export const AIRPORT_FARE_EXAMPLES = [
   { from: "CBD", to: "Melbourne Airport", price: 120, referenceKm: 22.9 },
   { from: "St Kilda", to: "Melbourne Airport", price: 139, referenceKm: 30.1 },
-  { from: "South Yarra", to: "Melbourne Airport", price: 137, referenceKm: 33.2 },
+  { from: "South Yarra", to: "Melbourne Airport", price: 140, referenceKm: 33.2 },
   { from: "Toorak", to: "Melbourne Airport", price: 141, referenceKm: 32.0 },
   { from: "Brighton", to: "Melbourne Airport", price: 148, referenceKm: 35.0 },
   { from: "Williamstown", to: "Melbourne Airport", price: 143, referenceKm: 30.2 },

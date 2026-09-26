@@ -202,7 +202,7 @@ describe("published pricing examples", () => {
 
   it("publishes the requested airport examples", () => {
     expect(AIRPORT_FARE_EXAMPLES.map((e) => [e.from, e.price])).toEqual([
-      ["CBD", 120], ["St Kilda", 139], ["South Yarra", 137], ["Toorak", 141], ["Brighton", 148], ["Williamstown", 143],
+      ["CBD", 120], ["St Kilda", 139], ["South Yarra", 140], ["Toorak", 141], ["Brighton", 148], ["Williamstown", 143],
     ]);
   });
 
