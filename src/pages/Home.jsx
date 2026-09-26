@@ -12,6 +12,7 @@ import {
   buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
 } from "../lib/booking.js";
 import { FAQS } from "../content/faq.js";
+import { SUBURBS, suburbPath, suburbAirportFare } from "../content/suburbs.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -238,15 +239,22 @@ function Nav() {
   );
 }
 
-function Hero() {
+function Hero({ suburb }) {
   return (
     <section className="hero">
       <div className="hero-inner">
-        <h1 className="hero-title">Melbourne, privately.</h1>
-        <p className="hero-lede">
-          Private chauffeur transfers across Melbourne in a BMW i5 — airport, corporate and private travel.
-          See your fare instantly, with no surge pricing and no sign-up.
-        </p>
+        <h1 className="hero-title">{suburb ? `${suburb.name}, privately.` : "Melbourne, privately."}</h1>
+        {suburb ? (
+          <p className="hero-lede">
+            Private chauffeur transfers between {suburb.name} and Melbourne Airport in a BMW i5 — fixed fare
+            from {formatPrice(suburbAirportFare(suburb))}, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
+          </p>
+        ) : (
+          <p className="hero-lede">
+            Private chauffeur transfers across Melbourne in a BMW i5 — airport, corporate and private travel.
+            See your fare instantly, with no surge pricing and no sign-up.
+          </p>
+        )}
         <button type="button" className="hero-route" onClick={goToBookingForm} aria-label="Get your fare — open the fare calculator">
           <span className="hero-route-field"><span className="route-marker route-marker--dot" aria-hidden="true" />Pickup address</span>
           <span className="hero-route-field"><span className="route-marker route-marker--square" aria-hidden="true" />Where to?</span>
@@ -254,10 +262,56 @@ function Hero() {
         </button>
         <ul className="hero-dataline" aria-label="Service overview">
           <li>Melbourne Airport</li>
-          <li>Melbourne CBD</li>
+          <li>{suburb ? suburb.name : "Melbourne CBD"}</li>
           <li>Corporate travel</li>
           <li>BMW i5 electric</li>
         </ul>
+      </div>
+    </section>
+  );
+}
+
+// Suburb landing pages only: the fixed airport fare for this suburb, straight
+// from the pricing engine, plus links to the other suburb pages.
+function SuburbFare({ suburb }) {
+  const fare = formatPrice(suburbAirportFare(suburb));
+  return (
+    <section id="suburb-fare" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
+      <div className="wrap">
+        <div className="s-label">{suburb.name} airport transfers</div>
+        <h2 className="s-h" style={{ color:"#111" }}>{suburb.name} to Melbourne Airport,<br /><span className="gold-em">from {fare}.</span></h2>
+        <p style={{ fontSize:".95rem", color:"#666", marginBottom:"3rem", maxWidth:560 }}>{suburb.intro}</p>
+
+        <div className="pricing-grid">
+          <div className="pricing-table">
+            <div className="pricing-table-label">Fixed fare</div>
+            <div className="pricing-row">
+              <span className="pricing-route">{suburb.name} &rarr; Melbourne Airport</span>
+              <span className="pricing-price">from {fare}</span>
+            </div>
+            <div className="pricing-row">
+              <span className="pricing-route">Melbourne Airport &rarr; {suburb.name}</span>
+              <span className="pricing-price">from {fare}</span>
+            </div>
+          </div>
+          <div className="pricing-table">
+            <div className="pricing-table-label">Other suburbs</div>
+            {SUBURBS.filter((s) => s.slug !== suburb.slug).map((s) => (
+              <a key={s.slug} href={suburbPath(s)} className="pricing-row">
+                <span className="pricing-route">{s.name} &rarr; Melbourne Airport</span>
+                <span className="pricing-price">from {formatPrice(suburbAirportFare(s))}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="pricing-note">
+          <p>{WAITING_POLICY}</p>
+          <p>Late-night surcharge of {LATE_NIGHT_SURCHARGE_LABEL} applies to pickups {LATE_NIGHT_WINDOW} &middot; Your exact fare is calculated instantly in the booking form.</p>
+          <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
+            Calculate your fare &rarr;
+          </a>
+        </div>
       </div>
     </section>
   );
@@ -1046,7 +1100,7 @@ function Footer() {
           <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12} />{VERNO_EMAIL}</a>
         </div>
         <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="#services">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
-        <div><p className="ft-col-h">Coverage</p><ul className="ft-links"><li><a href="#areas">Melbourne CBD</a></li><li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
+        <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={suburbPath(s)}>{s.name}</a></li>)}<li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
         <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
       <div className="ft-bottom">
@@ -1433,11 +1487,12 @@ function StickyBar() {
   );
 }
 
-export default function Home() {
+export default function Home({ suburb = null }) {
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
-    <Hero />
+    <Hero suburb={suburb} />
+    {suburb && <SuburbFare suburb={suburb} />}
     <TrustStrip />
     <InlineBooking />
     <Services />
