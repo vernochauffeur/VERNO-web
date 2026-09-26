@@ -231,18 +231,21 @@ export function normalizeAirportAddress(address, location = null) {
 // Beyond it the chauffeur has to position from Melbourne, so a passenger-distance
 // fare would underprice the job — those bookings are quoted manually instead.
 // Airports (Melbourne and Avalon) always count as inside the service area.
+// Airport transfers use the wider airportRadiusKm for their non-airport end
+// (e.g. Melbourne Airport ↔ Geelong or Torquay is priced automatically).
 export const SERVICE_AREA = {
   name: "Melbourne",
   center: { lat: -37.8136, lng: 144.9631 }, // Melbourne CBD
   radiusKm: 50,
+  airportRadiusKm: 200,
 };
 
 export const REGIONAL_QUOTE_LABEL = "Regional Transfer — Quote Required";
 export const REGIONAL_QUOTE_NOTE =
   "Regional bookings may include additional chauffeur positioning time and distance. We’ll confirm a fixed price when your booking is reviewed.";
 
-export function isWithinServiceArea(location) {
-  return isValidLocation(location) && haversineKm(location, SERVICE_AREA.center) <= SERVICE_AREA.radiusKm;
+export function isWithinServiceArea(location, radiusKm = SERVICE_AREA.radiusKm) {
+  return isValidLocation(location) && haversineKm(location, SERVICE_AREA.center) <= radiusKm;
 }
 
 /** Coordinates for an address: the Places result, or the airport's own coordinates. */
@@ -334,11 +337,13 @@ export function assessJourney({ from, to, fromLocation = null, toLocation = null
   const fromPoint = resolveLocation(from, fromLocation);
   const toPoint = resolveLocation(to, toLocation);
   const located = !!fromPoint && !!toPoint;
-  const outside = (airport, point) => !airport && !isWithinServiceArea(point);
+  const isAirportTransfer = !!(fromAirport || toAirport);
+  const radiusKm = isAirportTransfer ? SERVICE_AREA.airportRadiusKm : SERVICE_AREA.radiusKm;
+  const outside = (airport, point) => !airport && !isWithinServiceArea(point, radiusKm);
   return {
     fromAirport,
     toAirport,
-    isAirportTransfer: !!(fromAirport || toAirport),
+    isAirportTransfer,
     located,
     regional: located && (outside(fromAirport, fromPoint) || outside(toAirport, toPoint)),
     event: located ? findMajorEvent(date, [fromPoint, toPoint]) : null,

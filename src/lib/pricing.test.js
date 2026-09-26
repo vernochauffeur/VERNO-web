@@ -246,6 +246,8 @@ const PLACES = {
   sorrento: { address: "Sorrento VIC 3943, Australia", location: { lat: -38.3401, lng: 144.7365 } },
   redHill: { address: "Red Hill VIC 3937, Australia", location: { lat: -38.3697, lng: 145.0106 } },
   geelong: { address: "Geelong VIC 3220, Australia", location: { lat: -38.1493, lng: 144.3598 } },
+  bendigo: { address: "Bendigo VIC 3550, Australia", location: { lat: -36.7570, lng: 144.2794 } },
+  warrnambool: { address: "Warrnambool VIC 3280, Australia", location: { lat: -38.3818, lng: 142.4880 } },
   melAirport: { address: "Terminal 2 - International, Arrival Dr, Melbourne Airport VIC 3045, Australia", location: { lat: -37.6708, lng: 144.8430 } },
   melAirportChip: { address: "Melbourne Airport (Tullamarine) VIC, Australia", location: null },
   avalon: { address: "Avalon Airport, 80 Beach Rd, Lara VIC 3212, Australia", location: { lat: -38.0390, lng: 144.4684 } },
@@ -266,6 +268,7 @@ const journey = (from, to, date = "") => assessJourney({
 describe("service area", () => {
   it("is a 50 km radius around Melbourne CBD", () => {
     expect(SERVICE_AREA.radiusKm).toBe(50);
+    expect(SERVICE_AREA.airportRadiusKm).toBe(200);
     expect(SERVICE_AREA.center).toEqual({ lat: -37.8136, lng: 144.9631 });
   });
 
@@ -290,7 +293,8 @@ describe("regional bookings", () => {
     ["sorrento", "redHill"],
     ["cbd", "geelong"],   // destination outside
     ["geelong", "cbd"],   // pickup outside
-    ["geelong", "avalon"],
+    ["melAirport", "warrnambool"], // airport transfer beyond the 200 km airport radius
+    ["warrnambool", "avalon"],
   ])("%s → %s requires a quote", (from, to) => {
     const j = journey(from, to);
     expect(j.located).toBe(true);
@@ -312,6 +316,11 @@ describe("regional bookings", () => {
     ["cbd", "avalon"],           // Avalon sits just beyond 50 km but airports are always serviced
     ["stKilda", "mornington"],
     ["crown", "hawthorn"],
+    ["melAirport", "geelong"],   // airport transfers reach 200 km from the CBD
+    ["torquay", "melAirport"],
+    ["sorrento", "melAirportChip"],
+    ["geelong", "avalon"],
+    ["melAirport", "bendigo"],
   ])("%s → %s is priced automatically", (from, to) => {
     const j = journey(from, to);
     expect(j.located).toBe(true);
