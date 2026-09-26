@@ -14,6 +14,7 @@ import {
 import { FAQS } from "../content/faq.js";
 import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
 import { GOOGLE_REVIEWS_URL, GOOGLE_RATING, REVIEWS } from "../content/reviews.js";
+import { AIRPORT_HUB_PATH, CORPORATE_PATH } from "../content/pages.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -174,14 +175,15 @@ function Nav() {
 
   const primaryLinks = [
     { href: "#services",  label: "Services",  id: "services" },
-    { href: "#corporate", label: "Corporate", id: "corporate" },
+    { href: CORPORATE_PATH, label: "Corporate" },
     { href: "#pricing",   label: "Pricing",   id: "pricing" },
     { href: "#faq",       label: "FAQ",       id: "faq" },
   ];
   const menuLinks = [
     { href: "#services",  label: "Services",   id: "services" },
     { href: "#journey",   label: "Experience", id: "journey" },
-    { href: "#corporate", label: "Corporate",  id: "corporate" },
+    { href: CORPORATE_PATH, label: "Corporate" },
+    { href: AIRPORT_HUB_PATH, label: "Airport fares" },
     { href: "#pricing",   label: "Pricing",    id: "pricing" },
     { href: "#faq",       label: "FAQ",        id: "faq" },
     { href: "#areas",     label: "Coverage",   id: "areas" },
@@ -202,7 +204,7 @@ function Nav() {
         <ul className="nav-links">
           {primaryLinks.map((l) => (
             <li key={l.href}>
-              <a href={l.href} onClick={(e) => { e.preventDefault(); scrollTo(l.id); }}>{l.label}</a>
+              <a href={l.href} onClick={l.id ? (e) => { e.preventDefault(); scrollTo(l.id); } : undefined}>{l.label}</a>
             </li>
           ))}
         </ul>
@@ -226,7 +228,7 @@ function Nav() {
         </div>
         <nav className="nav-menu-links" aria-label="Menu links">
           {menuLinks.map((l) => (
-            <a key={l.href} href={l.href} className="nav-menu-link" onClick={(e) => { e.preventDefault(); scrollTo(l.id); }}>{l.label}</a>
+            <a key={l.href} href={l.href} className="nav-menu-link" onClick={l.id ? (e) => { e.preventDefault(); scrollTo(l.id); } : undefined}>{l.label}</a>
           ))}
         </nav>
         <div className="nav-menu-actions">
@@ -240,12 +242,17 @@ function Nav() {
   );
 }
 
-function Hero({ place, corporate }) {
+function Hero({ place, corporate, airportHub }) {
   return (
     <section className="hero">
       <div className="hero-inner">
-        <h1 className="hero-title">{place ? `${place.shortName || place.name}, privately.` : corporate ? "Business, privately." : "Melbourne, privately."}</h1>
-        {corporate ? (
+        <h1 className="hero-title">{place ? `${place.shortName || place.name}, privately.` : corporate ? "Business, privately." : airportHub ? "Airport, privately." : "Melbourne, privately."}</h1>
+        {airportHub ? (
+          <p className="hero-lede">
+            Fixed-fare chauffeur transfers between Melbourne Airport and Melbourne&apos;s hotels and suburbs in a BMW i5 —
+            name board meet &amp; greet, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
+          </p>
+        ) : corporate ? (
           <p className="hero-lede">
             Corporate chauffeur accounts in Melbourne — weekly tax invoices, airport meet &amp; greet with a name board,
             and a discreet electric BMW i5 for your executives and guests.
@@ -253,7 +260,7 @@ function Hero({ place, corporate }) {
         ) : place ? (
           <p className="hero-lede">
             Private chauffeur transfers between {place.name} and Melbourne Airport in a BMW i5 — fixed fare
-            from {formatPrice(placeAirportFare(place))}, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
+            from {formatPrice(placeAirportFare(place))}, name board meet &amp; greet, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
           </p>
         ) : (
           <p className="hero-lede">
@@ -268,7 +275,7 @@ function Hero({ place, corporate }) {
         </button>
         <ul className="hero-dataline" aria-label="Service overview">
           <li>Melbourne Airport</li>
-          <li>{place ? place.shortName || place.name : corporate ? "Corporate accounts" : "Melbourne CBD"}</li>
+          <li>{place ? place.shortName || place.name : corporate ? "Corporate accounts" : airportHub ? "Hotels & suburbs" : "Melbourne CBD"}</li>
           <li>Corporate travel</li>
           <li>BMW i5 electric</li>
         </ul>
@@ -279,12 +286,12 @@ function Hero({ place, corporate }) {
 
 // Landing pages only (suburbs and hotels): the airport fare for this place,
 // straight from the pricing engine, plus links to the other landing pages.
-function PlaceFare({ place }) {
-  const fare = formatPrice(placeAirportFare(place));
-  const linkTable = (label, places) => (
+// A fare table whose rows link to landing pages (optionally skipping one).
+function PlaceLinks({ label, places, exclude = null }) {
+  return (
     <div className="pricing-table">
       <div className="pricing-table-label">{label}</div>
-      {places.filter((p) => p.slug !== place.slug).map((p) => (
+      {places.filter((p) => p !== exclude).map((p) => (
         <a key={p.slug} href={placePath(p)} className="pricing-row">
           <span className="pricing-route">{p.name} &rarr; Melbourne Airport</span>
           <span className="pricing-price">from {formatPrice(placeAirportFare(p))}</span>
@@ -292,6 +299,35 @@ function PlaceFare({ place }) {
       ))}
     </div>
   );
+}
+
+// /melbourne-airport-transfers only: every hotel and suburb landing page with its fare.
+function AirportHub() {
+  return (
+    <section id="airport-fares" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
+      <div className="wrap">
+        <div className="s-label">Melbourne Airport transfers</div>
+        <h2 className="s-h" style={{ color:"#111" }}>Fixed fares by<br /><span className="gold-em">hotel and suburb.</span></h2>
+        <p style={{ fontSize:".95rem", color:"#666", marginBottom:"3rem", maxWidth:560 }}>
+          Choose your hotel or suburb for its airport fare. Anywhere else, the booking form shows your exact fare instantly.
+        </p>
+        <div className="pricing-grid">
+          <PlaceLinks label="Hotels" places={HOTELS} />
+          <PlaceLinks label="Suburbs" places={SUBURBS} />
+        </div>
+        <div className="pricing-note">
+          <p>{WAITING_POLICY}</p>
+          <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
+            Calculate your fare &rarr;
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PlaceFare({ place }) {
+  const fare = formatPrice(placeAirportFare(place));
   const isHotel = place.kind === "hotel";
   return (
     <section id="place-fare" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
@@ -313,8 +349,8 @@ function PlaceFare({ place }) {
             </div>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:"2.5rem" }}>
-            {linkTable(isHotel ? "Other hotels" : "Hotels", HOTELS)}
-            {linkTable(isHotel ? "Suburbs" : "Other suburbs", SUBURBS)}
+            <PlaceLinks label={isHotel ? "Other hotels" : "Hotels"} places={HOTELS} exclude={place} />
+            <PlaceLinks label={isHotel ? "Suburbs" : "Other suburbs"} places={SUBURBS} exclude={place} />
           </div>
         </div>
 
@@ -883,6 +919,7 @@ function CorporateSection() {
           <div className="s-label">Corporate</div>
           <h2 className="booking-panel-headline">Corporate Chauffeur Accounts</h2>
           <p className="booking-panel-sub">Tailored chauffeur services for businesses, executives and ongoing travel requirements.</p>
+          <a href={CORPORATE_PATH} className="pricing-cta">See what a corporate account includes &rarr;</a>
         </div>
         <div className="booking-panel-form">
           <div className="fg"><label className="fl">Full Name</label><input className="fi" value={name} onChange={(e) => setName(e.target.value)} /></div>
@@ -1046,6 +1083,7 @@ function Pricing() {
           <p>{WAITING_POLICY}</p>
           <p>{MAJOR_VENUE_FEE_NOTE}</p>
           <p>{SPECIAL_QUOTE_NOTE}</p>
+          <p><a href={AIRPORT_HUB_PATH} style={{ color:"#C4954A" }}>See airport fares by hotel &amp; suburb &rarr;</a></p>
           <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
             Calculate your fare &rarr;
           </a>
@@ -1176,7 +1214,7 @@ function Footer() {
           <p className="ft-tagline">Private electric chauffeur for Melbourne.</p>
           <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12} />{VERNO_EMAIL}</a>
         </div>
-        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="/corporate">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
+        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href={AIRPORT_HUB_PATH}>Airport Transfers</a></li><li><a href={CORPORATE_PATH}>Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
         <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={placePath(s)}>{s.name}</a></li>)}<li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
         <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
@@ -1564,11 +1602,12 @@ function StickyBar() {
   );
 }
 
-export default function Home({ place = null, corporate = false }) {
+export default function Home({ place = null, corporate = false, airportHub = false }) {
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
-    <Hero place={place} corporate={corporate} />
+    <Hero place={place} corporate={corporate} airportHub={airportHub} />
+    {airportHub && <AirportHub />}
     {place && <PlaceFare place={place} />}
     {corporate && <CorporateDetails />}
     <TrustStrip />

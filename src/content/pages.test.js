@@ -6,7 +6,7 @@ describe("prerendered pages", () => {
   it("cover every landing page plus /corporate, with unique paths", () => {
     const paths = PAGES.map((p) => p.path);
     expect(new Set(paths).size).toBe(paths.length);
-    expect(PAGES).toHaveLength(PLACES.length + 1);
+    expect(PAGES).toHaveLength(PLACES.length + 2);
     for (const p of PAGES) {
       expect(p.path).toMatch(/^\/[a-z0-9/-]+$/);
       expect(p.head.url).toBe(`https://www.vernochauffeur.com.au${p.path}`);
