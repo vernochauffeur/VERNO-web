@@ -830,7 +830,7 @@ const SERVICES = [
     h: "Airport Transfers",
     img: SVC_AIRPORT,
     d: `Your flight lands, we're already there. Tullamarine and Avalon transfers with real-time flight tracking, ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting from landing and a fixed fare — no surprises.`,
-    features: ["Flight tracked in real-time", "Fixed fare, no surprises", "Driver in position on arrival"]
+    features: ["Flight tracked in real-time", "Fixed fare, no surprises", "Name board meet & greet in arrivals"]
   },
   {
     label: "Corporate",
