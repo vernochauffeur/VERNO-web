@@ -2,10 +2,11 @@
 // real content. The client still mounts with createRoot.
 //   dist/index.html                        home page
 //   dist/404.html                          home page, served by Vercel with a 404 status
-//   dist/airport-transfer/<slug>.html      suburb and hotel pages (cleanUrls serves them without .html)
+//   dist/<path>.html                       landing pages and /corporate (cleanUrls serves them without .html)
 //   dist/sitemap.xml                       home + landing pages
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { dirname } from "node:path";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const dist = `${root}dist`;
@@ -13,7 +14,7 @@ const htmlPath = `${dist}/index.html`;
 const ssrDir = `${root}dist-ssr`;
 const ROOT_PLACEHOLDER = '<div id="root"></div>';
 
-const { render, PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema } =
+const { render, PAGES, SITE_URL } =
   await import(pathToFileURL(`${ssrDir}/entry-server.js`).href);
 const html = await readFile(htmlPath, "utf8");
 
@@ -56,17 +57,16 @@ const homeHtml = withApp(html, render());
 await writeFile(htmlPath, homeHtml);
 await writeFile(`${dist}/404.html`, homeHtml);
 
-await mkdir(`${dist}/airport-transfer`, { recursive: true });
-for (const place of PLACES) {
-  const page = withHead(withApp(html, render(place)), placeHead(place), buildPlaceSchema(place));
-  await writeFile(`${dist}${placePath(place)}.html`, page);
+for (const page of PAGES) {
+  await mkdir(dirname(`${dist}${page.path}`), { recursive: true });
+  await writeFile(`${dist}${page.path}.html`, withHead(withApp(html, render(page.props)), page.head, page.schema));
 }
 
-const urls = [`${SITE_URL}/`, ...PLACES.map((p) => `${SITE_URL}${placePath(p)}`)];
+const urls = [`${SITE_URL}/`, ...PAGES.map((p) => `${SITE_URL}${p.path}`)];
 await writeFile(`${dist}/sitemap.xml`,
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
   urls.map((u) => `  <url>\n    <loc>${u}</loc>\n  </url>\n`).join("") +
   `</urlset>\n`);
 
 await rm(ssrDir, { recursive: true, force: true });
-console.log(`Prerendered home, 404 and ${PLACES.length} landing pages; sitemap has ${urls.length} URLs`);
+console.log(`Prerendered home, 404 and ${PAGES.length} pages; sitemap has ${urls.length} URLs`);

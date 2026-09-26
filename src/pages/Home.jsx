@@ -240,12 +240,17 @@ function Nav() {
   );
 }
 
-function Hero({ place }) {
+function Hero({ place, corporate }) {
   return (
     <section className="hero">
       <div className="hero-inner">
-        <h1 className="hero-title">{place ? `${place.shortName || place.name}, privately.` : "Melbourne, privately."}</h1>
-        {place ? (
+        <h1 className="hero-title">{place ? `${place.shortName || place.name}, privately.` : corporate ? "Business, privately." : "Melbourne, privately."}</h1>
+        {corporate ? (
+          <p className="hero-lede">
+            Corporate chauffeur accounts in Melbourne — weekly tax invoices, airport meet &amp; greet with a name board,
+            and a discreet electric BMW i5 for your executives and guests.
+          </p>
+        ) : place ? (
           <p className="hero-lede">
             Private chauffeur transfers between {place.name} and Melbourne Airport in a BMW i5 — fixed fare
             from {formatPrice(placeAirportFare(place))}, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
@@ -263,7 +268,7 @@ function Hero({ place }) {
         </button>
         <ul className="hero-dataline" aria-label="Service overview">
           <li>Melbourne Airport</li>
-          <li>{place ? place.shortName || place.name : "Melbourne CBD"}</li>
+          <li>{place ? place.shortName || place.name : corporate ? "Corporate accounts" : "Melbourne CBD"}</li>
           <li>Corporate travel</li>
           <li>BMW i5 electric</li>
         </ul>
@@ -349,6 +354,41 @@ function Reviews() {
           ))}
         </div>
         <a href={GOOGLE_REVIEWS_URL} target="_blank" rel="noopener noreferrer" className="pricing-cta">Read all reviews on Google &rarr;</a>
+      </div>
+    </section>
+  );
+}
+
+// /corporate only: what a corporate account includes, then the existing
+// enquiry form (#corporate) further down the page.
+function CorporateDetails() {
+  const items = [
+    { name: "Weekly invoicing", tag: "Accounts", desc: "One tax invoice a week for every trip on your account, with 7-day payment terms. ABN registered." },
+    { name: "No card at booking", tag: "Accounts", desc: "Book by WhatsApp, phone or email — trips are billed to your company account." },
+    { name: "Anyone can book", tag: "Accounts", desc: "Assistants, office managers or travellers themselves can book on the same account." },
+    { name: "Volume rates", tag: "Accounts", desc: "Regular accounts receive rates based on trip volume, agreed when your account is set up." },
+    { name: "Meet & greet", tag: "Airport", desc: `A name board in arrivals, live flight tracking and ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting from landing.` },
+    { name: "Discreet & confidential", tag: "Service", desc: "Calls and conversations stay in the car. Professional, punctual and private." },
+    { name: "Electric BMW i5", tag: "Fleet", desc: "Quiet, comfortable executive travel with zero tailpipe emissions." },
+    { name: "Airport, office & events", tag: "Coverage", desc: "Airport runs, client meetings, roadshows, conferences and guest transfers across Melbourne." },
+  ];
+  return (
+    <section className="sec" id="corporate-accounts" style={{ background:"#fdf9f4" }}>
+      <div className="wrap">
+        <div className="s-label">Corporate accounts</div>
+        <h2 className="s-h" style={{ color:"#111" }}>Ground transport your<br /><span className="gold-em">team can rely on.</span></h2>
+        <div className="areas-list">
+          {items.map((item) => (
+            <div key={item.name} className="area-item" style={{ cursor:"default" }}>
+              <div className="area-name">{item.name}</div>
+              <div className="area-time">{item.tag}</div>
+              <p className="area-desc">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+        <a href="#corporate" className="pricing-cta" style={{ display:"inline-block", marginTop:"2rem" }} onClick={(e) => { e.preventDefault(); document.getElementById("corporate")?.scrollIntoView({ behavior:"smooth" }); }}>
+          Request a corporate account &rarr;
+        </a>
       </div>
     </section>
   );
@@ -1136,7 +1176,7 @@ function Footer() {
           <p className="ft-tagline">Private electric chauffeur for Melbourne.</p>
           <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12} />{VERNO_EMAIL}</a>
         </div>
-        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="#services">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
+        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="/corporate">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
         <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={placePath(s)}>{s.name}</a></li>)}<li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
         <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
@@ -1524,12 +1564,13 @@ function StickyBar() {
   );
 }
 
-export default function Home({ place = null }) {
+export default function Home({ place = null, corporate = false }) {
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
-    <Hero place={place} />
+    <Hero place={place} corporate={corporate} />
     {place && <PlaceFare place={place} />}
+    {corporate && <CorporateDetails />}
     <TrustStrip />
     <InlineBooking />
     <Reviews />
