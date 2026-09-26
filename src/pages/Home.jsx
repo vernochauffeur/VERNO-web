@@ -199,7 +199,7 @@ function Nav() {
   return (
     <>
       <nav className={`nav${solid ? " solid" : ""}`} aria-label="Main">
-        <a href="#" className="nav-logo-wrap" aria-label="VÉRNO — back to top"><VernoMark /></a>
+        <a href="/" className="nav-logo-wrap" aria-label="VÉRNO — home"><VernoMark /></a>
 
         <ul className="nav-links">
           {primaryLinks.map((l) => (
