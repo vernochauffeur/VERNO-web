@@ -18,6 +18,10 @@ if (!html.includes(ROOT_PLACEHOLDER)) {
 const appHtml = render();
 if (!appHtml) throw new Error("Prerender produced empty HTML");
 
-await writeFile(htmlPath, html.replace(ROOT_PLACEHOLDER, `<div id="root">${appHtml}</div>`));
+const pageHtml = html.replace(ROOT_PLACEHOLDER, `<div id="root">${appHtml}</div>`);
+await writeFile(htmlPath, pageHtml);
+// Vercel serves 404.html (with a 404 status) for unknown paths: visitors still
+// see the home page, but crawlers are told the URL does not exist.
+await writeFile(`${root}dist/404.html`, pageHtml);
 await rm(ssrDir, { recursive: true, force: true });
 console.log(`Prerendered dist/index.html (${appHtml.length} chars of app HTML)`);
