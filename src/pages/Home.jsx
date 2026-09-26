@@ -11,10 +11,10 @@ import {
   VERNO_EMAIL, VERNO_PHONE, VERNO_PHONE_DISPLAY, MAX_PASSENGERS,
   buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
 } from "../lib/booking.js";
-import { FAQS } from "../content/faq.js";
+import { faqsFor } from "../content/faq.js";
 import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
 import { GOOGLE_REVIEWS_URL, GOOGLE_RATING, REVIEWS } from "../content/reviews.js";
-import { AIRPORT_HUB_PATH, CORPORATE_PATH } from "../content/pages.js";
+import { AIRPORT_HUB_PATH, CORPORATE_PATH, FAQ_PATH, faqSetFor } from "../content/pages.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -32,9 +32,17 @@ function trackWhatsAppClick(source) {
   if (window.gtag) window.gtag("event", "whatsapp_click", { source });
 }
 
+// Scrolls to a section on this page, or opens the home page at it when this
+// page doesn't have one (e.g. the booking form from /corporate or /faq).
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth" });
+  else window.location.assign(`/#${id}`);
+}
+
 function goToBookingForm() {
   const el = document.getElementById("from");
-  if (!el) { document.getElementById("book")?.scrollIntoView({ behavior: "smooth" }); return; }
+  if (!el) { scrollToSection("book"); return; }
   el.focus({ preventScroll: true });
   setTimeout(() => {
     el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -174,25 +182,25 @@ function Nav() {
   const close = () => setMenuOpen(false);
 
   const primaryLinks = [
-    { href: "#services",  label: "Services",  id: "services" },
+    { href: "/#services", label: "Services",  id: "services" },
     { href: CORPORATE_PATH, label: "Corporate" },
-    { href: "#pricing",   label: "Pricing",   id: "pricing" },
-    { href: "#faq",       label: "FAQ",       id: "faq" },
+    { href: "/#pricing",  label: "Pricing",   id: "pricing" },
+    { href: FAQ_PATH,     label: "FAQ" },
   ];
   const menuLinks = [
-    { href: "#services",  label: "Services",   id: "services" },
-    { href: "#journey",   label: "Experience", id: "journey" },
+    { href: "/#services", label: "Services",   id: "services" },
+    { href: "/#journey",  label: "Experience", id: "journey" },
     { href: CORPORATE_PATH, label: "Corporate" },
     { href: AIRPORT_HUB_PATH, label: "Airport fares" },
-    { href: "#pricing",   label: "Pricing",    id: "pricing" },
-    { href: "#faq",       label: "FAQ",        id: "faq" },
-    { href: "#areas",     label: "Coverage",   id: "areas" },
+    { href: "/#pricing",  label: "Pricing",    id: "pricing" },
+    { href: FAQ_PATH,     label: "FAQ" },
+    { href: `${AIRPORT_HUB_PATH}#areas`, label: "Coverage" },
   ];
 
   const scrollTo = (id) => {
     close();
     setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      scrollToSection(id);
     }, menuOpen ? 350 : 0);
   };
 
@@ -214,7 +222,7 @@ function Nav() {
             <PhoneIcon s={16} />
             <span className="nav-phone-num">{VERNO_PHONE_DISPLAY}</span>
           </a>
-          <a href="#book" className="nav-cta" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get a fare</a>
+          <a href="/#book" className="nav-cta" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get a fare</a>
           <button type="button" className="nav-menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu" aria-expanded={menuOpen}>
             <span /><span />
           </button>
@@ -232,7 +240,7 @@ function Nav() {
           ))}
         </nav>
         <div className="nav-menu-actions">
-          <a href="#book" className="btn btn-inverse" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get your fare</a>
+          <a href="/#book" className="btn btn-inverse" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get your fare</a>
           <a href={`tel:${VERNO_PHONE}`} className="nav-menu-contact" onClick={close}><PhoneIcon s={16} /> {VERNO_PHONE_DISPLAY}</a>
           <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="nav-menu-contact" onClick={() => { trackWhatsAppClick("nav_menu"); close(); }}><WAIcon s={16} /> WhatsApp</a>
           <a href={`mailto:${VERNO_EMAIL}`} className="nav-menu-contact" onClick={close}><MsgIcon s={16} /> {VERNO_EMAIL}</a>
@@ -242,32 +250,38 @@ function Nav() {
   );
 }
 
-function Hero({ place, corporate, airportHub }) {
+// Headline, lede and second data-line item for each page type.
+function heroCopy({ place, corporate, airportHub, faqPage }) {
+  const wait = PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES;
+  if (place) return {
+    title: `${place.shortName || place.name}, privately.`, tag: place.shortName || place.name,
+    lede: `Private chauffeur transfers between ${place.name} and Melbourne Airport in a BMW i5 — fixed fare from ${formatPrice(placeAirportFare(place))}, name board meet & greet, flight tracked, with ${wait} minutes complimentary waiting.`,
+  };
+  if (corporate) return {
+    title: "Business, privately.", tag: "Corporate accounts",
+    lede: "Corporate chauffeur accounts in Melbourne — weekly tax invoices, airport meet & greet with a name board, and a discreet electric BMW i5 for your executives and guests.",
+  };
+  if (airportHub) return {
+    title: "Airport, privately.", tag: "Hotels & suburbs",
+    lede: `Fixed-fare chauffeur transfers between Melbourne Airport and Melbourne's hotels and suburbs in a BMW i5 — name board meet & greet, flight tracked, with ${wait} minutes complimentary waiting.`,
+  };
+  if (faqPage) return {
+    title: "Questions, answered.", tag: "Fares & bookings",
+    lede: "Fares, airport pickups, waiting time and bookings — everything to know before you ride with VÉRNO.",
+  };
+  return {
+    title: "Melbourne, privately.", tag: "Melbourne CBD",
+    lede: "Private chauffeur transfers across Melbourne in a BMW i5 — airport, corporate and private travel. See your fare instantly, with no surge pricing and no sign-up.",
+  };
+}
+
+function Hero(props) {
+  const { title, lede, tag } = heroCopy(props);
   return (
     <section className="hero">
       <div className="hero-inner">
-        <h1 className="hero-title">{place ? `${place.shortName || place.name}, privately.` : corporate ? "Business, privately." : airportHub ? "Airport, privately." : "Melbourne, privately."}</h1>
-        {airportHub ? (
-          <p className="hero-lede">
-            Fixed-fare chauffeur transfers between Melbourne Airport and Melbourne&apos;s hotels and suburbs in a BMW i5 —
-            name board meet &amp; greet, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
-          </p>
-        ) : corporate ? (
-          <p className="hero-lede">
-            Corporate chauffeur accounts in Melbourne — weekly tax invoices, airport meet &amp; greet with a name board,
-            and a discreet electric BMW i5 for your executives and guests.
-          </p>
-        ) : place ? (
-          <p className="hero-lede">
-            Private chauffeur transfers between {place.name} and Melbourne Airport in a BMW i5 — fixed fare
-            from {formatPrice(placeAirportFare(place))}, name board meet &amp; greet, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
-          </p>
-        ) : (
-          <p className="hero-lede">
-            Private chauffeur transfers across Melbourne in a BMW i5 — airport, corporate and private travel.
-            See your fare instantly, with no surge pricing and no sign-up.
-          </p>
-        )}
+        <h1 className="hero-title">{title}</h1>
+        <p className="hero-lede">{lede}</p>
         <button type="button" className="hero-route" onClick={goToBookingForm} aria-label="Get your fare — open the fare calculator">
           <span className="hero-route-field"><span className="route-marker route-marker--dot" aria-hidden="true" />Pickup address</span>
           <span className="hero-route-field"><span className="route-marker route-marker--square" aria-hidden="true" />Where to?</span>
@@ -275,7 +289,7 @@ function Hero({ place, corporate, airportHub }) {
         </button>
         <ul className="hero-dataline" aria-label="Service overview">
           <li>Melbourne Airport</li>
-          <li>{place ? place.shortName || place.name : corporate ? "Corporate accounts" : airportHub ? "Hotels & suburbs" : "Melbourne CBD"}</li>
+          <li>{tag}</li>
           <li>Corporate travel</li>
           <li>BMW i5 electric</li>
         </ul>
@@ -284,8 +298,6 @@ function Hero({ place, corporate, airportHub }) {
   );
 }
 
-// Landing pages only (suburbs and hotels): the airport fare for this place,
-// straight from the pricing engine, plus links to the other landing pages.
 // A fare table whose rows link to landing pages (optionally skipping one).
 function PlaceLinks({ label, places, exclude = null }) {
   return (
@@ -317,7 +329,7 @@ function AirportHub() {
         </div>
         <div className="pricing-note">
           <p>{WAITING_POLICY}</p>
-          <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
+          <a href="/#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); scrollToSection("book"); }}>
             Calculate your fare &rarr;
           </a>
         </div>
@@ -326,6 +338,8 @@ function AirportHub() {
   );
 }
 
+// Landing pages only (suburbs and hotels): the airport fare for this place,
+// straight from the pricing engine, plus links to the other landing pages.
 function PlaceFare({ place }) {
   const fare = formatPrice(placeAirportFare(place));
   const isHotel = place.kind === "hotel";
@@ -357,7 +371,7 @@ function PlaceFare({ place }) {
         <div className="pricing-note">
           <p>{WAITING_POLICY}</p>
           <p>Late-night surcharge of {LATE_NIGHT_SURCHARGE_LABEL} applies to pickups {LATE_NIGHT_WINDOW} &middot; Your exact fare is calculated instantly in the booking form.</p>
-          <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
+          <a href="/#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); scrollToSection("book"); }}>
             Calculate your fare &rarr;
           </a>
         </div>
@@ -395,6 +409,22 @@ function Reviews() {
   );
 }
 
+// Home only: a short pointer to /corporate (the full enquiry form lives there).
+function CorporateTeaser() {
+  return (
+    <section id="corporate" className="corporate-section">
+      <div className="booking-panel-inner">
+        <div>
+          <div className="s-label">Corporate</div>
+          <h2 className="booking-panel-headline">Corporate Chauffeur Accounts</h2>
+          <p className="booking-panel-sub">Weekly tax invoices, no card at booking and name-board meet &amp; greet for your executives and guests.</p>
+          <a href={CORPORATE_PATH} className="pricing-cta">See what a corporate account includes &rarr;</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // /corporate only: what a corporate account includes, then the existing
 // enquiry form (#corporate) further down the page.
 function CorporateDetails() {
@@ -422,7 +452,7 @@ function CorporateDetails() {
             </div>
           ))}
         </div>
-        <a href="#corporate" className="pricing-cta" style={{ display:"inline-block", marginTop:"2rem" }} onClick={(e) => { e.preventDefault(); document.getElementById("corporate")?.scrollIntoView({ behavior:"smooth" }); }}>
+        <a href="#corporate" className="pricing-cta" style={{ display:"inline-block", marginTop:"2rem" }} onClick={(e) => { e.preventDefault(); scrollToSection("corporate"); }}>
           Request a corporate account &rarr;
         </a>
       </div>
@@ -919,7 +949,6 @@ function CorporateSection() {
           <div className="s-label">Corporate</div>
           <h2 className="booking-panel-headline">Corporate Chauffeur Accounts</h2>
           <p className="booking-panel-sub">Tailored chauffeur services for businesses, executives and ongoing travel requirements.</p>
-          <a href={CORPORATE_PATH} className="pricing-cta">See what a corporate account includes &rarr;</a>
         </div>
         <div className="booking-panel-form">
           <div className="fg"><label className="fl">Full Name</label><input className="fi" value={name} onChange={(e) => setName(e.target.value)} /></div>
@@ -958,7 +987,7 @@ function Services() {
                 <ul className="svc-card-features">
                   {s.features.map((f) => <li key={f}>{f}</li>)}
                 </ul>
-                <a href="#book" className="svc-card-btn" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Get Fare Estimate &rarr;</a>
+                <a href="/#book" className="svc-card-btn" onClick={(e) => { e.preventDefault(); scrollToSection("book"); }}>Get Fare Estimate &rarr;</a>
               </div>
             </div>
           ))}
@@ -1084,7 +1113,7 @@ function Pricing() {
           <p>{MAJOR_VENUE_FEE_NOTE}</p>
           <p>{SPECIAL_QUOTE_NOTE}</p>
           <p><a href={AIRPORT_HUB_PATH} style={{ color:"#C4954A" }}>See airport fares by hotel &amp; suburb &rarr;</a></p>
-          <a href="#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>
+          <a href="/#book" className="pricing-cta" onClick={(e) => { e.preventDefault(); scrollToSection("book"); }}>
             Calculate your fare &rarr;
           </a>
         </div>
@@ -1111,7 +1140,7 @@ function Areas() {
         <h2 className="s-h">Across Melbourne<br /><span className="gold-em">and beyond.</span></h2>
         <div className="areas-list">
           {areas.map((area) => (
-            <div key={area.name} className="area-item" onClick={() => document.getElementById("book")?.scrollIntoView({ behavior: "smooth" })}>
+            <div key={area.name} className="area-item" onClick={() => scrollToSection("book")}>
               <div className="area-name">{area.name}</div>
               <div className="area-time">{area.time}</div>
               <p className="area-desc">{area.desc}</p>
@@ -1143,9 +1172,9 @@ function Fleet() {
   );
 }
 
-function FAQ() {
+// `faqs` is the list this page shows (faqsFor in faq.js); `showAll` links to /faq.
+function FAQ({ faqs, showAll = false }) {
   const [open, setOpen] = useState(null);
-  const faqs = FAQS;
 
   return (
     <section id="faq" style={{ background:"#fdf9f4", padding:"5rem 5vw" }}>
@@ -1165,6 +1194,7 @@ function FAQ() {
             </div>
           ))}
         </div>
+        {showAll && <a href={FAQ_PATH} className="pricing-cta" style={{ display:"inline-block", marginTop:"2rem" }}>All questions &rarr;</a>}
       </div>
     </section>
   );
@@ -1197,7 +1227,7 @@ function Closer() {
         <h2 className="closer-h">Ready when<br /><span className="gold-em">you are.</span></h2>
         <p className="closer-sub">Reserve your transfer directly. Instant confirmation, fixed price.</p>
         <div className="closer-btns">
-          <a href="#book" className="btn-wa" onClick={(e) => { e.preventDefault(); document.getElementById("book")?.scrollIntoView({ behavior:"smooth" }); }}>Reserve via WhatsApp</a>
+          <a href="/#book" className="btn-wa" onClick={(e) => { e.preventDefault(); scrollToSection("book"); }}>Reserve via WhatsApp</a>
           <a href={`mailto:${VERNO_EMAIL}?subject=Booking Request`} className="btn-outline">Send an Email</a>
         </div>
       </div>
@@ -1214,9 +1244,9 @@ function Footer() {
           <p className="ft-tagline">Private electric chauffeur for Melbourne.</p>
           <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12} />{VERNO_EMAIL}</a>
         </div>
-        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href={AIRPORT_HUB_PATH}>Airport Transfers</a></li><li><a href={CORPORATE_PATH}>Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
-        <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={placePath(s)}>{s.name}</a></li>)}<li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
-        <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
+        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href={AIRPORT_HUB_PATH}>Airport Transfers</a></li><li><a href={CORPORATE_PATH}>Corporate Travel</a></li><li><a href="/#services">Private Hire</a></li></ul></div>
+        <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={placePath(s)}>{s.name}</a></li>)}<li><a href={`${AIRPORT_HUB_PATH}#areas`}>Melbourne Airport</a></li><li><a href={`${AIRPORT_HUB_PATH}#areas`}>Mornington Peninsula</a></li></ul></div>
+        <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="/#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
       <div className="ft-bottom">
         <p>© 2025 VÉRNO Private Chauffeur - Melbourne</p>
@@ -1449,7 +1479,7 @@ body{font-synthesis-weight:none;}
 .nav-cta:hover{background:#fff;}
 .nav.solid .nav-cta{background:var(--ink);color:var(--paper);}
 .nav.solid .nav-cta:hover{background:var(--graphite);}
-.nav-menu-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:6px;width:44px;height:44px;margin-right:-10px;background:transparent;border:0;cursor:pointer;}
+.nav-menu-btn{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;width:44px;height:44px;margin-right:-10px;background:transparent;border:0;cursor:pointer;}
 .nav-menu-btn span{display:block;width:22px;height:1.5px;background:#fff;}
 .nav.solid .nav-menu-btn span{background:var(--ink);}
 .nav-menu{position:fixed;inset:0;z-index:1000;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;padding:16px var(--gutter) calc(32px + env(safe-area-inset-bottom));overflow-y:auto;opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility 0s linear .3s;}
@@ -1593,7 +1623,7 @@ function StickyBar() {
     <div className="sticky-bar">
       <a href={`tel:${VERNO_PHONE}`} className="sb-icon" aria-label="Call Verno Chauffeur"><PhoneIcon s={19} /></a>
       <a
-        href="#book"
+        href="/#book"
         className="sb-cta"
         onClick={(e) => { e.preventDefault(); goToBookingForm(); }}
       >See your fare &rarr;</a>
@@ -1602,24 +1632,34 @@ function StickyBar() {
   );
 }
 
-export default function Home({ place = null, corporate = false, airportHub = false }) {
+// One component renders every page; the props (from src/content/pages.js)
+// decide which sections a page shows. Home keeps the brand story; the other
+// pages stay short and focused.
+export default function Home({ place = null, corporate = false, airportHub = false, faqPage = false }) {
+  const isHome = !place && !corporate && !airportHub && !faqPage;
+  const hasBooking = !corporate && !faqPage;
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
-    <Hero place={place} corporate={corporate} airportHub={airportHub} />
+    <Hero place={place} corporate={corporate} airportHub={airportHub} faqPage={faqPage} />
     {airportHub && <AirportHub />}
     {place && <PlaceFare place={place} />}
     {corporate && <CorporateDetails />}
-    <TrustStrip />
-    <InlineBooking />
-    <Reviews />
-    <Services />
-    <JourneyMoments />
-    <CorporateSection />
-    <Pricing />
-    <FAQ />
-    <Areas />
-    <AboutSEO />
+    {!faqPage && <TrustStrip />}
+    {hasBooking && <InlineBooking />}
+    {corporate && <CorporateSection />}
+    {!faqPage && <Reviews />}
+    {isHome && <>
+      <Services />
+      <JourneyMoments />
+      <CorporateTeaser />
+      <Pricing />
+    </>}
+    <FAQ faqs={faqsFor(faqSetFor({ place, corporate, airportHub, faqPage }))} showAll={!faqPage} />
+    {airportHub && <>
+      <Areas />
+      <AboutSEO />
+    </>}
     <Closer />
     <Footer />
     <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="wa-float" onClick={() => trackWhatsAppClick("floating_button")}><WAIcon s={17} /><span>Reserve</span></a>

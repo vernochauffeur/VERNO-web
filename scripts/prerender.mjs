@@ -2,7 +2,7 @@
 // real content. The client still mounts with createRoot.
 //   dist/index.html                        home page
 //   dist/404.html                          home page, served by Vercel with a 404 status
-//   dist/<path>.html                       landing pages and /corporate (cleanUrls serves them without .html)
+//   dist/<path>.html                       every page in src/content/pages.js (cleanUrls serves them without .html)
 //   dist/sitemap.xml                       home + landing pages
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -14,7 +14,7 @@ const htmlPath = `${dist}/index.html`;
 const ssrDir = `${root}dist-ssr`;
 const ROOT_PLACEHOLDER = '<div id="root"></div>';
 
-const { render, PAGES, SITE_URL } =
+const { render, PAGES, SITE_URL, faqSchemaFor } =
   await import(pathToFileURL(`${ssrDir}/entry-server.js`).href);
 const html = await readFile(htmlPath, "utf8");
 
@@ -37,6 +37,15 @@ function replaceOnce(source, pattern, replacement) {
   return source.replace(pattern, replacement);
 }
 
+const FAQ_SCHEMA_PLACEHOLDER = "<!-- FAQ_SCHEMA -->";
+const jsonLd = (data) => `<script type="application/ld+json">\n${JSON.stringify(data, null, 2).replace(/</g, "\\u003c")}\n    </script>`;
+
+// Every page (home included) gets FAQPage data for only the questions it shows.
+function withFaqSchema(template, props) {
+  if (!template.includes(FAQ_SCHEMA_PLACEHOLDER)) throw new Error(`dist/index.html is missing ${FAQ_SCHEMA_PLACEHOLDER}`);
+  return template.replace(FAQ_SCHEMA_PLACEHOLDER, () => jsonLd(faqSchemaFor(props))); // answers contain "$"
+}
+
 function withHead(template, { title, description, url }, schema) {
   const t = escapeAttr(title), d = escapeAttr(description), u = escapeAttr(url);
   let out = template;
@@ -49,17 +58,18 @@ function withHead(template, { title, description, url }, schema) {
   ]) {
     out = replaceOnce(out, new RegExp(`<meta ${attr}="${key}" content="[^"]*" />`), `<meta ${attr}="${key}" content="${value}" />`);
   }
-  const json = JSON.stringify(schema, null, 2).replace(/</g, "\\u003c");
-  return replaceOnce(out, /<\/head>/, `  <script type="application/ld+json">\n${json}\n    </script>\n  </head>`);
+  if (!schema) return out;
+  return replaceOnce(out, /<\/head>/, `  ${jsonLd(schema)}\n  </head>`);
 }
 
-const homeHtml = withApp(html, render());
+const homeHtml = withFaqSchema(withApp(html, render()), {});
 await writeFile(htmlPath, homeHtml);
 await writeFile(`${dist}/404.html`, homeHtml);
 
 for (const page of PAGES) {
   await mkdir(dirname(`${dist}${page.path}`), { recursive: true });
-  await writeFile(`${dist}${page.path}.html`, withHead(withApp(html, render(page.props)), page.head, page.schema));
+  const pageHtml = withFaqSchema(withApp(html, render(page.props)), page.props);
+  await writeFile(`${dist}${page.path}.html`, withHead(pageHtml, page.head, page.schema));
 }
 
 const urls = [`${SITE_URL}/`, ...PAGES.map((p) => `${SITE_URL}${p.path}`)];

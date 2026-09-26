@@ -1,5 +1,6 @@
-// FAQ content — single source for the on-page FAQ (Home.jsx) and the
-// FAQPage structured data injected into index.html at build time (vite.config.js).
+// FAQ content — single source for the on-page FAQ (Home.jsx) and the FAQPage
+// structured data scripts/prerender.mjs adds to each page (only the questions
+// that page shows). The full list lives on /faq.
 // Prices come from src/lib/pricing.js so the copy can't drift from the calculator.
 
 import { PRICING, WAITING_POLICY, SPECIAL_QUOTE_NOTE, formatPrice, airportExamplePrice } from "../lib/pricing.js";
@@ -51,6 +52,37 @@ export const FAQS = [
     a: `Standard bookings use our normal distance-based pricing — there is no surge pricing. ${SPECIAL_QUOTE_NOTE}`,
   },
 ];
+
+// Short FAQ lists shown on the other pages, each linking to /faq for the rest.
+const FAQ_SETS = {
+  home: [
+    "How much does a chauffeur cost in Melbourne?",
+    "Do you provide airport transfers from Tullamarine and Avalon?",
+    "Where will my chauffeur meet me at the airport?",
+    "How far in advance should I book?",
+  ],
+  airport: [
+    "Do you provide airport transfers from Tullamarine and Avalon?",
+    "Where will my chauffeur meet me at the airport?",
+    "What if my flight is delayed?",
+    "Do you charge a waiting fee?",
+  ],
+  corporate: [
+    "Do you serve corporate clients?",
+    "Where will my chauffeur meet me at the airport?",
+    "How far in advance should I book?",
+  ],
+};
+
+/** The FAQs for a set name, in FAQS order; every FAQ when `set` is "all". */
+export function faqsFor(set) {
+  if (set === "all") return FAQS;
+  const questions = FAQ_SETS[set];
+  if (!questions) throw new Error(`Unknown FAQ set "${set}"`);
+  const faqs = FAQS.filter((f) => questions.includes(f.q));
+  if (faqs.length !== questions.length) throw new Error(`FAQ set "${set}" names a missing question`);
+  return faqs;
+}
 
 /** Schema.org FAQPage object for structured data. */
 export function buildFaqSchema(faqs = FAQS) {
