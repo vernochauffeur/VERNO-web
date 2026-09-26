@@ -12,7 +12,7 @@ import {
   buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
 } from "../lib/booking.js";
 import { FAQS } from "../content/faq.js";
-import { SUBURBS, suburbPath, suburbAirportFare } from "../content/suburbs.js";
+import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -239,15 +239,15 @@ function Nav() {
   );
 }
 
-function Hero({ suburb }) {
+function Hero({ place }) {
   return (
     <section className="hero">
       <div className="hero-inner">
-        <h1 className="hero-title">{suburb ? `${suburb.name}, privately.` : "Melbourne, privately."}</h1>
-        {suburb ? (
+        <h1 className="hero-title">{place ? `${place.shortName || place.name}, privately.` : "Melbourne, privately."}</h1>
+        {place ? (
           <p className="hero-lede">
-            Private chauffeur transfers between {suburb.name} and Melbourne Airport in a BMW i5 — fixed fare
-            from {formatPrice(suburbAirportFare(suburb))}, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
+            Private chauffeur transfers between {place.name} and Melbourne Airport in a BMW i5 — fixed fare
+            from {formatPrice(placeAirportFare(place))}, flight tracked, with {PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.
           </p>
         ) : (
           <p className="hero-lede">
@@ -262,7 +262,7 @@ function Hero({ suburb }) {
         </button>
         <ul className="hero-dataline" aria-label="Service overview">
           <li>Melbourne Airport</li>
-          <li>{suburb ? suburb.name : "Melbourne CBD"}</li>
+          <li>{place ? place.shortName || place.name : "Melbourne CBD"}</li>
           <li>Corporate travel</li>
           <li>BMW i5 electric</li>
         </ul>
@@ -271,37 +271,44 @@ function Hero({ suburb }) {
   );
 }
 
-// Suburb landing pages only: the fixed airport fare for this suburb, straight
-// from the pricing engine, plus links to the other suburb pages.
-function SuburbFare({ suburb }) {
-  const fare = formatPrice(suburbAirportFare(suburb));
+// Landing pages only (suburbs and hotels): the airport fare for this place,
+// straight from the pricing engine, plus links to the other landing pages.
+function PlaceFare({ place }) {
+  const fare = formatPrice(placeAirportFare(place));
+  const linkTable = (label, places) => (
+    <div className="pricing-table">
+      <div className="pricing-table-label">{label}</div>
+      {places.filter((p) => p.slug !== place.slug).map((p) => (
+        <a key={p.slug} href={placePath(p)} className="pricing-row">
+          <span className="pricing-route">{p.name} &rarr; Melbourne Airport</span>
+          <span className="pricing-price">from {formatPrice(placeAirportFare(p))}</span>
+        </a>
+      ))}
+    </div>
+  );
+  const isHotel = place.kind === "hotel";
   return (
-    <section id="suburb-fare" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
+    <section id="place-fare" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
       <div className="wrap">
-        <div className="s-label">{suburb.name} airport transfers</div>
-        <h2 className="s-h" style={{ color:"#111" }}>{suburb.name} to Melbourne Airport,<br /><span className="gold-em">from {fare}.</span></h2>
-        <p style={{ fontSize:".95rem", color:"#666", marginBottom:"3rem", maxWidth:560 }}>{suburb.intro}</p>
+        <div className="s-label">{place.name} airport transfers</div>
+        <h2 className="s-h" style={{ color:"#111" }}>{place.name} to Melbourne Airport,<br /><span className="gold-em">from {fare}.</span></h2>
+        <p style={{ fontSize:".95rem", color:"#666", marginBottom:"3rem", maxWidth:560 }}>{place.intro}</p>
 
         <div className="pricing-grid">
           <div className="pricing-table">
             <div className="pricing-table-label">Fixed fare</div>
             <div className="pricing-row">
-              <span className="pricing-route">{suburb.name} &rarr; Melbourne Airport</span>
+              <span className="pricing-route">{place.name} &rarr; Melbourne Airport</span>
               <span className="pricing-price">from {fare}</span>
             </div>
             <div className="pricing-row">
-              <span className="pricing-route">Melbourne Airport &rarr; {suburb.name}</span>
+              <span className="pricing-route">Melbourne Airport &rarr; {place.name}</span>
               <span className="pricing-price">from {fare}</span>
             </div>
           </div>
-          <div className="pricing-table">
-            <div className="pricing-table-label">Other suburbs</div>
-            {SUBURBS.filter((s) => s.slug !== suburb.slug).map((s) => (
-              <a key={s.slug} href={suburbPath(s)} className="pricing-row">
-                <span className="pricing-route">{s.name} &rarr; Melbourne Airport</span>
-                <span className="pricing-price">from {formatPrice(suburbAirportFare(s))}</span>
-              </a>
-            ))}
+          <div style={{ display:"flex", flexDirection:"column", gap:"2.5rem" }}>
+            {linkTable(isHotel ? "Other hotels" : "Hotels", HOTELS)}
+            {linkTable(isHotel ? "Suburbs" : "Other suburbs", SUBURBS)}
           </div>
         </div>
 
@@ -1100,7 +1107,7 @@ function Footer() {
           <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12} />{VERNO_EMAIL}</a>
         </div>
         <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href="#services">Airport Transfers</a></li><li><a href="#services">Corporate Travel</a></li><li><a href="#services">Private Hire</a></li></ul></div>
-        <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={suburbPath(s)}>{s.name}</a></li>)}<li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
+        <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={placePath(s)}>{s.name}</a></li>)}<li><a href="#areas">Melbourne Airport</a></li><li><a href="#areas">Mornington Peninsula</a></li></ul></div>
         <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
       <div className="ft-bottom">
@@ -1487,12 +1494,12 @@ function StickyBar() {
   );
 }
 
-export default function Home({ suburb = null }) {
+export default function Home({ place = null }) {
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
-    <Hero suburb={suburb} />
-    {suburb && <SuburbFare suburb={suburb} />}
+    <Hero place={place} />
+    {place && <PlaceFare place={place} />}
     <TrustStrip />
     <InlineBooking />
     <Services />

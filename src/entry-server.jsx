@@ -1,10 +1,10 @@
 import { renderToString } from "react-dom/server";
 import App from "./pages/Home.jsx";
-import { SUBURBS, SITE_URL, suburbPath, suburbHead, buildSuburbSchema } from "./content/suburbs.js";
+import { PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema } from "./content/places.js";
 
-export { SUBURBS, SITE_URL, suburbPath, suburbHead, buildSuburbSchema };
+export { PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema };
 
 // Used only at build time by scripts/prerender.mjs to produce static HTML.
-export function render(suburb = null) {
-  return renderToString(<App suburb={suburb} />);
+export function render(place = null) {
+  return renderToString(<App place={place} />);
 }

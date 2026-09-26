@@ -2,8 +2,8 @@
 // real content. The client still mounts with createRoot.
 //   dist/index.html                        home page
 //   dist/404.html                          home page, served by Vercel with a 404 status
-//   dist/airport-transfer/<slug>.html      suburb pages (cleanUrls serves them without .html)
-//   dist/sitemap.xml                       home + suburb pages
+//   dist/airport-transfer/<slug>.html      suburb and hotel pages (cleanUrls serves them without .html)
+//   dist/sitemap.xml                       home + landing pages
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -13,7 +13,7 @@ const htmlPath = `${dist}/index.html`;
 const ssrDir = `${root}dist-ssr`;
 const ROOT_PLACEHOLDER = '<div id="root"></div>';
 
-const { render, SUBURBS, SITE_URL, suburbPath, suburbHead, buildSuburbSchema } =
+const { render, PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema } =
   await import(pathToFileURL(`${ssrDir}/entry-server.js`).href);
 const html = await readFile(htmlPath, "utf8");
 
@@ -29,7 +29,7 @@ function withApp(template, appHtml) {
 const escapeAttr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
 // Replaces exactly one match, so a changed index.html fails the build instead
-// of silently shipping suburb pages with the home page's title or canonical.
+// of silently shipping landing pages with the home page's title or canonical.
 function replaceOnce(source, pattern, replacement) {
   const matches = source.match(new RegExp(pattern, "g")) || [];
   if (matches.length !== 1) throw new Error(`Expected one match for ${pattern}, found ${matches.length}`);
@@ -57,16 +57,16 @@ await writeFile(htmlPath, homeHtml);
 await writeFile(`${dist}/404.html`, homeHtml);
 
 await mkdir(`${dist}/airport-transfer`, { recursive: true });
-for (const suburb of SUBURBS) {
-  const page = withHead(withApp(html, render(suburb)), suburbHead(suburb), buildSuburbSchema(suburb));
-  await writeFile(`${dist}${suburbPath(suburb)}.html`, page);
+for (const place of PLACES) {
+  const page = withHead(withApp(html, render(place)), placeHead(place), buildPlaceSchema(place));
+  await writeFile(`${dist}${placePath(place)}.html`, page);
 }
 
-const urls = [`${SITE_URL}/`, ...SUBURBS.map((s) => `${SITE_URL}${suburbPath(s)}`)];
+const urls = [`${SITE_URL}/`, ...PLACES.map((p) => `${SITE_URL}${placePath(p)}`)];
 await writeFile(`${dist}/sitemap.xml`,
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
   urls.map((u) => `  <url>\n    <loc>${u}</loc>\n  </url>\n`).join("") +
   `</urlset>\n`);
 
 await rm(ssrDir, { recursive: true, force: true });
-console.log(`Prerendered home, 404 and ${SUBURBS.length} suburb pages; sitemap has ${urls.length} URLs`);
+console.log(`Prerendered home, 404 and ${PLACES.length} landing pages; sitemap has ${urls.length} URLs`);
