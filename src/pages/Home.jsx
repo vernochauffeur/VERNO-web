@@ -6,6 +6,7 @@ import {
   AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES,
 } from "../lib/pricing.js";
 import { getDrivingDistanceKm } from "../lib/distance.js";
+import { loadGoogleMaps } from "../lib/maps.js";
 import {
   VERNO_EMAIL, VERNO_PHONE, VERNO_PHONE_DISPLAY, MAX_PASSENGERS,
   buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
@@ -115,6 +116,7 @@ function AddressField({ label, placeholder, value, onChange, onSelect, id, marke
         <input
           id={id} ref={inputRef} className={`fi address-input${marker ? " has-marker" : ""}`}
           placeholder={placeholder} value={value}
+          onFocus={loadGoogleMaps}
           onChange={(e) => { onChange(e.target.value); }}
           autoComplete="off"
         />

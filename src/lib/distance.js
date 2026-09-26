@@ -1,6 +1,6 @@
 // Google Maps Distance Matrix wrapper (browser only).
 //
-// The Maps JavaScript API is loaded by the <script> tag in index.html. Results
+// The Maps JavaScript API is loaded on demand by src/lib/maps.js. Results
 // are cached per origin/destination pair for the page session, so changing only
 // the pickup time re-prices instantly without another API request.
 
