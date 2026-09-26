@@ -33,7 +33,8 @@ export const PRICING = {
   MAJOR_VENUE_FEE: 20,
 
   // Waiting time (not added automatically â€” charged only if it occurs).
-  WAITING: { COMPLIMENTARY_MINUTES: 15, RATE_PER_MINUTE: 1.25 },
+  // Airport pickups count from the flight's actual landing time.
+  WAITING: { COMPLIMENTARY_MINUTES: 15, AIRPORT_COMPLIMENTARY_MINUTES: 60, RATE_PER_MINUTE: 1.25 },
 };
 
 // ---------------------------------------------------------------------------
@@ -57,9 +58,10 @@ export const LATE_NIGHT_WINDOW = `${formatHour(PRICING.LATE_NIGHT.START_HOUR)}â€
 export const LATE_NIGHT_SURCHARGE_LABEL = `${Math.round(PRICING.LATE_NIGHT.SURCHARGE * 100)}%`;
 
 export const WAITING_POLICY =
-  `${PRICING.WAITING.COMPLIMENTARY_MINUTES} minutes complimentary waiting time is included with standard pickups. ` +
+  `Airport pickups include ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting from your flight's actual landing time. ` +
+  `Standard pickups include ${PRICING.WAITING.COMPLIMENTARY_MINUTES} minutes. ` +
   `Additional waiting time is charged at ${formatPrice(PRICING.WAITING.RATE_PER_MINUTE)} per minute. ` +
-  "Airport pickups are monitored using live flight information, so flight delays do not reduce your complimentary waiting time.";
+  "Flights are tracked live, so delays never reduce your complimentary waiting time.";
 
 export const SPECIAL_QUOTE_NOTE =
   "Major events, extended waiting requirements and special itinerary bookings may be quoted separately.";
@@ -354,7 +356,7 @@ export function assessJourney({ from, to, fromLocation = null, toLocation = null
 export const AIRPORT_FARE_EXAMPLES = [
   { from: "CBD", to: "Melbourne Airport", price: 120, referenceKm: 22.9 },
   { from: "St Kilda", to: "Melbourne Airport", price: 139, referenceKm: 30.1 },
-  { from: "South Yarra", to: "Melbourne Airport", price: 137, referenceKm: 33.2 },
+  { from: "South Yarra", to: "Melbourne Airport", price: 140, referenceKm: 33.2 },
   { from: "Toorak", to: "Melbourne Airport", price: 141, referenceKm: 32.0 },
   { from: "Brighton", to: "Melbourne Airport", price: 148, referenceKm: 35.0 },
   { from: "Williamstown", to: "Melbourne Airport", price: 143, referenceKm: 30.2 },
