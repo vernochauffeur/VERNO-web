@@ -1,11 +1,30 @@
 // Every prerendered page besides the home page: suburb and hotel landing pages
-// (places.js), the corporate page and the airport-transfer hub listing them. Each entry gives the URL path, the props
+// (places.js), the corporate page, the airport-transfer hub listing them and /faq. Each entry gives the URL path, the props
 // the Home component renders with, and the page's head tags and schema.
 
 import { PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema } from "./places.js";
 import { PRICING, formatPrice } from "../lib/pricing.js";
 
 export const CORPORATE_PATH = "/corporate";
+export const FAQ_PATH = "/faq";
+
+/** Which FAQ list (see faqsFor in faq.js) a page with these Home props shows. */
+export function faqSetFor({ place = null, corporate = false, airportHub = false, faqPage = false } = {}) {
+  if (faqPage) return "all";
+  if (corporate) return "corporate";
+  if (place || airportHub) return "airport";
+  return "home";
+}
+
+function faqHead() {
+  return {
+    title: "Chauffeur FAQ Melbourne | Fares, Airport Pickups & Bookings | VÉRNO",
+    description:
+      "Answers about VÉRNO chauffeur fares, Melbourne and Avalon airport pickups, name board meet & greet, " +
+      `${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary airport waiting, return trips and corporate accounts.`,
+    url: `${SITE_URL}${FAQ_PATH}`,
+  };
+}
 export const AIRPORT_HUB_PATH = "/melbourne-airport-transfers";
 
 function airportHubHead() {
@@ -61,6 +80,8 @@ export const PAGES = [
   })),
   { path: CORPORATE_PATH, props: { corporate: true }, head: corporateHead(), schema: corporateSchema() },
   { path: AIRPORT_HUB_PATH, props: { airportHub: true }, head: airportHubHead(), schema: airportHubSchema() },
+  // FAQPage data for /faq comes from the per-page FAQ schema, like every page.
+  { path: FAQ_PATH, props: { faqPage: true }, head: faqHead(), schema: null },
 ];
 
 /** The page at `pathname`, or null (home page, unknown paths). */
