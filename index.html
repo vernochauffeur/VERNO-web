@@ -19,6 +19,9 @@
     <!-- Canonical -->
     <link rel="canonical" href="https://www.vernochauffeur.com.au/" />
 
+    <!-- Hero image (LCP) -->
+    <link rel="preload" as="image" href="/images/hero-bg.webp" type="image/webp" fetchpriority="high" />
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
@@ -80,12 +83,6 @@
 
     <!-- Schema.org FAQ (generated from src/content/faq.js at build time — edit the FAQ there) -->
     <!-- FAQ_SCHEMA -->
-
-    <!-- Google Maps API (Places Autocomplete + Distance Matrix for the fare calculator).
-         This is a browser key and is visible by design. Keep it restricted in Google Cloud Console:
-         Application restriction = HTTP referrers (https://www.vernochauffeur.com.au/* and https://vernochauffeur.com.au/*),
-         API restriction = Maps JavaScript API, Places API and Distance Matrix API only. -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDewj3mAviH1TlgbCnSc2XnkXMzz4R6hZA&libraries=places,geometry"></script>
 
     <!-- Schema.org Local Business -->
     <script type="application/ld+json">

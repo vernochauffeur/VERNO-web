@@ -6,6 +6,7 @@ import {
   AIRPORT_FARE_EXAMPLES, POINT_TO_POINT_EXAMPLES,
 } from "../lib/pricing.js";
 import { getDrivingDistanceKm } from "../lib/distance.js";
+import { loadGoogleMaps } from "../lib/maps.js";
 import {
   VERNO_EMAIL, VERNO_PHONE, VERNO_PHONE_DISPLAY, MAX_PASSENGERS,
   buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
@@ -23,6 +24,10 @@ const SVC_PRIVATE = "/images/svc-private.jpg";
 const SVC_EVENTS = "/images/svc-events.jpg";
 const FLEET_IMG = "/images/fleet.jpg";
 const GENERIC_WA_URL = buildWhatsAppUrl(buildBlankBookingMessage());
+
+function trackWhatsAppClick(source) {
+  if (window.gtag) window.gtag("event", "whatsapp_click", { source });
+}
 
 function goToBookingForm() {
   const el = document.getElementById("from");
@@ -111,6 +116,7 @@ function AddressField({ label, placeholder, value, onChange, onSelect, id, marke
         <input
           id={id} ref={inputRef} className={`fi address-input${marker ? " has-marker" : ""}`}
           placeholder={placeholder} value={value}
+          onFocus={loadGoogleMaps}
           onChange={(e) => { onChange(e.target.value); }}
           autoComplete="off"
         />
@@ -224,7 +230,7 @@ function Nav() {
         <div className="nav-menu-actions">
           <a href="#book" className="btn btn-inverse" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get your fare</a>
           <a href={`tel:${VERNO_PHONE}`} className="nav-menu-contact" onClick={close}><PhoneIcon s={16} /> {VERNO_PHONE_DISPLAY}</a>
-          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="nav-menu-contact" onClick={close}><WAIcon s={16} /> WhatsApp</a>
+          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="nav-menu-contact" onClick={() => { trackWhatsAppClick("nav_menu"); close(); }}><WAIcon s={16} /> WhatsApp</a>
           <a href={`mailto:${VERNO_EMAIL}`} className="nav-menu-contact" onClick={close}><MsgIcon s={16} /> {VERNO_EMAIL}</a>
         </div>
       </div>
@@ -483,6 +489,7 @@ function InlineBooking() {
   const handleWA = () => {
     if (!validate()) return;
     trackConversion();
+    trackWhatsAppClick("booking_form");
     window.open(buildWhatsAppUrl(bookingMessage()), "_blank", "noopener");
   };
 
@@ -1290,7 +1297,7 @@ body{font-synthesis-weight:none;}
 .nav-menu-contact{display:inline-flex;align-items:center;gap:12px;font-size:16px;color:rgba(246,245,242,.82);}
 
 /* Hero */
-.hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:100vh;min-height:min(100svh,920px);padding:120px var(--gutter) 0;background:var(--ink) url("/images/hero-bg.jpg") center 70%/cover no-repeat;color:#fff;overflow:hidden;}
+.hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:100vh;min-height:min(100svh,920px);padding:120px var(--gutter) 0;background:var(--ink) url("/images/hero-bg.jpg") center 70%/cover no-repeat;background-image:image-set(url("/images/hero-bg.webp") type("image/webp"),url("/images/hero-bg.jpg") type("image/jpeg"));color:#fff;overflow:hidden;}
 .hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:
   linear-gradient(180deg,rgba(10,10,11,.5) 0%,rgba(10,10,11,0) 22%),
   linear-gradient(0deg,rgba(10,10,11,.82) 0%,rgba(10,10,11,.45) 38%,rgba(10,10,11,0) 70%),
@@ -1421,7 +1428,7 @@ function StickyBar() {
         className="sb-cta"
         onClick={(e) => { e.preventDefault(); goToBookingForm(); }}
       >See your fare &rarr;</a>
-      <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
+      <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp" onClick={() => trackWhatsAppClick("sticky_bar")}><WAIcon s={19} /></a>
     </div>
   );
 }
@@ -1442,7 +1449,7 @@ export default function Home() {
     <AboutSEO />
     <Closer />
     <Footer />
-    <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
+    <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="wa-float" onClick={() => trackWhatsAppClick("floating_button")}><WAIcon s={17} /><span>Reserve</span></a>
     <StickyBar />
   </>;
 }
