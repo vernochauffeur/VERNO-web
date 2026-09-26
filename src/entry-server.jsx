@@ -1,10 +1,11 @@
 import { renderToString } from "react-dom/server";
 import App from "./pages/Home.jsx";
-import { PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema } from "./content/places.js";
+import { SITE_URL } from "./content/places.js";
+import { PAGES } from "./content/pages.js";
 
-export { PLACES, SITE_URL, placePath, placeHead, buildPlaceSchema };
+export { PAGES, SITE_URL };
 
 // Used only at build time by scripts/prerender.mjs to produce static HTML.
-export function render(place = null) {
-  return renderToString(<App place={place} />);
+export function render(props = {}) {
+  return renderToString(<App {...props} />);
 }

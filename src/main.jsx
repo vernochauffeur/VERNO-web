@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./pages/Home.jsx";
-import { findPlaceByPath } from "./content/places.js";
+import { findPageByPath } from "./content/pages.js";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App place={findPlaceByPath(window.location.pathname)} />
+    <App {...findPageByPath(window.location.pathname)?.props} />
   </React.StrictMode>
 );

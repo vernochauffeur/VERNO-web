@@ -66,3 +66,18 @@ describe("no stale pricing anywhere", () => {
     for (const [file, content] of all) expect(content, file).not.toMatch(pattern);
   });
 });
+
+describe("Google reviews", async () => {
+  const { REVIEWS, GOOGLE_RATING, GOOGLE_REVIEWS_URL } = await import("./reviews.js");
+  it("only shows five-star-scale reviews with text, and a rating that matches", () => {
+    expect(REVIEWS.length).toBeGreaterThan(0);
+    for (const r of REVIEWS) {
+      expect(r.stars).toBeGreaterThanOrEqual(1);
+      expect(r.stars).toBeLessThanOrEqual(5);
+      expect(r.text.trim().length).toBeGreaterThan(0);
+      expect(r.name).toMatch(/^\S+ \S\.$/); // first name + initial
+    }
+    expect(GOOGLE_RATING.count).toBeGreaterThanOrEqual(REVIEWS.length);
+    expect(GOOGLE_REVIEWS_URL).toMatch(/^https:\/\/maps\.app\.goo\.gl\//);
+  });
+});
