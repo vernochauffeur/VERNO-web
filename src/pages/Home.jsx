@@ -13,6 +13,7 @@ import {
 } from "../lib/booking.js";
 import { FAQS } from "../content/faq.js";
 import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
+import { GOOGLE_REVIEWS_URL, GOOGLE_RATING, REVIEWS } from "../content/reviews.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -319,6 +320,35 @@ function PlaceFare({ place }) {
             Calculate your fare &rarr;
           </a>
         </div>
+      </div>
+    </section>
+  );
+}
+
+// Real Google reviews, quoted verbatim from src/content/reviews.js, each linking
+// back to the Google Business Profile so visitors can verify them.
+function Reviews() {
+  const stars = (n) => "★".repeat(n);
+  return (
+    <section id="reviews" style={{ background:"#fdf9f4", padding:"5rem 5vw" }}>
+      <div className="wrap">
+        <div className="s-label">Google Reviews</div>
+        <h2 className="s-h" style={{ color:"#111" }}>
+          {GOOGLE_RATING.rating.toFixed(1)} <span className="gold-em" aria-hidden="true">{stars(Math.round(GOOGLE_RATING.rating))}</span><br />
+          <span style={{ fontSize:".45em" }}>from {GOOGLE_RATING.count} Google reviews.</span>
+        </h2>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(260px, 1fr))", gap:"1.5rem", marginBottom:"2rem" }}>
+          {REVIEWS.map((r) => (
+            <figure key={r.name} style={{ margin:0, padding:"1.75rem", background:"#fff", border:"1px solid rgba(0,0,0,.07)" }}>
+              <div aria-label={`${r.stars} out of 5 stars`} style={{ color:"#C4954A", letterSpacing:".1em", marginBottom:".9rem" }}>{stars(r.stars)}</div>
+              <blockquote style={{ margin:0, fontSize:".95rem", lineHeight:1.7, color:"#333" }}>“{r.text}”</blockquote>
+              <figcaption style={{ marginTop:"1.1rem", fontSize:".8rem", color:"#777" }}>
+                {r.name} · <a href={GOOGLE_REVIEWS_URL} target="_blank" rel="noopener noreferrer" style={{ color:"#C4954A" }}>Google review</a>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+        <a href={GOOGLE_REVIEWS_URL} target="_blank" rel="noopener noreferrer" className="pricing-cta">Read all reviews on Google &rarr;</a>
       </div>
     </section>
   );
@@ -1502,6 +1532,7 @@ export default function Home({ place = null }) {
     {place && <PlaceFare place={place} />}
     <TrustStrip />
     <InlineBooking />
+    <Reviews />
     <Services />
     <JourneyMoments />
     <CorporateSection />
