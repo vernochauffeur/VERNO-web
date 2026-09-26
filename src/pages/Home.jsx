@@ -24,6 +24,10 @@ const SVC_EVENTS = "/images/svc-events.jpg";
 const FLEET_IMG = "/images/fleet.jpg";
 const GENERIC_WA_URL = buildWhatsAppUrl(buildBlankBookingMessage());
 
+function trackWhatsAppClick(source) {
+  if (window.gtag) window.gtag("event", "whatsapp_click", { source });
+}
+
 function goToBookingForm() {
   const el = document.getElementById("from");
   if (!el) { document.getElementById("book")?.scrollIntoView({ behavior: "smooth" }); return; }
@@ -224,7 +228,7 @@ function Nav() {
         <div className="nav-menu-actions">
           <a href="#book" className="btn btn-inverse" onClick={(e) => { e.preventDefault(); scrollTo("book"); }}>Get your fare</a>
           <a href={`tel:${VERNO_PHONE}`} className="nav-menu-contact" onClick={close}><PhoneIcon s={16} /> {VERNO_PHONE_DISPLAY}</a>
-          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="nav-menu-contact" onClick={close}><WAIcon s={16} /> WhatsApp</a>
+          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="nav-menu-contact" onClick={() => { trackWhatsAppClick("nav_menu"); close(); }}><WAIcon s={16} /> WhatsApp</a>
           <a href={`mailto:${VERNO_EMAIL}`} className="nav-menu-contact" onClick={close}><MsgIcon s={16} /> {VERNO_EMAIL}</a>
         </div>
       </div>
@@ -483,6 +487,7 @@ function InlineBooking() {
   const handleWA = () => {
     if (!validate()) return;
     trackConversion();
+    trackWhatsAppClick("booking_form");
     window.open(buildWhatsAppUrl(bookingMessage()), "_blank", "noopener");
   };
 
@@ -1421,7 +1426,7 @@ function StickyBar() {
         className="sb-cta"
         onClick={(e) => { e.preventDefault(); goToBookingForm(); }}
       >See your fare &rarr;</a>
-      <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp"><WAIcon s={19} /></a>
+      <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="sb-icon sb-wa" aria-label="WhatsApp" onClick={() => trackWhatsAppClick("sticky_bar")}><WAIcon s={19} /></a>
     </div>
   );
 }
@@ -1442,7 +1447,7 @@ export default function Home() {
     <AboutSEO />
     <Closer />
     <Footer />
-    <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="wa-float"><WAIcon s={17} /><span>Reserve</span></a>
+    <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="wa-float" onClick={() => trackWhatsAppClick("floating_button")}><WAIcon s={17} /><span>Reserve</span></a>
     <StickyBar />
   </>;
 }
