@@ -21,6 +21,20 @@ describe("prerendered pages", () => {
     expect(findPageByPath("/")).toBeNull();
   });
 
+  it("keep titles and meta descriptions within search engine limits", async () => {
+    const { readFileSync } = await import("node:fs");
+    const indexHtml = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+    const home = {
+      title: indexHtml.match(/<title>([^<]*)<\/title>/)[1],
+      description: indexHtml.match(/<meta name="description" content="([^"]*)"/)[1],
+    };
+    for (const head of [home, ...PAGES.map((p) => p.head)]) {
+      expect(head.title.length, head.title).toBeLessThanOrEqual(70);
+      expect(head.description.length, head.description).toBeGreaterThanOrEqual(25);
+      expect(head.description.length, head.description).toBeLessThanOrEqual(160);
+    }
+  });
+
   it("finds the racing page with a Service schema", () => {
     const page = findPageByPath(RACING_PATH);
     expect(page.props).toEqual({ racing: true });

@@ -22,8 +22,8 @@ function faqHead() {
   return {
     title: "Chauffeur FAQ Melbourne | Fares, Airport Pickups & Bookings | VÉRNO",
     description:
-      "Answers about VÉRNO chauffeur fares, Melbourne and Avalon airport pickups, name board meet & greet, " +
-      `${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary airport waiting, return trips and corporate accounts.`,
+      "Answers on VÉRNO chauffeur fares, Melbourne and Avalon airport pickups, " +
+      `${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting, return trips and corporate accounts.`,
     url: `${SITE_URL}${FAQ_PATH}`,
   };
 }
@@ -33,8 +33,8 @@ function airportHubHead() {
   return {
     title: `Melbourne Airport Transfers by Hotel & Suburb | From ${formatPrice(PRICING.AIRPORT.MIN_FARE)} | VÉRNO`,
     description:
-      "Fixed-fare chauffeur transfers between Melbourne Airport and Melbourne's hotels and suburbs in a BMW i5: " +
-      `name board meet & greet, live flight tracking and ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.`,
+      "Fixed-fare BMW i5 transfers between Melbourne Airport and the city's hotels and suburbs, " +
+      `with name board meet & greet and ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting.`,
     url: `${SITE_URL}${AIRPORT_HUB_PATH}`,
   };
 }
@@ -56,8 +56,8 @@ function corporateHead() {
   return {
     title: "Corporate Chauffeur Melbourne | Accounts & Weekly Invoicing | VÉRNO",
     description:
-      "Corporate chauffeur accounts in Melbourne: weekly tax invoices, no card needed at booking, airport meet & greet " +
-      `with a name board, ${PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES} minutes complimentary waiting and an electric BMW i5 fleet.`,
+      "Corporate chauffeur accounts in Melbourne: weekly tax invoices, no card at booking, " +
+      "airport meet & greet with a name board and an electric BMW i5 fleet.",
     url: `${SITE_URL}${CORPORATE_PATH}`,
   };
 }

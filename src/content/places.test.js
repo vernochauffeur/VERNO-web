@@ -41,13 +41,15 @@ describe("landing pages", () => {
   it("builds page titles, canonical URLs and offers with the real fare", () => {
     const toorak = SUBURBS.find((s) => s.slug === "toorak");
     const head = placeHead(toorak);
-    expect(head.title).toBe("Toorak to Melbourne Airport Chauffeur | Fixed Fare from $141 | VÉRNO");
+    expect(head.title).toBe("Toorak to Melbourne Airport | From $141 | VÉRNO");
     expect(head.url).toBe("https://www.vernochauffeur.com.au/airport-transfer/toorak");
     expect(head.description).toContain("60 minutes complimentary waiting");
     expect(buildPlaceSchema(toorak).offers).toMatchObject({ price: 141, priceCurrency: "AUD" });
 
     const crown = HOTELS.find((h) => h.slug === "crown-towers-melbourne");
-    expect(placeHead(crown).title).toBe("Crown Towers Melbourne to Melbourne Airport Chauffeur | From $120 | VÉRNO");
+    expect(placeHead(crown).title).toBe("Crown Towers Melbourne to Melbourne Airport | From $120 | VÉRNO");
+    const rialto = PLACES.find((p) => p.slug === "intercontinental-melbourne-the-rialto");
+    expect(placeHead(rialto).title).toBe("InterContinental Melbourne The Rialto Airport Transfer | VÉRNO");
     expect(buildPlaceSchema(crown).areaServed[0]).toMatchObject({ "@type": "Hotel", name: "Crown Towers Melbourne" });
   });
 });
