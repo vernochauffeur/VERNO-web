@@ -1317,7 +1317,7 @@ function Footer() {
         <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="/#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
       <div className="ft-bottom">
-        <p>© 2025 VÉRNO Private Chauffeur - Melbourne</p>
+        <p>© {new Date().getFullYear()} VÉRNO Private Chauffeur - Melbourne</p>
         <p>Melbourne - Airport - Corporate</p>
       </div>
       <p style={{ maxWidth:"1200px",margin:"18px auto 0",fontSize:"11px",color:"rgba(255,255,255,.25)",textAlign:"center" }}>Melbourne chauffeur service | Airport transfers Melbourne | Private driver Melbourne</p>

@@ -110,14 +110,23 @@ export function placeAirportFare(place) {
   return example.price;
 }
 
+// Search engines cut titles past about 70 characters, so long hotel names
+// drop words from the title until it fits.
+export const MAX_TITLE_LENGTH = 70;
+
 export function placeHead(place) {
   const fare = formatPrice(placeAirportFare(place));
   const wait = PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES;
+  const titles = [
+    `${place.name} to Melbourne Airport | From ${fare} | VÉRNO`,
+    `${place.name} Airport Transfer | From ${fare} | VÉRNO`,
+    `${place.name} Airport Transfer | VÉRNO`,
+  ];
   return {
-    title: `${place.name} to Melbourne Airport Chauffeur | ${place.kind === "hotel" ? "From" : "Fixed Fare from"} ${fare} | VÉRNO`,
+    title: titles.find((t) => t.length <= MAX_TITLE_LENGTH) || titles[titles.length - 1],
     description:
-      `Private BMW i5 chauffeur between ${place.name} and Melbourne Airport (Tullamarine). ` +
-      `Fixed fare from ${fare}, live flight tracking and ${wait} minutes complimentary waiting on airport pickups. Book direct.`,
+      `BMW i5 chauffeur between ${place.name} and Melbourne Airport. ` +
+      `Fixed fare from ${fare}, flight tracked, ${wait} minutes complimentary waiting.`,
     url: `${SITE_URL}${placePath(place)}`,
   };
 }
