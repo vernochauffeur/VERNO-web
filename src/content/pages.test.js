@@ -25,7 +25,7 @@ describe("prerendered pages", () => {
     const page = findPageByPath(RACING_PATH);
     expect(page.props).toEqual({ racing: true });
     expect(page.schema["@type"]).toBe("Service");
-    expect(page.head.title).toContain("Melbourne Cup & Spring Racing Carnival Chauffeur");
+    expect(page.head.title).toContain("Melbourne Cup & Spring Racing Chauffeur");
   });
 });
 

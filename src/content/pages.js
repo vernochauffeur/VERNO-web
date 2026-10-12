@@ -78,10 +78,10 @@ function corporateSchema() {
 
 function racingHead() {
   return {
-    title: "Melbourne Cup & Spring Racing Carnival Chauffeur | Flemington & Caulfield | VÉRNO",
+    title: "Melbourne Cup & Spring Racing Chauffeur | VÉRNO",
     description:
-      "Private BMW i5 chauffeur for the Spring Racing Carnival: drop-off and pick-up at Flemington and Caulfield, " +
-      "return trips and full-day hire for the Caulfield Cup, Cox Plate, Derby Day, Melbourne Cup, Oaks Day and Stakes Day.",
+      "BMW i5 chauffeur for the Melbourne Cup and Spring Racing Carnival: drop-off and pick-up at Flemington " +
+      "and Caulfield, return trips and full-day hire.",
     url: `${SITE_URL}${RACING_PATH}`,
   };
 }
