@@ -51,6 +51,22 @@ export const FAQS = [
     q: "Is pricing different for major events?",
     a: `Standard bookings use our normal distance-based pricing — there is no surge pricing. ${SPECIAL_QUOTE_NOTE}`,
   },
+  {
+    q: "Where will you drop us off and pick us up at the races?",
+    a: "As close to your entry gate as the race-day traffic arrangements at Flemington or Caulfield allow. Tell us your gate or enclosure when you book and we'll confirm the pick-up point with you before race day.",
+  },
+  {
+    q: "Should I pre-book my return trip from the races?",
+    a: "Yes. Most of the crowd leaves after the last race and traffic around the course is slow, so a pre-booked return means your chauffeur is already there. Toggle 'Add return trip' when booking and give an approximate time; message us on WhatsApp on the day if your plans change.",
+  },
+  {
+    q: "How far ahead should I book for race days?",
+    a: "As early as you can. Melbourne Cup week is one of the busiest times of the year and our fleet is small, so race-day bookings fill first. Book once you have your tickets.",
+  },
+  {
+    q: "How much does a race day chauffeur cost?",
+    a: `Drop-off and pick-up trips are priced like any other trip — enter your addresses in the booking form to see your fare. A ${formatPrice(PRICING.MAJOR_VENUE_FEE)} major venue fee applies per trip to or from Flemington or Caulfield Racecourse. Full-day and event hire is quoted via WhatsApp.`,
+  },
 ];
 
 // Short FAQ lists shown on the other pages, each linking to /faq for the rest.
@@ -71,6 +87,11 @@ const FAQ_SETS = {
     "Do you serve corporate clients?",
     "Where will my chauffeur meet me at the airport?",
     "How far in advance should I book?",
+  ],  racing: [
+    "Where will you drop us off and pick us up at the races?",
+    "Should I pre-book my return trip from the races?",
+    "How far ahead should I book for race days?",
+    "How much does a race day chauffeur cost?",
   ],
 };
 
