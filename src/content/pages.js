@@ -7,11 +7,13 @@ import { PRICING, formatPrice } from "../lib/pricing.js";
 
 export const CORPORATE_PATH = "/corporate";
 export const FAQ_PATH = "/faq";
+export const RACING_PATH = "/spring-racing-carnival-chauffeur";
 
 /** Which FAQ list (see faqsFor in faq.js) a page with these Home props shows. */
-export function faqSetFor({ place = null, corporate = false, airportHub = false, faqPage = false } = {}) {
+export function faqSetFor({ place = null, corporate = false, racing = false, airportHub = false, faqPage = false } = {}) {
   if (faqPage) return "all";
   if (corporate) return "corporate";
+  if (racing) return "racing";
   if (place || airportHub) return "airport";
   return "home";
 }
@@ -74,11 +76,36 @@ function corporateSchema() {
   };
 }
 
+function racingHead() {
+  return {
+    title: "Melbourne Cup & Spring Racing Carnival Chauffeur | Flemington & Caulfield | VÉRNO",
+    description:
+      "Private BMW i5 chauffeur for the Spring Racing Carnival: drop-off and pick-up at Flemington and Caulfield, " +
+      "return trips and full-day hire for the Caulfield Cup, Cox Plate, Derby Day, Melbourne Cup, Oaks Day and Stakes Day.",
+    url: `${SITE_URL}${RACING_PATH}`,
+  };
+}
+
+function racingSchema() {
+  const head = racingHead();
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Melbourne Cup & Spring Racing Carnival chauffeur",
+    serviceType: "Event Chauffeur",
+    url: head.url,
+    description: head.description,
+    provider: { "@type": "LocalBusiness", name: "VÉRNO Chauffeur", url: SITE_URL, telephone: "+61421238894" },
+    areaServed: { "@type": "City", name: "Melbourne" },
+  };
+}
+
 export const PAGES = [
   ...PLACES.map((place) => ({
     path: placePath(place), props: { place }, head: placeHead(place), schema: buildPlaceSchema(place),
   })),
   { path: CORPORATE_PATH, props: { corporate: true }, head: corporateHead(), schema: corporateSchema() },
+  { path: RACING_PATH, props: { racing: true }, head: racingHead(), schema: racingSchema() },
   { path: AIRPORT_HUB_PATH, props: { airportHub: true }, head: airportHubHead(), schema: airportHubSchema() },
   // FAQPage data for /faq comes from the per-page FAQ schema, like every page.
   { path: FAQ_PATH, props: { faqPage: true }, head: faqHead(), schema: null },

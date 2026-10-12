@@ -3,7 +3,7 @@
 //   dist/index.html                        home page
 //   dist/404.html                          home page, served by Vercel with a 404 status
 //   dist/<path>.html                       every page in src/content/pages.js (cleanUrls serves them without .html)
-//   dist/sitemap.xml                       home + landing pages
+//   dist/sitemap.xml                       home + landing pages, each with the build date as lastmod
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname } from "node:path";
@@ -73,9 +73,11 @@ for (const page of PAGES) {
 }
 
 const urls = [`${SITE_URL}/`, ...PAGES.map((p) => `${SITE_URL}${p.path}`)];
+// Every deploy rebuilds every page, so lastmod is the build date (Melbourne time, YYYY-MM-DD).
+const lastmod = new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Melbourne" });
 await writeFile(`${dist}/sitemap.xml`,
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-  urls.map((u) => `  <url>\n    <loc>${u}</loc>\n  </url>\n`).join("") +
+  urls.map((u) => `  <url>\n    <loc>${u}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>\n`).join("") +
   `</urlset>\n`);
 
 await rm(ssrDir, { recursive: true, force: true });
