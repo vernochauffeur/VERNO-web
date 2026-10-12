@@ -1,0 +1,26 @@
+# After each successful Vercel production deploy, tells Bing (and other
+# IndexNow search engines) about every URL in the live sitemap, so new and
+# changed pages are crawled without a manual "Request indexing".
+# The key is public by design: IndexNow checks it against
+# https://www.vernochauffeur.com.au/af1f2fa51a4dc759731e97dd727dcf30.txt (public/af1f2fa51a4dc759731e97dd727dcf30.txt).
+name: IndexNow
+
+on:
+  deployment_status:
+
+jobs:
+  submit:
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit sitemap URLs to IndexNow
+        env:
+          SITE: https://www.vernochauffeur.com.au
+          KEY: af1f2fa51a4dc759731e97dd727dcf30
+        run: |
+          urls=$(curl -fsS "$SITE/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | sed -e 's/<loc>//' -e 's#</loc>##')
+          body=$(printf '%s\n' $urls | jq -R . | jq -s --arg key "$KEY" --arg site "$SITE" \
+            '{host: ($site | sub("^https://"; "")), key: $key, keyLocation: "\($site)/\($key).txt", urlList: .}')
+          echo "$body"
+          curl -fsS -X POST https://api.indexnow.org/indexnow \
+            -H 'Content-Type: application/json; charset=utf-8' -d "$body" -w '%{http_code}\n'
