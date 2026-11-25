@@ -552,6 +552,41 @@ function TrustStrip() {
   );
 }
 
+// The car every booking is in, shown in the booking form above the fare.
+const VEHICLE_SUITCASES = 2;
+
+function VehicleCard() {
+  return (
+    <div className="fg">
+      <span className="fl">Your vehicle</span>
+      <div className="vehicle-card">
+        <picture>
+          <source srcSet="/images/vehicle-i5.webp" type="image/webp" />
+          <img className="vehicle-art" src="/images/vehicle-i5.png" alt="VÉRNO BMW i5, side view" width="480" height="176" loading="lazy" />
+        </picture>
+        <div>
+          <div className="vehicle-name">BMW i5 eDrive40</div>
+          <div className="vehicle-sub">Electric executive sedan</div>
+          <ul className="vehicle-specs">
+            <li>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.7-4 4.2-6 8-6s6.3 2 8 6" /></svg>
+              {MAX_PASSENGERS} passengers
+            </li>
+            <li>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="5" y="7" width="14" height="13" rx="2" /><path d="M9 7V4h6v3M9 20v1M15 20v1" /></svg>
+              {VEHICLE_SUITCASES} large suitcases
+            </li>
+            <li>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" /></svg>
+              100% electric
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const selectAddressNotice = (
   <div className="fare-hint">Please select an address from the dropdown to see your fare.</div>
 );
@@ -940,6 +975,8 @@ function InlineBooking() {
               </div>
             )}
           </div>
+
+          <VehicleCard />
 
           <FareEstimate from={from} to={to} fromSelected={fromSelected} toSelected={toSelected}
             outbound={outbound} showReturn={showReturn} returnLeg={returnLeg} diffReturn={diffReturn} total={total} />
@@ -1754,6 +1791,15 @@ body{font-synthesis-weight:none;}
 .booking-panel .btn-text-link{display:inline-flex;align-items:center;gap:8px;padding:6px 0;background:none;border:0;font-family:var(--sans);font-size:14px;font-weight:400;letter-spacing:0;color:var(--slate);cursor:pointer;}
 .booking-panel .btn-text-link:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px;}
 .booking-panel .wa-trust-line{margin-top:20px;text-align:center;font-size:13px;color:var(--slate);}
+
+/* Vehicle card (booking form) */
+.vehicle-card{display:flex;align-items:center;gap:18px;padding:14px;background:var(--field);border:1px solid var(--ink);border-radius:var(--radius);}
+.vehicle-art{display:block;width:190px;height:auto;flex-shrink:0;filter:drop-shadow(0 6px 5px rgba(0,0,0,.18));}
+.vehicle-name{font-family:var(--serif);font-size:24px;line-height:1.1;color:var(--ink);}
+.vehicle-sub{font-size:14px;color:var(--slate);margin:2px 0 10px;}
+.vehicle-specs{display:flex;flex-wrap:wrap;gap:6px;list-style:none;}
+.vehicle-specs li{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--concrete);border-radius:999px;font-size:13px;color:var(--ink);}
+@media(max-width:768px){.vehicle-card{flex-direction:column;align-items:flex-start;gap:8px;}.vehicle-art{width:240px;}.vehicle-name{font-size:21px;}}
 
 /* Corporate page */
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px;}

@@ -9,7 +9,7 @@ export const VERNO_PHONE = "+61421238894";
 export const VERNO_PHONE_DISPLAY = "0421 238 894";
 
 // BMW i5 sedan capacity.
-export const MAX_PASSENGERS = 4;
+export const MAX_PASSENGERS = 3;
 
 const TO_BE_CONFIRMED = "To be confirmed";
 const REGIONAL_QUOTE = "To be quoted (regional)";
