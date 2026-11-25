@@ -14,7 +14,7 @@ const htmlPath = `${dist}/index.html`;
 const ssrDir = `${root}dist-ssr`;
 const ROOT_PLACEHOLDER = '<div id="root"></div>';
 
-const { render, PAGES, SITE_URL, faqSchemaFor } =
+const { render, PAGES, SITE_URL, faqSchemaFor, heroImageFor } =
   await import(pathToFileURL(`${ssrDir}/entry-server.js`).href);
 const html = await readFile(htmlPath, "utf8");
 
@@ -46,6 +46,14 @@ function withFaqSchema(template, props) {
   return template.replace(FAQ_SCHEMA_PLACEHOLDER, () => jsonLd(faqSchemaFor(props))); // answers contain "$"
 }
 
+const HERO_PRELOAD = /<link rel="preload" as="image" href="\/images\/[^"]+\.webp" type="image\/webp" fetchpriority="high" \/>/;
+
+// Preloads the hero image the page actually shows (see heroImageFor in pages.js).
+function withHeroPreload(template, props) {
+  return replaceOnce(template, HERO_PRELOAD,
+    `<link rel="preload" as="image" href="/images/${heroImageFor(props)}.webp" type="image/webp" fetchpriority="high" />`);
+}
+
 function withHead(template, { title, description, url }, schema) {
   const t = escapeAttr(title), d = escapeAttr(description), u = escapeAttr(url);
   let out = template;
@@ -68,7 +76,7 @@ await writeFile(`${dist}/404.html`, homeHtml);
 
 for (const page of PAGES) {
   await mkdir(dirname(`${dist}${page.path}`), { recursive: true });
-  const pageHtml = withFaqSchema(withApp(html, render(page.props)), page.props);
+  const pageHtml = withHeroPreload(withFaqSchema(withApp(html, render(page.props)), page.props), page.props);
   await writeFile(`${dist}${page.path}.html`, withHead(pageHtml, page.head, page.schema));
 }
 
