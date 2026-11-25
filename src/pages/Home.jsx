@@ -552,23 +552,52 @@ function TrustStrip() {
   );
 }
 
+// Side-view illustration of the BMW i5 for the vehicle card (drawn for this
+// site, so no photo licence is involved).
+function BmwI5Side() {
+  return (
+      <svg viewBox="0 0 240 96" className="vehicle-art" role="img" aria-label="BMW i5 side view">
+        <ellipse cx="121" cy="90" rx="112" ry="3.5" fill="#000" opacity=".14"/>
+        <circle cx="56" cy="70.5" r="20.5" fill="#0b0b0d"/>
+        <circle cx="188" cy="70.5" r="20.5" fill="#0b0b0d"/>
+        <path d="M10 70.5 C7 64 7 56.5 10 52.5 C13 48.5 18 46.6 28 46 L78 43 C84 42.6 88 41.5 94 37.5 L110 27.5 C114 25.4 119 24.6 126 24.4 L152 24.3 C160 24.5 166 25.8 172 28.6 L192 38.4 C196 40.2 200 41 206 41.6 L221 43 C227 43.8 230 46.5 231 51 L232 62 C232 67 231 69.5 228 70.5 L208.5 70.5 A20.5 20.5 0 0 0 167.5 70.5 L76.5 70.5 A20.5 20.5 0 0 0 35.5 70.5 Z" fill="#1d1e21"/>
+        <path d="M96 42 L111 30.5 C114.5 28.6 118 28 123 27.9 L134 27.8 L134.5 42 Z" fill="#59616a"/>
+        <path d="M138.5 42 L138 27.8 L151 27.8 C157 28 162 29.2 167 31.6 L185 40.4 C182 41.4 179 41.8 175 41.9 Z" fill="#59616a"/>
+        <path d="M15 56.5 C60 52.5 150 50.6 229 51.6" stroke="#fff" strokeOpacity=".13" strokeWidth="1.2" fill="none"/>
+        <path d="M12.5 55.5 C15.5 53 20 52 27 51.6" stroke="#d6dde4" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
+        <path d="M222 46.5 L230 48.6" stroke="#8a2323" strokeWidth="2.4" strokeLinecap="round"/>
+        <path d="M102 50.5 L110 50.5 M150 50.2 L158 50.2" stroke="#fff" strokeOpacity=".28" strokeWidth="1.4" strokeLinecap="round"/>
+        <g fill="#111214"><circle cx="56" cy="72" r="17.5"/><circle cx="188" cy="72" r="17.5"/></g>
+        <g fill="#454b52"><circle cx="56" cy="72" r="11.5"/><circle cx="188" cy="72" r="11.5"/></g>
+        <g stroke="#111214" strokeWidth="1.6">
+          <path d="M56 61 V83 M45 72 H67 M48.2 64.2 L63.8 79.8 M63.8 64.2 L48.2 79.8"/>
+          <path d="M188 61 V83 M177 72 H199 M180.2 64.2 L195.8 79.8 M195.8 64.2 L180.2 79.8"/>
+        </g>
+        <g fill="#2a2e33"><circle cx="56" cy="72" r="3.2"/><circle cx="188" cy="72" r="3.2"/></g>
+      </svg>
+  );
+}
+
 // The car every booking is in, shown in the booking form above the fare.
+const VEHICLE = { passengers: 3, suitcases: 2 };
+
 function VehicleCard() {
   return (
     <div className="fg">
       <span className="fl">Your vehicle</span>
       <div className="vehicle-card">
-        <picture>
-          <source srcSet="/images/vehicle-i5.webp" type="image/webp" />
-          <img src="/images/vehicle-i5.jpg" alt="VÉRNO BMW i5" width="112" height="84" loading="lazy" />
-        </picture>
+        <BmwI5Side />
         <div>
           <div className="vehicle-name">BMW i5 eDrive40</div>
           <div className="vehicle-sub">Electric executive sedan</div>
           <ul className="vehicle-specs">
             <li>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.7-4 4.2-6 8-6s6.3 2 8 6" /></svg>
-              Up to {MAX_PASSENGERS} passengers
+              {VEHICLE.passengers} passengers
+            </li>
+            <li>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="5" y="7" width="14" height="13" rx="2" /><path d="M9 7V4h6v3M9 20v1M15 20v1" /></svg>
+              {VEHICLE.suitcases} large suitcases
             </li>
             <li>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" /></svg>
@@ -1788,12 +1817,12 @@ body{font-synthesis-weight:none;}
 
 /* Vehicle card (booking form) */
 .vehicle-card{display:flex;align-items:center;gap:18px;padding:14px;background:var(--field);border:1px solid var(--ink);border-radius:var(--radius);}
-.vehicle-card img{display:block;width:112px;height:84px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;}
+.vehicle-art{display:block;width:168px;height:auto;flex-shrink:0;}
 .vehicle-name{font-family:var(--serif);font-size:24px;line-height:1.1;color:var(--ink);}
 .vehicle-sub{font-size:14px;color:var(--slate);margin:2px 0 10px;}
 .vehicle-specs{display:flex;flex-wrap:wrap;gap:6px;list-style:none;}
 .vehicle-specs li{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--concrete);border-radius:999px;font-size:13px;color:var(--ink);}
-@media(max-width:768px){.vehicle-card img{width:96px;height:72px;}.vehicle-name{font-size:21px;}}
+@media(max-width:768px){.vehicle-card{flex-direction:column;align-items:flex-start;gap:8px;}.vehicle-art{width:180px;}.vehicle-name{font-size:21px;}}
 
 /* Corporate page */
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px;}
