@@ -192,7 +192,6 @@ function Nav() {
     { href: "/#services", label: "Services",   id: "services" },
     { href: "/#journey",  label: "Experience", id: "journey" },
     { href: CORPORATE_PATH, label: "Corporate" },
-    { href: RACING_PATH, label: "Spring racing" },
     { href: AIRPORT_HUB_PATH, label: "Airport fares" },
     { href: "/#pricing",  label: "Pricing",    id: "pricing" },
     { href: FAQ_PATH,     label: "FAQ" },
@@ -443,7 +442,7 @@ function RacingDetails() {
   return (
     <section id="race-days" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
       <div className="wrap">
-        <div className="s-label">Spring Racing Carnival 2026</div>
+        <div className="s-label">Spring Racing Carnival</div>
         <h2 className="s-h" style={{ color:"#111" }}>Race days at Flemington<br /><span className="gold-em">and Caulfield.</span></h2>
         <div className="pricing-grid">
           <div className="pricing-table">
@@ -451,7 +450,7 @@ function RacingDetails() {
             {RACE_DAYS.map((d) => (
               <div key={d.name} className="pricing-row">
                 <span className="pricing-route">{d.name} &middot; {d.venue}</span>
-                <span className="pricing-price">{d.date}</span>
+                <span className="pricing-price">{d.when}</span>
               </div>
             ))}
           </div>
@@ -523,6 +522,51 @@ function CorporateDetails() {
         <a href="#corporate" className="pricing-cta" style={{ display:"inline-block", marginTop:"2rem" }} onClick={(e) => { e.preventDefault(); scrollToSection("corporate"); }}>
           Request a corporate account &rarr;
         </a>
+      </div>
+    </section>
+  );
+}
+
+// Electric fleet: only claims that are true without certification
+// (no "zero emissions", "carbon neutral" or "renewable"; see ACCC guidance
+// on environmental claims). The last card differs on /corporate.
+function EvIcon({ children }) {
+  return <svg className="ev-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
+}
+const EV_ICONS = {
+  // Sedan side profile with a charge bolt above it.
+  tailpipe: <EvIcon><path d="M5 31v-4.5c0-1 .6-1.8 1.6-2.1l5.4-1.6 5.2-5.1c.8-.8 1.8-1.2 2.9-1.2h9.6c1.2 0 2.3.5 3.1 1.4l4.2 4.9 4.1 1c1 .3 1.7 1.1 1.7 2.1V31c0 .6-.4 1-1 1h-2.6"/><path d="M13.2 32h17.6"/><path d="M6 32h1.8"/><circle cx="10.5" cy="32" r="3"/><circle cx="33.5" cy="32" r="3"/><path d="M15 22.6h22"/><path d="M26 6.5l-3.2 5h3.6l-3.2 5"/></EvIcon>,
+  // Pause symbol inside a ring: engine off while waiting.
+  idle: <EvIcon><circle cx="24" cy="24" r="16"/><path d="M20 18v12M28 18v12"/><path d="M24 4.5v3M24 40.5v3"/></EvIcon>,
+  // Speaker with the sound waves crossed out.
+  quiet: <EvIcon><path d="M8 19h6l8-7v24l-8-7H8z"/><path d="M29 18l10 12M39 18L29 30"/></EvIcon>,
+  // Leaf beside a falling bar chart: lower-emission reporting.
+  reporting: <EvIcon><path d="M7 40h34"/><path d="M11 40V22M18 40V27M25 40V32"/><path d="M31 31c0-8.3 4.6-14.6 11-16-.2 8.6-4.3 15.1-11 16z"/><path d="M31 31l6-9"/></EvIcon>,
+};
+
+function ElectricByDefault({ corporate = false }) {
+  const items = [
+    { icon: "tailpipe", name: "Zero tailpipe emissions", desc: "Every journey is in a fully electric BMW i5 — no exhaust and no fumes on Melbourne's streets." },
+    { icon: "idle", name: "No idling while we wait", desc: "At arrivals or outside your meeting, there's no engine running — the cabin stays comfortable on battery power." },
+    { icon: "quiet", name: "Whisper-quiet cabin", desc: "No engine noise or vibration. Take calls, work, or simply rest." },
+    corporate
+      ? { icon: "reporting", name: "Lower-emission business travel", desc: "Choose electric trips with no tailpipe emissions for executives and guests — a practical step for companies reporting on business-travel (Scope 3) emissions." }
+      : { icon: "reporting", name: "Lower-emission business travel", desc: "A simple way to reduce the footprint of your team's ground transport as sustainability reporting becomes standard in Australia." },
+  ];
+  return (
+    <section className="sec ev-section" id="electric">
+      <div className="wrap">
+        <div className="s-label">Electric by default</div>
+        <h2 className="s-h inv">Quieter for you.<br /><span className="gold-em">Cleaner for Melbourne.</span></h2>
+        <div className="ev-grid">
+          {items.map((item) => (
+            <div key={item.name} className="ev-item">
+              <div className="ev-icon-wrap">{EV_ICONS[item.icon]}</div>
+              <h3 className="ev-name">{item.name}</h3>
+              <p className="ev-desc">{item.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -1455,6 +1499,16 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .area-item{padding:2rem 1rem;border-bottom:1px solid #eee;cursor:pointer;} .area-item:hover{background:#fafafa;}
 .area-name{font-family:var(--serif);margin-bottom:.4rem;} .area-time{font-size:.68rem;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;}
 .area-desc{font-size:.82rem;line-height:1.65;color:#666;}
+.ev-section{background:#111;}
+.ev-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:3rem;border-top:1px solid rgba(201,164,109,.16);}
+.ev-item{padding:2.4rem 1.6rem 1rem;border-right:1px solid rgba(255,255,255,.07);}
+.ev-item:last-child{border-right:none;}
+.ev-icon-wrap{color:var(--gold);margin-bottom:1.4rem;}
+.ev-icon{width:52px;height:52px;display:block;}
+.ev-name{font-family:var(--serif);font-weight:400;font-size:1.3rem;color:#fff;margin-bottom:.7rem;}
+.ev-desc{font-size:.85rem;line-height:1.7;color:rgba(255,255,255,.5);}
+@media(max-width:1024px){.ev-grid{grid-template-columns:repeat(2,1fr);}.ev-item:nth-child(2){border-right:none;}}
+@media(max-width:768px){.ev-grid{grid-template-columns:1fr;}.ev-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.07);padding:2rem 0;}.ev-item:last-child{border-bottom:none;}}
 .fleet-section{background:#111;} .fleet-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:6rem;align-items:center;}
 .fleet-img-wrap{background:#1a1a1a;min-height:340px;overflow:hidden;} .fleet-img{width:100%;min-height:340px;object-fit:cover;display:block;}
 .fleet-text-eyebrow{color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.12em;font-size:.7rem;margin-bottom:.8rem;}
@@ -1713,6 +1767,7 @@ export default function Home({ place = null, corporate = false, racing = false, 
     {airportHub && <AirportHub />}
     {place && <PlaceFare place={place} />}
     {corporate && <CorporateDetails />}
+    {corporate && <ElectricByDefault corporate />}
     {racing && <RacingDetails />}
     {!faqPage && <TrustStrip />}
     {hasBooking && <InlineBooking />}
@@ -1720,6 +1775,7 @@ export default function Home({ place = null, corporate = false, racing = false, 
     {!faqPage && <Reviews />}
     {isHome && <>
       <Services />
+      <ElectricByDefault />
       <JourneyMoments />
       <CorporateTeaser />
       <Pricing />
