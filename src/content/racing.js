@@ -1,17 +1,16 @@
-// Spring Racing Carnival page (/spring-racing-carnival-chauffeur): race days
-// and venues. Verify dates against racingvictoria.com.au / vrc.com.au each year.
-
-// 2026 dates, checked October 2026 on racingvictoria.com.au and vrc.com.au.
-// Moonee Valley is closed for redevelopment in 2026, so the Cox Plate is at Flemington.
+// Spring Racing Carnival page (/spring-racing-carnival-chauffeur): the
+// carnival's main race days, without exact dates. The 2026 carnival is over
+// and 2027 dates aren't announced yet. When Racing Victoria / the VRC publish
+// them, put exact dates back in `when` (and update RACING_VENUE_NOTE).
 export const RACE_DAYS = [
-  { name: "Caulfield Cup", venue: "Caulfield", date: "Sat 17 October" },
-  { name: "Cox Plate", venue: "Flemington", date: "Sat 24 October" },
-  { name: "Derby Day", venue: "Flemington", date: "Sat 31 October" },
-  { name: "Melbourne Cup", venue: "Flemington", date: "Tue 3 November" },
-  { name: "Oaks Day", venue: "Flemington", date: "Thu 5 November" },
-  { name: "Stakes Day", venue: "Flemington", date: "Sat 7 November" },
+  { name: "Caulfield Cup", venue: "Caulfield", when: "October" },
+  { name: "Cox Plate", venue: "Moonee Valley / Flemington", when: "October" },
+  { name: "Derby Day", venue: "Flemington", when: "Cup week" },
+  { name: "Melbourne Cup", venue: "Flemington", when: "1st Tue of Nov" },
+  { name: "Oaks Day", venue: "Flemington", when: "Cup week" },
+  { name: "Stakes Day", venue: "Flemington", when: "Cup week" },
 ];
 
 export const RACING_VENUE_NOTE =
-  "In 2026 the Cox Plate is run at Flemington while Moonee Valley is being redeveloped. " +
-  "Race dates from Racing Victoria and the VRC.";
+  "The 2026 carnival has finished. Race dates for 2027 are set by Racing Victoria and the VRC — " +
+  "message us and we'll hold your race days as soon as they're confirmed.";

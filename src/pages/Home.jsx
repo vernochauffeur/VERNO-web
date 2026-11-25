@@ -192,7 +192,6 @@ function Nav() {
     { href: "/#services", label: "Services",   id: "services" },
     { href: "/#journey",  label: "Experience", id: "journey" },
     { href: CORPORATE_PATH, label: "Corporate" },
-    { href: RACING_PATH, label: "Spring racing" },
     { href: AIRPORT_HUB_PATH, label: "Airport fares" },
     { href: "/#pricing",  label: "Pricing",    id: "pricing" },
     { href: FAQ_PATH,     label: "FAQ" },
@@ -443,7 +442,7 @@ function RacingDetails() {
   return (
     <section id="race-days" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
       <div className="wrap">
-        <div className="s-label">Spring Racing Carnival 2026</div>
+        <div className="s-label">Spring Racing Carnival</div>
         <h2 className="s-h" style={{ color:"#111" }}>Race days at Flemington<br /><span className="gold-em">and Caulfield.</span></h2>
         <div className="pricing-grid">
           <div className="pricing-table">
@@ -451,7 +450,7 @@ function RacingDetails() {
             {RACE_DAYS.map((d) => (
               <div key={d.name} className="pricing-row">
                 <span className="pricing-route">{d.name} &middot; {d.venue}</span>
-                <span className="pricing-price">{d.date}</span>
+                <span className="pricing-price">{d.when}</span>
               </div>
             ))}
           </div>
