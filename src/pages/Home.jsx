@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, cloneElement } from "react";
 import {
   PRICING, quoteFare, totalFare, assessJourney, normalizeAirportAddress, formatPrice,
   LATE_NIGHT_WINDOW, LATE_NIGHT_SURCHARGE_LABEL, WAITING_POLICY, SPECIAL_QUOTE_NOTE,
@@ -12,9 +12,13 @@ import {
   buildBookingMessage, buildBlankBookingMessage, buildWhatsAppUrl, buildSmsUrl,
 } from "../lib/booking.js";
 import { faqsFor } from "../content/faq.js";
+import {
+  EMPTY_ENQUIRY, TRIPS_PER_MONTH, COMPANY_SIZES, SERVICES as CORPORATE_SERVICES, BOOKERS, START_OPTIONS, SOURCES,
+  validateEnquiry, enquiryMailtoUrl,
+} from "../lib/corporate.js";
 import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
 import { GOOGLE_REVIEWS_URL, GOOGLE_RATING, REVIEWS } from "../content/reviews.js";
-import { AIRPORT_HUB_PATH, CORPORATE_PATH, FAQ_PATH, RACING_PATH, AUSOPEN_PATH, faqSetFor } from "../content/pages.js";
+import { AIRPORT_HUB_PATH, CORPORATE_PATH, FAQ_PATH, RACING_PATH, AUSOPEN_PATH, faqSetFor, heroImageFor, navPathFor } from "../content/pages.js";
 import { RACING_EVENT } from "../content/racing.js";
 import { AO_EVENT } from "../content/ausopen.js";
 
@@ -163,7 +167,7 @@ function VernoMark() {
   );
 }
 
-function Nav() {
+function Nav({ current = null }) {
   const [solid, setSolid] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -216,7 +220,7 @@ function Nav() {
         <ul className="nav-links">
           {primaryLinks.map((l) => (
             <li key={l.href}>
-              <a href={l.href} onClick={l.id ? (e) => { e.preventDefault(); scrollTo(l.id); } : undefined}>{l.label}</a>
+              <a href={l.href} aria-current={l.href === current ? "page" : undefined} onClick={l.id ? (e) => { e.preventDefault(); scrollTo(l.id); } : undefined}>{l.label}</a>
             </li>
           ))}
         </ul>
@@ -240,7 +244,7 @@ function Nav() {
         </div>
         <nav className="nav-menu-links" aria-label="Menu links">
           {menuLinks.map((l) => (
-            <a key={l.href} href={l.href} className="nav-menu-link" onClick={l.id ? (e) => { e.preventDefault(); scrollTo(l.id); } : undefined}>{l.label}</a>
+            <a key={l.href} href={l.href} className="nav-menu-link" aria-current={l.href === current ? "page" : undefined} onClick={l.id ? (e) => { e.preventDefault(); scrollTo(l.id); } : undefined}>{l.label}</a>
           ))}
         </nav>
         <div className="nav-menu-actions">
@@ -289,16 +293,26 @@ function heroCopy({ place, corporate, racing, ausOpen, airportHub, faqPage }) {
 
 function Hero(props) {
   const { title, lede, tag } = heroCopy(props);
+  const { corporate } = props;
+  const image = heroImageFor(props);
+  const heroImage = { "--hero-jpg": `url("/images/${image}.jpg")`, "--hero-webp": `url("/images/${image}.webp")` };
   return (
-    <section className="hero">
+    <section className="hero" style={heroImage}>
       <div className="hero-inner">
         <h1 className="hero-title">{title}</h1>
         <p className="hero-lede">{lede}</p>
-        <button type="button" className="hero-route" onClick={goToBookingForm} aria-label="Get your fare — open the fare calculator">
-          <span className="hero-route-field"><span className="route-marker route-marker--dot" aria-hidden="true" />Pickup address</span>
-          <span className="hero-route-field"><span className="route-marker route-marker--square" aria-hidden="true" />Where to?</span>
-          <span className="hero-route-cta">Get your fare <span aria-hidden="true">→</span></span>
-        </button>
+        {corporate ? (
+          <div className="hero-actions">
+            <a href="#corporate" className="btn btn-inverse" onClick={(e) => { e.preventDefault(); scrollToSection("corporate"); }}>Open a corporate account <span aria-hidden="true">→</span></a>
+            <a href={`tel:${VERNO_PHONE}`} className="btn btn-outline-light"><PhoneIcon s={16} /> {VERNO_PHONE_DISPLAY}</a>
+          </div>
+        ) : (
+          <button type="button" className="hero-route" onClick={goToBookingForm} aria-label="Get your fare — open the fare calculator">
+            <span className="hero-route-field"><span className="route-marker route-marker--dot" aria-hidden="true" />Pickup address</span>
+            <span className="hero-route-field"><span className="route-marker route-marker--square" aria-hidden="true" />Where to?</span>
+            <span className="hero-route-cta">Get your fare <span aria-hidden="true">→</span></span>
+          </button>
+        )}
         <ul className="hero-dataline" aria-label="Service overview">
           <li>Melbourne Airport</li>
           <li>{tag}</li>
@@ -987,44 +1001,144 @@ const SERVICES = [
   }
 ];
 
-function CorporateSection() {
-  const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-  const [email, setEmail] = useState("");
-  const [monthlyTrips, setMonthlyTrips] = useState("");
-  const [typicalRoute, setTypicalRoute] = useState("");
-  const [details, setDetails] = useState("");
-  const handleSubmit = () => {
-    const subject = "Corporate Chauffeur Enquiry";
-    const body = [
-      `Name: ${name}`,
-      `Company: ${company}`,
-      `Email: ${email}`,
-      `Estimated monthly trips: ${monthlyTrips}`,
-      `Typical route: ${typicalRoute}`,
-      "",
-      "Details:",
-      details,
-    ].join("\n");
-    window.location.href = `mailto:${VERNO_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  };
+// Labelled form field in the booking-panel style; `error` shows under it.
+// `children` is the single input/select/textarea, given `id` for the label.
+function Field({ id, label, optional = false, error, children }) {
   return (
-    <section id="corporate" className="corporate-section">
+    <div className="fg">
+      <label className="fl" htmlFor={id}>{label}{optional && <span className="fl-optional"> (optional)</span>}</label>
+      {cloneElement(children, { id, "aria-invalid": error ? true : undefined })}
+      {error && <span className="field-error">{error}</span>}
+    </div>
+  );
+}
+
+// /corporate only: the corporate account enquiry. Sends through
+// /api/corporate-enquiry (emails the team); if that isn't set up or fails,
+// opens the visitor's email app with the same details so no enquiry is lost.
+function CorporateSection() {
+  const [form, setForm] = useState(EMPTY_ENQUIRY);
+  const [errors, setErrors] = useState({});
+  const [status, setStatus] = useState("idle"); // idle | sending | sent | mailto
+
+  const set = (key) => (e) => {
+    const value = e.target.value;
+    setForm((f) => ({ ...f, [key]: value }));
+    setErrors((errs) => ({ ...errs, [key]: null }));
+  };
+  const toggleService = (service) => setForm((f) => ({
+    ...f, services: f.services.includes(service) ? f.services.filter((s) => s !== service) : [...f.services, service],
+  }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const found = validateEnquiry(form);
+    setErrors(found);
+    if (Object.keys(found).length) return;
+    setStatus("sending");
+    let response = null;
+    try {
+      response = await fetch("/api/corporate-enquiry", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
+      });
+    } catch { /* network error: fall back to email below */ }
+    if (window.gtag) window.gtag("event", "generate_lead", { form: "corporate_enquiry" });
+    if (response && response.ok) { setStatus("sent"); return; }
+    if (response && response.status === 400) {
+      const data = await response.json().catch(() => ({}));
+      setErrors(data.errors || {}); setStatus("idle"); return;
+    }
+    window.location.href = enquiryMailtoUrl(form);
+    setStatus("mailto");
+  };
+
+  const select = (key, options, placeholder = "Select") => (
+    <select className="fi" value={form[key]} onChange={set(key)}>
+      <option value="">{placeholder}</option>
+      {options.map((o) => <option key={o} value={o}>{o}</option>)}
+    </select>
+  );
+
+  return (
+    <section className="booking-panel corporate-enquiry" id="corporate">
       <div className="booking-panel-inner">
-        <div>
-          <div className="s-label">Corporate</div>
-          <h2 className="booking-panel-headline">Corporate Chauffeur Accounts</h2>
-          <p className="booking-panel-sub">Tailored chauffeur services for businesses, executives and ongoing travel requirements.</p>
+        <div className="booking-intro">
+          <div className="s-label">Corporate accounts</div>
+          <h2 className="booking-panel-headline">Open a corporate account.</h2>
+          <p className="booking-panel-sub">Tell us about your team's travel and we'll set up your account, invoicing and rates.</p>
+          <ol className="booking-facts">
+            <li><span className="booking-fact-n">01</span><span><strong>Tell us about your travel</strong>A few questions about your team, trips and routes.</span></li>
+            <li><span className="booking-fact-n">02</span><span><strong>We set up your account</strong>Weekly tax invoices with 7-day terms, and rates based on your trip volume.</span></li>
+            <li><span className="booking-fact-n">03</span><span><strong>Your team books directly</strong>By WhatsApp, phone or email — no card needed at booking.</span></li>
+          </ol>
+          <p className="form-stars">Prefer to talk? <a href={`tel:${VERNO_PHONE}`} className="corporate-call">Call {VERNO_PHONE_DISPLAY}</a></p>
         </div>
+
         <div className="booking-panel-form">
-          <div className="fg"><label className="fl">Full Name</label><input className="fi" value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div className="fg"><label className="fl">Company</label><input className="fi" value={company} onChange={(e) => setCompany(e.target.value)} /></div>
-          <div className="fg"><label className="fl">Work Email</label><input className="fi" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="fg"><label className="fl">Estimated Monthly Trips</label><select className="fi" value={monthlyTrips} onChange={(e) => setMonthlyTrips(e.target.value)}><option value="">Select</option><option>1–5 trips</option><option>5–15 trips</option><option>15+ trips</option></select></div>
-          <div className="fg"><label className="fl">Typical Route</label><input className="fi" placeholder="e.g. Melbourne Airport ↔ CBD" value={typicalRoute} onChange={(e) => setTypicalRoute(e.target.value)} /></div>
-          <div className="fg"><label className="fl">Additional Details (optional)</label><textarea className="fi" rows="3" placeholder="Any specific requirements..." value={details} onChange={(e) => setDetails(e.target.value)} /></div>
-          <button className="btn-whatsapp" onClick={handleSubmit}>Request Corporate Account Access</button>
-          <p style={{ fontSize: "12px", color: "#999", marginTop: "14px" }}>Suitable for businesses of all sizes — from occasional bookings to ongoing travel requirements.</p>
+          {status === "sent" ? (
+            <div className="corporate-done" role="status">
+              <h3 className="booking-panel-headline">Thank you{form.name ? `, ${form.name.split(" ")[0]}` : ""}.</h3>
+              <p className="booking-panel-sub">Your enquiry has reached our team at {VERNO_EMAIL}. We'll be in touch at {form.email}.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate>
+              <fieldset className="corporate-group">
+                <legend className="return-panel-title">Your details</legend>
+                <div className="f2">
+                  <Field id="ce-name" label="Full name" error={errors.name}><input className="fi" autoComplete="name" value={form.name} onChange={set("name")} /></Field>
+                  <Field id="ce-jobTitle" label="Job title" optional><input className="fi" autoComplete="organization-title" value={form.jobTitle} onChange={set("jobTitle")} /></Field>
+                </div>
+                <div className="f2">
+                  <Field id="ce-email" label="Work email" error={errors.email}><input className="fi" type="email" autoComplete="email" value={form.email} onChange={set("email")} /></Field>
+                  <Field id="ce-phone" label="Phone" error={errors.phone}><input className="fi" type="tel" autoComplete="tel" value={form.phone} onChange={set("phone")} /></Field>
+                </div>
+              </fieldset>
+
+              <fieldset className="corporate-group">
+                <legend className="return-panel-title">Your company</legend>
+                <Field id="ce-company" label="Company" error={errors.company}><input className="fi" autoComplete="organization" value={form.company} onChange={set("company")} /></Field>
+                <div className="f2">
+                  <Field id="ce-abn" label="ABN" optional><input className="fi" inputMode="numeric" value={form.abn} onChange={set("abn")} /></Field>
+                  <Field id="ce-companySize" label="Company size" optional>{select("companySize", COMPANY_SIZES, "Employees")}</Field>
+                </div>
+              </fieldset>
+
+              <fieldset className="corporate-group">
+                <legend className="return-panel-title">Your travel</legend>
+                <Field id="ce-tripsPerMonth" label="Estimated trips per month" error={errors.tripsPerMonth}>{select("tripsPerMonth", TRIPS_PER_MONTH)}</Field>
+                <div className="fg">
+                  <span className="fl">What will you use us for? <span className="fl-optional">(optional)</span></span>
+                  <div className="choice-chips">
+                    {CORPORATE_SERVICES.map((service) => (
+                      <button key={service} type="button" className="choice-chip" aria-pressed={form.services.includes(service)} onClick={() => toggleService(service)}>
+                        {service}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <Field id="ce-routes" label="Typical routes" optional>
+                  <input className="fi" placeholder="e.g. Melbourne Airport ↔ Collins Street office" value={form.routes} onChange={set("routes")} />
+                </Field>
+                <div className="f2">
+                  <Field id="ce-bookers" label="Who usually books?" optional>{select("bookers", BOOKERS)}</Field>
+                  <Field id="ce-start" label="When would you like to start?" optional>{select("start", START_OPTIONS)}</Field>
+                </div>
+                <Field id="ce-source" label="How did you hear about us?" optional>{select("source", SOURCES)}</Field>
+                <Field id="ce-notes" label="Anything else we should know?" optional>
+                  <textarea className="fi" rows="3" placeholder="Billing contacts, regular travellers, special requirements…" value={form.notes} onChange={set("notes")} />
+                </Field>
+              </fieldset>
+
+              <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hp-field" aria-hidden="true" value={form.website || ""} onChange={set("website")} />
+
+              <button type="submit" className="btn btn-primary btn-block booking-submit" disabled={status === "sending"}>
+                {status === "sending" ? "Sending…" : "Request corporate account"}
+              </button>
+              {status === "mailto" && (
+                <p className="fare-hint" role="status">Your email app has opened with your details — press Send to complete your enquiry, or email us at {VERNO_EMAIL}.</p>
+              )}
+            </form>
+          )}
         </div>
       </div>
     </section>
@@ -1535,7 +1649,7 @@ body{font-synthesis-weight:none;}
 .nav.solid .verno-city{color:var(--slate);}
 .nav-links{display:flex;gap:36px;list-style:none;}
 .nav-links a{font-size:15px;color:rgba(255,255,255,.88);padding:6px 0;border-bottom:1px solid transparent;transition:border-color .18s var(--ease);}
-.nav-links a:hover{border-bottom-color:currentColor;}
+.nav-links a:hover,.nav-links a[aria-current="page"]{border-bottom-color:currentColor;}
 .nav.solid .nav-links a{color:var(--ink);}
 .nav-right{display:flex;align-items:center;gap:24px;}
 .nav-phone{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums;}
@@ -1556,13 +1670,13 @@ body{font-synthesis-weight:none;}
 .nav-menu-close{width:44px;height:44px;margin-right:-10px;background:transparent;border:0;color:var(--paper);font-size:32px;font-weight:300;line-height:1;cursor:pointer;}
 .nav-menu-links{display:flex;flex-direction:column;margin-bottom:40px;}
 .nav-menu-link{font-family:var(--serif);font-size:40px;line-height:1.1;letter-spacing:-.01em;color:var(--paper);padding:14px 0;border-bottom:1px solid var(--rule-dark);}
-.nav-menu-link:hover{color:var(--bronze-dark);}
+.nav-menu-link:hover,.nav-menu-link[aria-current="page"]{color:var(--bronze-dark);}
 .nav-menu-actions{display:flex;flex-direction:column;gap:18px;margin-top:auto;}
 .nav-menu-actions .btn{width:100%;margin-bottom:8px;}
 .nav-menu-contact{display:inline-flex;align-items:center;gap:12px;font-size:16px;color:rgba(246,245,242,.82);}
 
 /* Hero */
-.hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:100vh;min-height:min(100svh,920px);padding:120px var(--gutter) 0;background:var(--ink) url("/images/hero-bg.jpg") center 70%/cover no-repeat;background-image:image-set(url("/images/hero-bg.webp") type("image/webp"),url("/images/hero-bg.jpg") type("image/jpeg"));color:#fff;overflow:hidden;}
+.hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:100vh;min-height:min(100svh,920px);padding:120px var(--gutter) 0;background:var(--ink) var(--hero-jpg,url("/images/hero-bg.jpg")) center 70%/cover no-repeat;background-image:image-set(var(--hero-webp,url("/images/hero-bg.webp")) type("image/webp"),var(--hero-jpg,url("/images/hero-bg.jpg")) type("image/jpeg"));color:#fff;overflow:hidden;}
 .hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:
   linear-gradient(180deg,rgba(10,10,11,.5) 0%,rgba(10,10,11,0) 22%),
   linear-gradient(0deg,rgba(10,10,11,.82) 0%,rgba(10,10,11,.45) 38%,rgba(10,10,11,0) 70%),
@@ -1641,6 +1755,23 @@ body{font-synthesis-weight:none;}
 .booking-panel .btn-text-link:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px;}
 .booking-panel .wa-trust-line{margin-top:20px;text-align:center;font-size:13px;color:var(--slate);}
 
+/* Corporate page */
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;}
+.btn-outline-light{border-color:rgba(255,255,255,.55);color:#fff;background:transparent;}
+.btn-outline-light:hover{background:rgba(255,255,255,.08);}
+.corporate-group{border:0;border-top:1px solid var(--rule);padding:24px 0 4px;margin:0;}
+.corporate-group:first-child{border-top:0;padding-top:0;}
+.booking-panel .fl-optional{text-transform:none;letter-spacing:0;font-weight:400;color:var(--stone);}
+.choice-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.choice-chip{padding:10px 14px;border:1px solid var(--rule);border-radius:var(--radius-sm);background:var(--field);color:var(--ink);font-family:var(--sans);font-size:14px;cursor:pointer;transition:background-color .15s var(--ease),border-color .15s var(--ease);}
+.choice-chip:hover{border-color:#BEBAB2;}
+.choice-chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.choice-chip:focus-visible{outline:2px solid var(--bronze);outline-offset:2px;}
+.corporate-call{color:var(--ink);text-decoration:underline;text-underline-offset:3px;}
+.corporate-done{padding:24px 0;}
+.hp-field{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;}
+.booking-submit:disabled{opacity:.6;cursor:wait;}
+
 /* Mobile sticky bar */
 .sticky-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:997;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--ink);border-top:1px solid var(--rule-dark);}
 .sb-cta{flex:1;display:flex;align-items:center;justify-content:center;height:48px;border-radius:var(--radius-sm);background:var(--paper);color:var(--ink);font-size:15px;font-weight:500;}
@@ -1706,7 +1837,7 @@ export default function Home({ place = null, corporate = false, racing = false, 
   const hasBooking = !corporate && !faqPage;
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
-    <Nav />
+    <Nav current={navPathFor({ corporate, racing, ausOpen, airportHub, faqPage })} />
     <Hero place={place} corporate={corporate} racing={racing} ausOpen={ausOpen} airportHub={airportHub} faqPage={faqPage} />
     {airportHub && <AirportHub />}
     {place && <PlaceFare place={place} />}

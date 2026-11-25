@@ -31,6 +31,26 @@ function faqHead() {
 }
 export const AIRPORT_HUB_PATH = "/melbourne-airport-transfers";
 
+/** Hero background (public/images/<name>.jpg + .webp) for a page with these Home props. */
+export function heroImageFor({ place = null, corporate = false, racing = false, ausOpen = false, airportHub = false, faqPage = false } = {}) {
+  if (corporate) return "svc-corporate";
+  if (racing) return "svc-events";
+  if (ausOpen) return "journey-4";
+  if (place || airportHub) return "journey-1";
+  if (faqPage) return "journey-2";
+  return "hero-bg";
+}
+
+/** The nav link path for the page with these Home props, or null (home, landing pages). */
+export function navPathFor({ corporate = false, racing = false, ausOpen = false, airportHub = false, faqPage = false } = {}) {
+  if (corporate) return CORPORATE_PATH;
+  if (racing) return RACING_PATH;
+  if (ausOpen) return AUSOPEN_PATH;
+  if (airportHub) return AIRPORT_HUB_PATH;
+  if (faqPage) return FAQ_PATH;
+  return null;
+}
+
 function airportHubHead() {
   return {
     title: `Melbourne Airport Transfers by Hotel & Suburb | From ${formatPrice(PRICING.AIRPORT.MIN_FARE)} | VÉRNO`,
