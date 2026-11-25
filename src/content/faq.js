@@ -3,7 +3,10 @@
 // that page shows). The full list lives on /faq.
 // Prices come from src/lib/pricing.js so the copy can't drift from the calculator.
 
-import { PRICING, WAITING_POLICY, SPECIAL_QUOTE_NOTE, formatPrice, airportExamplePrice } from "../lib/pricing.js";
+import {
+  PRICING, WAITING_POLICY, SPECIAL_QUOTE_NOTE, EVENT_FARE_NOTE, LATE_NIGHT_SURCHARGE_LABEL, LATE_NIGHT_WINDOW,
+  formatPrice, airportExamplePrice,
+} from "../lib/pricing.js";
 import { MAX_PASSENGERS } from "../lib/booking.js";
 
 const airportFrom = (suburb) => formatPrice(airportExamplePrice(suburb));
@@ -67,6 +70,22 @@ export const FAQS = [
     q: "How much does a race day chauffeur cost?",
     a: `Drop-off and pick-up trips are priced like any other trip — enter your addresses in the booking form to see your fare. A ${formatPrice(PRICING.MAJOR_VENUE_FEE)} major venue fee applies per trip to or from Flemington or Caulfield Racecourse. Full-day and event hire is quoted via WhatsApp.`,
   },
+  {
+    q: "Where will you drop us off for the Australian Open?",
+    a: "As close to Melbourne Park as the tournament's road closures and traffic arrangements allow. Tell us which arena or gate you're heading to when you book and we'll confirm the pick-up point with you before the day.",
+  },
+  {
+    q: "Can you pick us up after a night session?",
+    a: `Yes. Night matches can finish late, so book an approximate pick-up time and message us on WhatsApp if your match runs over. A late-night surcharge of ${LATE_NIGHT_SURCHARGE_LABEL} applies to pickups ${LATE_NIGHT_WINDOW}.`,
+  },
+  {
+    q: "How much does an Australian Open chauffeur cost?",
+    a: `Trips are priced like any other — enter your addresses in the booking form to see your fare. A ${formatPrice(PRICING.MAJOR_VENUE_FEE)} major venue fee applies per trip to or from Rod Laver Arena, Margaret Court Arena or John Cain Arena. On finals weekend (30–31 January): ${EVENT_FARE_NOTE} Full-day hire is quoted via WhatsApp.`,
+  },
+  {
+    q: "How far ahead should I book for the Australian Open?",
+    a: "As early as you can, especially for finals weekend. Our fleet is small, so the busiest days fill first.",
+  },
 ];
 
 // Short FAQ lists shown on the other pages, each linking to /faq for the rest.
@@ -87,7 +106,13 @@ const FAQ_SETS = {
     "Do you serve corporate clients?",
     "Where will my chauffeur meet me at the airport?",
     "How far in advance should I book?",
-  ],  racing: [
+  ],  ausOpen: [
+    "Where will you drop us off for the Australian Open?",
+    "Can you pick us up after a night session?",
+    "How much does an Australian Open chauffeur cost?",
+    "How far ahead should I book for the Australian Open?",
+  ],
+  racing: [
     "Where will you drop us off and pick us up at the races?",
     "Should I pre-book my return trip from the races?",
     "How far ahead should I book for race days?",

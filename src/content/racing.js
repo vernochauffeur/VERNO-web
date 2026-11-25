@@ -1,6 +1,9 @@
 // Spring Racing Carnival page (/spring-racing-carnival-chauffeur): race days
 // and venues. Verify dates against racingvictoria.com.au / vrc.com.au each year.
 
+import { MAJOR_VENUE_FEE_NOTE, SPECIAL_QUOTE_NOTE } from "../lib/pricing.js";
+import { MAX_PASSENGERS } from "../lib/booking.js";
+
 // Season shown on the page. Leave `date` (and an unconfirmed `venue`) null until
 // the official calendar is out; the page then shows "Date TBC".
 export const RACING_SEASON = "2027";
@@ -21,3 +24,20 @@ export const RACE_DAYS = [
 export const RACING_VENUE_NOTE =
   `${RACING_SEASON} race dates are not announced yet. We'll add them here once Racing Victoria ` +
   "and the VRC confirm them; the Cox Plate venue depends on the Moonee Valley redevelopment.";
+
+// What EventDetails (Home.jsx) shows on the racing page.
+export const RACING_EVENT = {
+  id: "race-days",
+  label: `Spring Racing Carnival ${RACING_SEASON}`,
+  heading: ["Race days at Flemington", "and Caulfield."],
+  daysLabel: "Race days",
+  days: RACE_DAYS.map((d) => ({ name: d.venue ? `${d.name} · ${d.venue}` : d.name, date: d.date || "Date TBC" })),
+  items: [
+    { name: "BMW i5 chauffeur", tag: "Fleet", desc: `An electric BMW i5 for up to ${MAX_PASSENGERS} passengers, with your chauffeur for the trip.` },
+    { name: "Drop-off & pick-up", tag: "Race day", desc: "To and from Flemington and Caulfield racecourses, from your home, hotel or office." },
+    { name: "Return trips", tag: "Race day", desc: "Book both directions at once — turn on 'Add return trip' in the booking form." },
+    { name: "Full-day hire", tag: "Quote via WhatsApp", desc: "A chauffeur for the whole race day, with stops before and after the races." },
+  ],
+  notes: [RACING_VENUE_NOTE, MAJOR_VENUE_FEE_NOTE, SPECIAL_QUOTE_NOTE],
+  waSource: "racing_quote",
+};
