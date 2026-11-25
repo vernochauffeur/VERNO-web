@@ -15,7 +15,7 @@ import { faqsFor } from "../content/faq.js";
 import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
 import { GOOGLE_REVIEWS_URL, GOOGLE_RATING, REVIEWS } from "../content/reviews.js";
 import { AIRPORT_HUB_PATH, CORPORATE_PATH, FAQ_PATH, RACING_PATH, faqSetFor } from "../content/pages.js";
-import { RACE_DAYS, RACING_VENUE_NOTE } from "../content/racing.js";
+import { RACE_DAYS, RACING_SEASON, RACING_VENUE_NOTE } from "../content/racing.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -443,15 +443,15 @@ function RacingDetails() {
   return (
     <section id="race-days" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
       <div className="wrap">
-        <div className="s-label">Spring Racing Carnival 2026</div>
+        <div className="s-label">Spring Racing Carnival {RACING_SEASON}</div>
         <h2 className="s-h" style={{ color:"#111" }}>Race days at Flemington<br /><span className="gold-em">and Caulfield.</span></h2>
         <div className="pricing-grid">
           <div className="pricing-table">
             <div className="pricing-table-label">Race days</div>
             {RACE_DAYS.map((d) => (
               <div key={d.name} className="pricing-row">
-                <span className="pricing-route">{d.name} &middot; {d.venue}</span>
-                <span className="pricing-price">{d.date}</span>
+                <span className="pricing-route">{d.name}{d.venue && <> &middot; {d.venue}</>}</span>
+                <span className="pricing-price">{d.date || "Date TBC"}</span>
               </div>
             ))}
           </div>
