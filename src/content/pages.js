@@ -8,12 +8,14 @@ import { PRICING, formatPrice } from "../lib/pricing.js";
 export const CORPORATE_PATH = "/corporate";
 export const FAQ_PATH = "/faq";
 export const RACING_PATH = "/spring-racing-carnival-chauffeur";
+export const EVENTS_PATH = "/melbourne-events-chauffeur";
 
 /** Which FAQ list (see faqsFor in faq.js) a page with these Home props shows. */
-export function faqSetFor({ place = null, corporate = false, racing = false, airportHub = false, faqPage = false } = {}) {
+export function faqSetFor({ place = null, corporate = false, racing = false, events = false, airportHub = false, faqPage = false } = {}) {
   if (faqPage) return "all";
   if (corporate) return "corporate";
   if (racing) return "racing";
+  if (events) return "events";
   if (place || airportHub) return "airport";
   return "home";
 }
@@ -100,12 +102,37 @@ function racingSchema() {
   };
 }
 
+function eventsHead() {
+  return {
+    title: "Melbourne Event Chauffeur | Australian Open, F1 & MCG | VÉRNO",
+    description:
+      "BMW i5 chauffeur for Melbourne's major events: the Australian Open, Boxing Day Test, " +
+      "Formula 1 Grand Prix and MCG Tests. Drop-off, pick-up and return trips.",
+    url: `${SITE_URL}${EVENTS_PATH}`,
+  };
+}
+
+function eventsSchema() {
+  const head = eventsHead();
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Melbourne major event chauffeur",
+    serviceType: "Event Chauffeur",
+    url: head.url,
+    description: head.description,
+    provider: { "@type": "LocalBusiness", name: "VÉRNO Chauffeur", url: SITE_URL, telephone: "+61421238894" },
+    areaServed: { "@type": "City", name: "Melbourne" },
+  };
+}
+
 export const PAGES = [
   ...PLACES.map((place) => ({
     path: placePath(place), props: { place }, head: placeHead(place), schema: buildPlaceSchema(place),
   })),
   { path: CORPORATE_PATH, props: { corporate: true }, head: corporateHead(), schema: corporateSchema() },
   { path: RACING_PATH, props: { racing: true }, head: racingHead(), schema: racingSchema() },
+  { path: EVENTS_PATH, props: { events: true }, head: eventsHead(), schema: eventsSchema() },
   { path: AIRPORT_HUB_PATH, props: { airportHub: true }, head: airportHubHead(), schema: airportHubSchema() },
   // FAQPage data for /faq comes from the per-page FAQ schema, like every page.
   { path: FAQ_PATH, props: { faqPage: true }, head: faqHead(), schema: null },

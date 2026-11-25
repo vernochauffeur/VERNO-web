@@ -297,6 +297,7 @@ export const MAJOR_VENUE_FEE_NOTE =
 // dates, "YYYY-MM-DD", inclusive. Verify dates against the official source.
 const MCG = { name: "MCG", location: { lat: -37.8200, lng: 144.9834 }, radiusKm: 1.5 };
 const MELBOURNE_PARK = { name: "Melbourne Park", location: { lat: -37.8216, lng: 144.9786 }, radiusKm: 1.5 };
+const ALBERT_PARK = { name: "Albert Park", location: { lat: -37.8466, lng: 144.9706 }, radiusKm: 1.5 };
 
 export const MAJOR_EVENTS = [
   // afl.com.au / mcg.org.au: Sat 26 September 2026, MCG
@@ -305,6 +306,10 @@ export const MAJOR_EVENTS = [
   { name: "Boxing Day Test", start: "2026-12-26", end: "2026-12-30", venue: MCG },
   // ausopen.com: AO 2027 runs 11–31 January; finals weekend 30–31 January 2027
   { name: "Australian Open Finals", start: "2027-01-30", end: "2027-01-31", venue: MELBOURNE_PARK },
+  // mcg.org.au: 150th Anniversary Test, Australia v England (day-night), 11–15 March 2027
+  { name: "150th Anniversary Test", start: "2027-03-11", end: "2027-03-15", venue: MCG },
+  // premier.vic.gov.au: Formula 1 Australian Grand Prix, Albert Park, 1–4 April 2027
+  { name: "Australian Grand Prix", start: "2027-04-01", end: "2027-04-04", venue: ALBERT_PARK },
 ];
 
 export const EVENT_FARE_LABEL = "Event Day — Final Fare to Be Confirmed";

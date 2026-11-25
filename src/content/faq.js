@@ -67,6 +67,14 @@ export const FAQS = [
     q: "How much does a race day chauffeur cost?",
     a: `Drop-off and pick-up trips are priced like any other trip — enter your addresses in the booking form to see your fare. A ${formatPrice(PRICING.MAJOR_VENUE_FEE)} major venue fee applies per trip to or from Flemington or Caulfield Racecourse. Full-day and event hire is quoted via WhatsApp.`,
   },
+  {
+    q: "Where do you drop off and pick up at the MCG, Melbourne Park and Albert Park?",
+    a: "As close to your gate as the event-day road closures allow. Roads around Albert Park are closed during the Grand Prix, and Melbourne Park and the MCG have traffic restrictions on big days, so we'll confirm the nearest open pick-up point with you before the day.",
+  },
+  {
+    q: "Should I pre-book my return trip after a match or session?",
+    a: "Yes. Crowds leave together and taxis and rideshares get scarce, so a pre-booked return means your chauffeur is already waiting. Toggle 'Add return trip' when booking and give an approximate time; message us on WhatsApp if the match runs long or your plans change.",
+  },
 ];
 
 // Short FAQ lists shown on the other pages, each linking to /faq for the rest.
@@ -87,7 +95,14 @@ const FAQ_SETS = {
     "Do you serve corporate clients?",
     "Where will my chauffeur meet me at the airport?",
     "How far in advance should I book?",
-  ],  racing: [
+  ],
+  events: [
+    "Where do you drop off and pick up at the MCG, Melbourne Park and Albert Park?",
+    "Should I pre-book my return trip after a match or session?",
+    "Is pricing different for major events?",
+    "How far in advance should I book?",
+  ],
+  racing: [
     "Where will you drop us off and pick us up at the races?",
     "Should I pre-book my return trip from the races?",
     "How far ahead should I book for race days?",

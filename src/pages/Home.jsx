@@ -14,7 +14,8 @@ import {
 import { faqsFor } from "../content/faq.js";
 import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
 import { GOOGLE_REVIEWS_URL, GOOGLE_RATING, REVIEWS } from "../content/reviews.js";
-import { AIRPORT_HUB_PATH, CORPORATE_PATH, FAQ_PATH, RACING_PATH, faqSetFor } from "../content/pages.js";
+import { AIRPORT_HUB_PATH, CORPORATE_PATH, EVENTS_PATH, FAQ_PATH, RACING_PATH, faqSetFor } from "../content/pages.js";
+import { formatEventDates, upcomingEvents } from "../content/events.js";
 import { RACE_DAYS, RACING_VENUE_NOTE } from "../content/racing.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
@@ -192,6 +193,7 @@ function Nav() {
     { href: "/#services", label: "Services",   id: "services" },
     { href: "/#journey",  label: "Experience", id: "journey" },
     { href: CORPORATE_PATH, label: "Corporate" },
+    { href: EVENTS_PATH, label: "Events" },
     { href: AIRPORT_HUB_PATH, label: "Airport fares" },
     { href: "/#pricing",  label: "Pricing",    id: "pricing" },
     { href: FAQ_PATH,     label: "FAQ" },
@@ -252,7 +254,7 @@ function Nav() {
 }
 
 // Headline, lede and second data-line item for each page type.
-function heroCopy({ place, corporate, racing, airportHub, faqPage }) {
+function heroCopy({ place, corporate, racing, events, airportHub, faqPage }) {
   const wait = PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES;
   if (place) return {
     title: `${place.shortName || place.name}, privately.`, tag: place.shortName || place.name,
@@ -265,6 +267,10 @@ function heroCopy({ place, corporate, racing, airportHub, faqPage }) {
   if (racing) return {
     title: "Melbourne Cup & Spring Racing Carnival Chauffeur", tag: "Flemington & Caulfield",
     lede: "A private BMW i5 chauffeur for race day — drop-off and pick-up at Flemington and Caulfield, return trips and full-day hire for the Caulfield Cup, Cox Plate and Melbourne Cup Carnival.",
+  };
+  if (events) return {
+    title: "Melbourne's big events, privately.", tag: "MCG, Melbourne Park & Albert Park",
+    lede: "A private BMW i5 chauffeur for the Australian Open, the Boxing Day Test, the Formula 1 Grand Prix and Melbourne's biggest match days — dropped as close to the gate as the roads allow, and collected after.",
   };
   if (airportHub) return {
     title: "Airport, privately.", tag: "Hotels & suburbs",
@@ -424,6 +430,75 @@ function CorporateTeaser() {
           <h2 className="booking-panel-headline">Corporate Chauffeur Accounts</h2>
           <p className="booking-panel-sub">Weekly tax invoices, no card at booking and name-board meet &amp; greet for your executives and guests.</p>
           <a href={CORPORATE_PATH} className="pricing-cta">See what a corporate account includes &rarr;</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// /melbourne-events-chauffeur only: upcoming major events (src/content/events.js;
+// finished ones drop off by date), what's offered and event-day pricing.
+function EventsDetails() {
+  const list = upcomingEvents();
+  const items = [
+    { name: "BMW i5 chauffeur", tag: "Fleet", desc: `An electric BMW i5 for up to ${MAX_PASSENGERS} passengers, with your chauffeur for the trip.` },
+    { name: "Drop-off & pick-up", tag: "Event day", desc: "To and from the MCG, Melbourne Park and Albert Park, from your home, hotel or office." },
+    { name: "Return trips", tag: "Event day", desc: "Skip the taxi queue after the last ball — turn on 'Add return trip' in the booking form." },
+    { name: "Day & corporate hosting", tag: "Quote via WhatsApp", desc: "A chauffeur for the whole day, or several trips for clients and guests." },
+  ];
+  return (
+    <section id="events" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
+      <div className="wrap">
+        <div className="s-label">Major events</div>
+        <h2 className="s-h" style={{ color:"#111" }}>Coming up<br /><span className="gold-em">in Melbourne.</span></h2>
+        <div className="pricing-grid">
+          <div className="pricing-table">
+            <div className="pricing-table-label">Events</div>
+            {list.length ? list.map((e) => (
+              <div key={e.name} className="pricing-row event-row">
+                <span className="pricing-route">{e.name} &middot; {e.venue}<span className="event-detail">{e.detail}</span></span>
+                <span className="pricing-price">{formatEventDates(e)}</span>
+              </div>
+            )) : (
+              <div className="pricing-row"><span className="pricing-route">Next season's dates are on their way — message us to book early.</span></div>
+            )}
+            <div className="pricing-row">
+              <span className="pricing-route"><a href={RACING_PATH} className="event-link">Spring Racing Carnival &middot; Flemington &amp; Caulfield</a></span>
+              <span className="pricing-price">Oct–Nov</span>
+            </div>
+          </div>
+          <div className="pricing-table">
+            <div className="pricing-table-label">Pricing</div>
+            <div className="pricing-row">
+              <span className="pricing-route">Drop-off &amp; pick-up</span>
+              <span className="pricing-price">Booking form</span>
+            </div>
+            <div className="pricing-row">
+              <span className="pricing-route">Major venue fee, per trip</span>
+              <span className="pricing-price">{formatPrice(PRICING.MAJOR_VENUE_FEE)}</span>
+            </div>
+            <div className="pricing-row">
+              <span className="pricing-route">Day &amp; event hire</span>
+              <span className="pricing-price">Quote via WhatsApp</span>
+            </div>
+          </div>
+        </div>
+        <div className="areas-list">
+          {items.map((item) => (
+            <div key={item.name} className="area-item" style={{ cursor:"default" }}>
+              <div className="area-name">{item.name}</div>
+              <div className="area-time">{item.tag}</div>
+              <p className="area-desc">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="pricing-note">
+          <p>Event dates from the organisers; check your ticket for session times. On some event days the fare shown is a guide and your final fixed fare is confirmed before the booking is accepted.</p>
+          <p>{MAJOR_VENUE_FEE_NOTE}</p>
+          <p>{SPECIAL_QUOTE_NOTE}</p>
+          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="btn-wa" onClick={() => trackWhatsAppClick("events_quote")}>
+            <WAIcon s={17} /> Quote via WhatsApp
+          </a>
         </div>
       </div>
     </section>
@@ -1356,7 +1431,7 @@ function Footer() {
           <p className="ft-tagline">Private electric chauffeur for Melbourne.</p>
           <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12} />{VERNO_EMAIL}</a>
         </div>
-        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href={AIRPORT_HUB_PATH}>Airport Transfers</a></li><li><a href={CORPORATE_PATH}>Corporate Travel</a></li><li><a href={RACING_PATH}>Spring Racing Carnival</a></li><li><a href="/#services">Private Hire</a></li></ul></div>
+        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href={AIRPORT_HUB_PATH}>Airport Transfers</a></li><li><a href={CORPORATE_PATH}>Corporate Travel</a></li><li><a href={EVENTS_PATH}>Melbourne Events</a></li><li><a href={RACING_PATH}>Spring Racing Carnival</a></li><li><a href="/#services">Private Hire</a></li></ul></div>
         <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={placePath(s)}>{s.name}</a></li>)}<li><a href={`${AIRPORT_HUB_PATH}#areas`}>Melbourne Airport</a></li><li><a href={`${AIRPORT_HUB_PATH}#areas`}>Mornington Peninsula</a></li></ul></div>
         <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="/#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
@@ -1499,6 +1574,10 @@ textarea.fi{height:auto;padding:14px 18px;resize:vertical;}
 .area-item{padding:2rem 1rem;border-bottom:1px solid #eee;cursor:pointer;} .area-item:hover{background:#fafafa;}
 .area-name{font-family:var(--serif);margin-bottom:.4rem;} .area-time{font-size:.68rem;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;}
 .area-desc{font-size:.82rem;line-height:1.65;color:#666;}
+.event-detail{display:block;font-size:.75rem;color:#8a7d6b;margin-top:.2rem;}
+.event-row{align-items:flex-start;gap:1rem;}
+.event-row .pricing-price{text-align:right;}
+.event-link{color:inherit;text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px;}
 .ev-section{background:#111;}
 .ev-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:3rem;border-top:1px solid rgba(201,164,109,.16);}
 .ev-item{padding:2.4rem 1.6rem 1rem;border-right:1px solid rgba(255,255,255,.07);}
@@ -1757,18 +1836,19 @@ function StickyBar() {
 // One component renders every page; the props (from src/content/pages.js)
 // decide which sections a page shows. Home keeps the brand story; the other
 // pages stay short and focused.
-export default function Home({ place = null, corporate = false, racing = false, airportHub = false, faqPage = false }) {
-  const isHome = !place && !corporate && !racing && !airportHub && !faqPage;
+export default function Home({ place = null, corporate = false, racing = false, events = false, airportHub = false, faqPage = false }) {
+  const isHome = !place && !corporate && !racing && !events && !airportHub && !faqPage;
   const hasBooking = !corporate && !faqPage;
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
-    <Hero place={place} corporate={corporate} racing={racing} airportHub={airportHub} faqPage={faqPage} />
+    <Hero place={place} corporate={corporate} racing={racing} events={events} airportHub={airportHub} faqPage={faqPage} />
     {airportHub && <AirportHub />}
     {place && <PlaceFare place={place} />}
     {corporate && <CorporateDetails />}
     {corporate && <ElectricByDefault corporate />}
     {racing && <RacingDetails />}
+    {events && <EventsDetails />}
     {!faqPage && <TrustStrip />}
     {hasBooking && <InlineBooking />}
     {corporate && <CorporateSection />}
@@ -1780,7 +1860,7 @@ export default function Home({ place = null, corporate = false, racing = false, 
       <CorporateTeaser />
       <Pricing />
     </>}
-    <FAQ faqs={faqsFor(faqSetFor({ place, corporate, racing, airportHub, faqPage }))} showAll={!faqPage} />
+    <FAQ faqs={faqsFor(faqSetFor({ place, corporate, racing, events, airportHub, faqPage }))} showAll={!faqPage} />
     {airportHub && <>
       <Areas />
       <AboutSEO />

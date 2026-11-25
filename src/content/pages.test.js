@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { PAGES, CORPORATE_PATH, RACING_PATH, findPageByPath } from "./pages.js";
+import { PAGES, CORPORATE_PATH, RACING_PATH, EVENTS_PATH, findPageByPath } from "./pages.js";
 import { PLACES } from "./places.js";
 
 describe("prerendered pages", () => {
   it("cover every landing page plus /corporate and /spring-racing-carnival-chauffeur, with unique paths", () => {
     const paths = PAGES.map((p) => p.path);
     expect(new Set(paths).size).toBe(paths.length);
-    expect(PAGES).toHaveLength(PLACES.length + 4);
+    expect(PAGES).toHaveLength(PLACES.length + 5);
     for (const p of PAGES) {
       expect(p.path).toMatch(/^\/[a-z0-9/-]+$/);
       expect(p.head.url).toBe(`https://www.vernochauffeur.com.au${p.path}`);
@@ -43,6 +43,15 @@ describe("prerendered pages", () => {
   });
 });
 
+describe("events page", () => {
+  it("is registered with a Service schema", () => {
+    const page = findPageByPath(EVENTS_PATH);
+    expect(page.props).toEqual({ events: true });
+    expect(page.schema["@type"]).toBe("Service");
+    expect(page.head.title).toContain("Australian Open");
+  });
+});
+
 describe("per-page FAQ lists", async () => {
   const { faqSetFor, FAQ_PATH } = await import("./pages.js");
   const { faqsFor, FAQS } = await import("./faq.js");
@@ -52,8 +61,9 @@ describe("per-page FAQ lists", async () => {
     expect(faqSetFor({ airportHub: true })).toBe("airport");
     expect(faqSetFor({ corporate: true })).toBe("corporate");
     expect(faqSetFor({ racing: true })).toBe("racing");
+    expect(faqSetFor({ events: true })).toBe("events");
     expect(faqSetFor({ faqPage: true })).toBe("all");
-    for (const set of ["home", "airport", "corporate", "racing"]) {
+    for (const set of ["home", "airport", "corporate", "racing", "events"]) {
       expect(faqsFor(set).length).toBeGreaterThanOrEqual(3);
       expect(faqsFor(set).length).toBeLessThan(FAQS.length);
     }

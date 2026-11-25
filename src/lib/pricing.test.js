@@ -340,6 +340,8 @@ describe("major events", () => {
       ["AFL Grand Final", "2026-09-26", "2026-09-26", "MCG"],
       ["Boxing Day Test", "2026-12-26", "2026-12-30", "MCG"],
       ["Australian Open Finals", "2027-01-30", "2027-01-31", "Melbourne Park"],
+      ["150th Anniversary Test", "2027-03-11", "2027-03-15", "MCG"],
+      ["Australian Grand Prix", "2027-04-01", "2027-04-04", "Albert Park"],
     ]);
     for (const e of MAJOR_EVENTS) {
       expect(e.start).toMatch(/^\d{4}-\d{2}-\d{2}$/);
