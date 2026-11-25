@@ -164,7 +164,7 @@ describe("links", () => {
 });
 
 describe("vehicle capacity", () => {
-  it("limits the BMW i5 to 4 passengers", () => {
-    expect(MAX_PASSENGERS).toBe(4);
+  it("limits the BMW i5 to 3 passengers", () => {
+    expect(MAX_PASSENGERS).toBe(3);
   });
 });

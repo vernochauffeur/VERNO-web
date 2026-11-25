@@ -553,7 +553,7 @@ function TrustStrip() {
 }
 
 // The car every booking is in, shown in the booking form above the fare.
-const VEHICLE = { passengers: 3, suitcases: 2 };
+const VEHICLE_SUITCASES = 2;
 
 function VehicleCard() {
   return (
@@ -570,11 +570,11 @@ function VehicleCard() {
           <ul className="vehicle-specs">
             <li>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.7-4 4.2-6 8-6s6.3 2 8 6" /></svg>
-              {VEHICLE.passengers} passengers
+              {MAX_PASSENGERS} passengers
             </li>
             <li>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="5" y="7" width="14" height="13" rx="2" /><path d="M9 7V4h6v3M9 20v1M15 20v1" /></svg>
-              {VEHICLE.suitcases} large suitcases
+              {VEHICLE_SUITCASES} large suitcases
             </li>
             <li>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" /></svg>
