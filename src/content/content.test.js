@@ -46,6 +46,12 @@ describe("index.html", () => {
     expect(indexHtml).toContain(`"priceRange": "${formatPrice(PRICING.MIN_FARE)}+"`);
   });
 
+  it("links the business to its Google Business Profile", async () => {
+    const { GOOGLE_REVIEWS_URL } = await import("./reviews.js");
+    expect(indexHtml).toContain(`"sameAs": ["${GOOGLE_REVIEWS_URL}"]`);
+    expect(indexHtml).toContain(`"hasMap": "${GOOGLE_REVIEWS_URL}"`);
+  });
+
   it("no longer loads the unused QR-code script", () => {
     expect(indexHtml).not.toMatch(/qrcode/i);
   });
