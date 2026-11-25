@@ -6,7 +6,7 @@ describe("prerendered pages", () => {
   it("cover every landing page plus /corporate and /spring-racing-carnival-chauffeur, with unique paths", () => {
     const paths = PAGES.map((p) => p.path);
     expect(new Set(paths).size).toBe(paths.length);
-    expect(PAGES).toHaveLength(PLACES.length + 4);
+    expect(PAGES).toHaveLength(PLACES.length + 5);
     for (const p of PAGES) {
       expect(p.path).toMatch(/^\/[a-z0-9/-]+$/);
       expect(p.head.url).toBe(`https://www.vernochauffeur.com.au${p.path}`);
@@ -52,12 +52,25 @@ describe("per-page FAQ lists", async () => {
     expect(faqSetFor({ airportHub: true })).toBe("airport");
     expect(faqSetFor({ corporate: true })).toBe("corporate");
     expect(faqSetFor({ racing: true })).toBe("racing");
+    expect(faqSetFor({ ausOpen: true })).toBe("ausOpen");
     expect(faqSetFor({ faqPage: true })).toBe("all");
-    for (const set of ["home", "airport", "corporate", "racing"]) {
+    for (const set of ["home", "airport", "corporate", "racing", "ausOpen"]) {
       expect(faqsFor(set).length).toBeGreaterThanOrEqual(3);
       expect(faqsFor(set).length).toBeLessThan(FAQS.length);
     }
     expect(faqsFor("all")).toBe(FAQS);
     expect(findPageByPath(FAQ_PATH).props).toEqual({ faqPage: true });
+  });
+});
+
+describe("Australian Open page", async () => {
+  const { AUSOPEN_PATH } = await import("./pages.js");
+  const { MAJOR_EVENTS } = await import("../lib/pricing.js");
+  it("is a Service page whose finals dates match the event-day pricing", () => {
+    const page = findPageByPath(AUSOPEN_PATH);
+    expect(page.props).toEqual({ ausOpen: true });
+    expect(page.schema["@type"]).toBe("Service");
+    const finals = MAJOR_EVENTS.find((e) => e.name === "Australian Open Finals");
+    expect([finals.start, finals.end]).toEqual(["2027-01-30", "2027-01-31"]);
   });
 });

@@ -14,8 +14,9 @@ import {
 import { faqsFor } from "../content/faq.js";
 import { SUBURBS, HOTELS, placePath, placeAirportFare } from "../content/places.js";
 import { GOOGLE_REVIEWS_URL, GOOGLE_RATING, REVIEWS } from "../content/reviews.js";
-import { AIRPORT_HUB_PATH, CORPORATE_PATH, FAQ_PATH, RACING_PATH, faqSetFor } from "../content/pages.js";
-import { RACE_DAYS, RACING_VENUE_NOTE } from "../content/racing.js";
+import { AIRPORT_HUB_PATH, CORPORATE_PATH, FAQ_PATH, RACING_PATH, AUSOPEN_PATH, faqSetFor } from "../content/pages.js";
+import { RACING_EVENT } from "../content/racing.js";
+import { AO_EVENT } from "../content/ausopen.js";
 
 const MOMENTS_MAIN = "/images/moments-main.jpg";
 const JOURNEY_IMG_1 = "/images/journey-1.jpg";
@@ -193,6 +194,7 @@ function Nav() {
     { href: "/#journey",  label: "Experience", id: "journey" },
     { href: CORPORATE_PATH, label: "Corporate" },
     { href: RACING_PATH, label: "Spring racing" },
+    { href: AUSOPEN_PATH, label: "Australian Open" },
     { href: AIRPORT_HUB_PATH, label: "Airport fares" },
     { href: "/#pricing",  label: "Pricing",    id: "pricing" },
     { href: FAQ_PATH,     label: "FAQ" },
@@ -253,7 +255,7 @@ function Nav() {
 }
 
 // Headline, lede and second data-line item for each page type.
-function heroCopy({ place, corporate, racing, airportHub, faqPage }) {
+function heroCopy({ place, corporate, racing, ausOpen, airportHub, faqPage }) {
   const wait = PRICING.WAITING.AIRPORT_COMPLIMENTARY_MINUTES;
   if (place) return {
     title: `${place.shortName || place.name}, privately.`, tag: place.shortName || place.name,
@@ -266,6 +268,10 @@ function heroCopy({ place, corporate, racing, airportHub, faqPage }) {
   if (racing) return {
     title: "Melbourne Cup & Spring Racing Carnival Chauffeur", tag: "Flemington & Caulfield",
     lede: "A private BMW i5 chauffeur for race day — drop-off and pick-up at Flemington and Caulfield, return trips and full-day hire for the Caulfield Cup, Cox Plate and Melbourne Cup Carnival.",
+  };
+  if (ausOpen) return {
+    title: "Australian Open Chauffeur", tag: "Melbourne Park",
+    lede: "A private BMW i5 chauffeur for the Australian Open — drop-off and pick-up at Melbourne Park, return trips after night sessions and full-day hire.",
   };
   if (airportHub) return {
     title: "Airport, privately.", tag: "Hotels & suburbs",
@@ -431,26 +437,20 @@ function CorporateTeaser() {
   );
 }
 
-// /spring-racing-carnival-chauffeur only: race days (src/content/racing.js),
-// what's offered and race-day pricing, in the same layout as the other pages.
-function RacingDetails() {
-  const items = [
-    { name: "BMW i5 chauffeur", tag: "Fleet", desc: `An electric BMW i5 for up to ${MAX_PASSENGERS} passengers, with your chauffeur for the trip.` },
-    { name: "Drop-off & pick-up", tag: "Race day", desc: "To and from Flemington and Caulfield racecourses, from your home, hotel or office." },
-    { name: "Return trips", tag: "Race day", desc: "Book both directions at once — turn on 'Add return trip' in the booking form." },
-    { name: "Full-day hire", tag: "Quote via WhatsApp", desc: "A chauffeur for the whole race day, with stops before and after the races." },
-  ];
+// Event pages (/spring-racing-carnival-chauffeur, /australian-open-chauffeur):
+// key dates, pricing and what's offered, from the event's content file.
+function EventDetails({ event }) {
   return (
-    <section id="race-days" style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
+    <section id={event.id} style={{ background:"#f5ead4", padding:"5rem 5vw" }}>
       <div className="wrap">
-        <div className="s-label">Spring Racing Carnival 2026</div>
-        <h2 className="s-h" style={{ color:"#111" }}>Race days at Flemington<br /><span className="gold-em">and Caulfield.</span></h2>
+        <div className="s-label">{event.label}</div>
+        <h2 className="s-h" style={{ color:"#111" }}>{event.heading[0]}<br /><span className="gold-em">{event.heading[1]}</span></h2>
         <div className="pricing-grid">
           <div className="pricing-table">
-            <div className="pricing-table-label">Race days</div>
-            {RACE_DAYS.map((d) => (
+            <div className="pricing-table-label">{event.daysLabel}</div>
+            {event.days.map((d) => (
               <div key={d.name} className="pricing-row">
-                <span className="pricing-route">{d.name} &middot; {d.venue}</span>
+                <span className="pricing-route">{d.name}</span>
                 <span className="pricing-price">{d.date}</span>
               </div>
             ))}
@@ -472,7 +472,7 @@ function RacingDetails() {
           </div>
         </div>
         <div className="areas-list">
-          {items.map((item) => (
+          {event.items.map((item) => (
             <div key={item.name} className="area-item" style={{ cursor:"default" }}>
               <div className="area-name">{item.name}</div>
               <div className="area-time">{item.tag}</div>
@@ -481,10 +481,8 @@ function RacingDetails() {
           ))}
         </div>
         <div className="pricing-note">
-          <p>{RACING_VENUE_NOTE}</p>
-          <p>{MAJOR_VENUE_FEE_NOTE}</p>
-          <p>{SPECIAL_QUOTE_NOTE}</p>
-          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="btn-wa" onClick={() => trackWhatsAppClick("racing_quote")}>
+          {event.notes.map((note) => <p key={note}>{note}</p>)}
+          <a href={GENERIC_WA_URL} target="_blank" rel="noopener noreferrer" className="btn-wa" onClick={() => trackWhatsAppClick(event.waSource)}>
             <WAIcon s={17} /> Quote via WhatsApp
           </a>
         </div>
@@ -1312,7 +1310,7 @@ function Footer() {
           <p className="ft-tagline">Private electric chauffeur for Melbourne.</p>
           <a href={`mailto:${VERNO_EMAIL}`} className="ft-msg-link"><MsgIcon s={12} />{VERNO_EMAIL}</a>
         </div>
-        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href={AIRPORT_HUB_PATH}>Airport Transfers</a></li><li><a href={CORPORATE_PATH}>Corporate Travel</a></li><li><a href={RACING_PATH}>Spring Racing Carnival</a></li><li><a href="/#services">Private Hire</a></li></ul></div>
+        <div><p className="ft-col-h">Services</p><ul className="ft-links"><li><a href={AIRPORT_HUB_PATH}>Airport Transfers</a></li><li><a href={CORPORATE_PATH}>Corporate Travel</a></li><li><a href={RACING_PATH}>Spring Racing Carnival</a></li><li><a href={AUSOPEN_PATH}>Australian Open</a></li><li><a href="/#services">Private Hire</a></li></ul></div>
         <div><p className="ft-col-h">Coverage</p><ul className="ft-links">{SUBURBS.map((s) => <li key={s.slug}><a href={placePath(s)}>{s.name}</a></li>)}<li><a href={`${AIRPORT_HUB_PATH}#areas`}>Melbourne Airport</a></li><li><a href={`${AIRPORT_HUB_PATH}#areas`}>Mornington Peninsula</a></li></ul></div>
         <div><p className="ft-col-h">Reservations</p><ul className="ft-links"><li><a href={`tel:${VERNO_PHONE}`}>{VERNO_PHONE_DISPLAY}</a></li><li><a href="/#book">Fare Estimate</a></li><li><a href={`mailto:${VERNO_EMAIL}`}>{VERNO_EMAIL}</a></li></ul></div>
       </div>
@@ -1703,17 +1701,18 @@ function StickyBar() {
 // One component renders every page; the props (from src/content/pages.js)
 // decide which sections a page shows. Home keeps the brand story; the other
 // pages stay short and focused.
-export default function Home({ place = null, corporate = false, racing = false, airportHub = false, faqPage = false }) {
-  const isHome = !place && !corporate && !racing && !airportHub && !faqPage;
+export default function Home({ place = null, corporate = false, racing = false, ausOpen = false, airportHub = false, faqPage = false }) {
+  const isHome = !place && !corporate && !racing && !ausOpen && !airportHub && !faqPage;
   const hasBooking = !corporate && !faqPage;
   return <>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <Nav />
-    <Hero place={place} corporate={corporate} racing={racing} airportHub={airportHub} faqPage={faqPage} />
+    <Hero place={place} corporate={corporate} racing={racing} ausOpen={ausOpen} airportHub={airportHub} faqPage={faqPage} />
     {airportHub && <AirportHub />}
     {place && <PlaceFare place={place} />}
     {corporate && <CorporateDetails />}
-    {racing && <RacingDetails />}
+    {racing && <EventDetails event={RACING_EVENT} />}
+    {ausOpen && <EventDetails event={AO_EVENT} />}
     {!faqPage && <TrustStrip />}
     {hasBooking && <InlineBooking />}
     {corporate && <CorporateSection />}
@@ -1724,7 +1723,7 @@ export default function Home({ place = null, corporate = false, racing = false, 
       <CorporateTeaser />
       <Pricing />
     </>}
-    <FAQ faqs={faqsFor(faqSetFor({ place, corporate, racing, airportHub, faqPage }))} showAll={!faqPage} />
+    <FAQ faqs={faqsFor(faqSetFor({ place, corporate, racing, ausOpen, airportHub, faqPage }))} showAll={!faqPage} />
     {airportHub && <>
       <Areas />
       <AboutSEO />
